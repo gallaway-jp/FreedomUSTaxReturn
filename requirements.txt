@@ -1,0 +1,9 @@
+# Core Dependencies
+pypdf>=4.0.0,<5.0.0          # PDF manipulation and form filling
+cryptography>=42.0.0,<43.0.0 # Encryption for sensitive tax data (AES-256)
+
+# Python standard library (included):
+# - tkinter: GUI framework
+# - json: Data serialization
+# - pathlib: File path handling
+# - hmac/hashlib: Data integrity verification
