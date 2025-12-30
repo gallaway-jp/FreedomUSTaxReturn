@@ -1498,9 +1498,9 @@ class CapitalGainDialog(tk.Toplevel):
         ttk.Label(calc_frame, textvariable=self.calculated_gain_loss, font=("Arial", 10, "bold")).pack(side="right")
 
         # Bind events to recalculate
-        self.sales_price.field.bind('<KeyRelease>', self._recalculate_gain_loss)
-        self.cost_basis.field.bind('<KeyRelease>', self._recalculate_gain_loss)
-        self.adjustment.field.bind('<KeyRelease>', self._recalculate_gain_loss)
+        self.sales_price.entry.bind('<KeyRelease>', self._recalculate_gain_loss)
+        self.cost_basis.entry.bind('<KeyRelease>', self._recalculate_gain_loss)
+        self.adjustment.entry.bind('<KeyRelease>', self._recalculate_gain_loss)
 
         # Initialize calculation
         self._recalculate_gain_loss()

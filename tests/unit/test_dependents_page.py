@@ -16,18 +16,71 @@ class TestDependentsPage:
     @pytest.fixture
     def setup_page(self):
         """Set up a DependentsPage instance for testing"""
-        root = tk.Tk()
-        config = AppConfig.from_env()
-        tax_data = TaxData(config)
-        main_window = Mock()
-        theme_manager = Mock()
+        # Mock tkinter to avoid GUI requirements in headless environments
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.ttk.Frame') as mock_frame, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.Listbox') as mock_listbox, \
+             patch('tkinter.ttk.Scrollbar') as mock_scrollbar, \
+             patch('tkinter.StringVar') as mock_stringvar, \
+             patch('tkinter.Canvas') as mock_canvas:
 
-        page = DependentsPage(root, tax_data, main_window, theme_manager)
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
 
-        yield page
+            mock_frame_instance = MagicMock()
+            mock_frame.return_value = mock_frame_instance
 
-        # Clean up
-        root.destroy()
+            mock_listbox_instance = MagicMock()
+            # Simple internal storage for Listbox items so insert/delete/get behave
+            mock_listbox_instance._items = []
+
+            def _insert(index, item):
+                if index == tk.END:
+                    mock_listbox_instance._items.append(item)
+                else:
+                    mock_listbox_instance._items.insert(index, item)
+
+            def _delete(start, end=None):
+                # For our tests we always clear the list on delete(0, END)
+                mock_listbox_instance._items.clear()
+
+            def _get(start, end=None):
+                return tuple(mock_listbox_instance._items) if mock_listbox_instance._items else ("No dependents added yet",)
+
+            mock_listbox_instance.curselection = Mock(return_value=())
+            # Make selection_set update curselection to mimic real Listbox
+            mock_listbox_instance.selection_set = Mock(side_effect=lambda idx: setattr(mock_listbox_instance.curselection, 'return_value', (idx,)))
+            mock_listbox_instance.insert.side_effect = _insert
+            mock_listbox_instance.delete.side_effect = _delete
+            mock_listbox_instance.get.side_effect = _get
+            # Allow dynamic configuration of curselection
+            mock_listbox_instance.configure_curselection = lambda val: setattr(mock_listbox_instance.curselection, 'return_value', val)
+            mock_listbox.return_value = mock_listbox_instance
+
+            mock_canvas_instance = MagicMock()
+            mock_canvas.return_value = mock_canvas_instance
+
+            mock_stringvar_instance = MagicMock()
+            mock_stringvar_instance.get.return_value = ""
+            mock_stringvar_instance.set.return_value = None
+            mock_stringvar.return_value = mock_stringvar_instance
+
+            config = AppConfig.from_env()
+            tax_data = TaxData(config)
+            main_window = Mock()
+            theme_manager = Mock()
+            theme_manager.get_color.side_effect = lambda color: {
+                "success": "green",
+                "error": "red", 
+                "fg": "black"
+            }.get(color, "black")
+
+            page = DependentsPage(mock_root, tax_data, main_window, theme_manager)
+
+            yield page
 
     def test_page_initialization(self, setup_page):
         """Test that the page initializes correctly"""
@@ -160,9 +213,11 @@ class TestDependentsPage:
 
         # Select the first item
         page.dependents_listbox.selection_set(0)
+        # Configure mock to return selection
+        page.dependents_listbox.configure_curselection((0,))
 
-        with patch('tkinter.messagebox.askyesno', return_value=True) as mock_ask, \
-             patch('tkinter.messagebox.showinfo') as mock_info:
+        with patch('gui.pages.dependents.messagebox.askyesno', return_value=True) as mock_ask, \
+             patch('gui.pages.dependents.messagebox.showinfo') as mock_info:
 
             page.delete_dependent()
 
@@ -201,8 +256,10 @@ class TestDependentsPage:
         page.tax_data.set("dependents", [dependent])
         page.refresh_dependents_list()
         page.dependents_listbox.selection_set(0)
+        # Configure mock to return selection
+        page.dependents_listbox.configure_curselection((0,))
 
-        with patch('tkinter.messagebox.askyesno', return_value=False) as mock_ask:
+        with patch('gui.pages.dependents.messagebox.askyesno', return_value=False) as mock_ask:
             page.delete_dependent()
 
             # Check that confirmation was asked but dependent was not removed

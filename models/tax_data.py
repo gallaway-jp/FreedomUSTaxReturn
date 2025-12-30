@@ -336,6 +336,13 @@ class TaxData:
             current_list.pop(index)
             self.set(path, current_list)
     
+    def update_in_list(self, path: str, index: int, new_item: Any):
+        """Update item in list by index"""
+        current_list = self.get(path, [])
+        if isinstance(current_list, list) and 0 <= index < len(current_list):
+            current_list[index] = new_item
+            self.set(path, current_list)
+    
     def get_required_forms(self) -> List[str]:
         """Determine which forms are required based on entered data"""
         forms = ["Form 1040"]  # Always required
@@ -932,18 +939,92 @@ class TaxData:
     
     def _are_similar_securities(self, desc1: str, desc2: str) -> bool:
         """
-        Basic check if two security descriptions are similar.
-        This is a simplified implementation - real wash sale rules are more complex.
+        Check if two security descriptions represent substantially identical securities.
+        For wash sale purposes, securities are considered identical if they represent
+        the same company and same type of security (common stock, preferred, etc.).
         """
-        # Remove common words and compare
-        common_words = {'the', 'and', 'or', 'of', 'to', 'in', 'on', 'at', 'by', 'for', 'with', 'as', 'an', 'a'}
-        words1 = set(desc1.split()) - common_words
-        words2 = set(desc2.split()) - common_words
+        if not desc1 or not desc2:
+            return False
+            
+        # Normalize descriptions
+        desc1_norm = desc1.lower().strip()
+        desc2_norm = desc2.lower().strip()
         
-        # If significant overlap in words, consider them similar
-        if words1 and words2:
-            overlap = len(words1.intersection(words2))
-            return overlap >= min(len(words1), len(words2)) * 0.5  # 50% overlap
+        # Exact match
+        if desc1_norm == desc2_norm:
+            return True
+            
+        # Extract company name and security type
+        def extract_company_and_type(desc: str) -> tuple:
+            """Extract (company_name, security_type) from description"""
+            # Common security type indicators
+            security_types = ['common stock', 'preferred stock', 'bond', 'note', 'debenture']
+            
+            desc_lower = desc.lower()
+            
+            # Find security type
+            security_type = None
+            for st in security_types:
+                if st in desc_lower:
+                    security_type = st
+                    # Remove security type from description to get company name
+                    company_part = desc_lower.replace(st, '').strip()
+                    break
+            
+            if not security_type:
+                # If no security type found, assume it's common stock and use whole description as company
+                company_part = desc_lower
+                security_type = 'common stock'
+            
+            # Clean up company name - remove extra spaces, punctuation, and class designations
+            company_part = ' '.join(company_part.split())  # normalize spaces
+            company_part = company_part.replace(',', '').replace('.', '').strip()
+            
+            # Remove class designations (Class A, Class B, Series A, etc.) as they don't affect wash sale similarity
+            import re
+            company_part = re.sub(r'\bclass\s+[a-zA-Z0-9]+\b', '', company_part, flags=re.IGNORECASE)
+            company_part = re.sub(r'\bseries\s+[a-zA-Z0-9]+\b', '', company_part, flags=re.IGNORECASE)
+            company_part = ' '.join(company_part.split())  # normalize spaces again
+            
+            return company_part, security_type
+        
+        company1, type1 = extract_company_and_type(desc1_norm)
+        company2, type2 = extract_company_and_type(desc2_norm)
+        
+        # Must be same security type
+        if type1 != type2:
+            return False
+            
+        # Company names must be very similar (allowing for minor differences)
+        # For simplicity, check if one contains the other or they differ by only common variations
+        if company1 == company2:
+            return True
+            
+        # Check if one is substring of the other (handles abbreviations, etc.)
+        if company1 in company2 or company2 in company1:
+            return True
+            
+        # Handle common variations (Inc vs Inc., Corp vs Corporation, etc.)
+        variations = {
+            'inc': ['inc.', 'incorporated'],
+            'corp': ['corp.', 'corporation'],
+            'ltd': ['ltd.', 'limited'],
+            'co': ['co.', 'company']
+        }
+        
+        for base, variants in variations.items():
+            for variant in variants:
+                if base in company1 and variant in company2:
+                    # Replace variant with base and compare
+                    c1_normalized = company1.replace(base, '').replace(variant, '').strip()
+                    c2_normalized = company2.replace(base, '').replace(variant, '').strip()
+                    if c1_normalized == c2_normalized:
+                        return True
+                if variant in company1 and base in company2:
+                    c1_normalized = company1.replace(variant, '').replace(base, '').strip()
+                    c2_normalized = company2.replace(variant, '').replace(base, '').strip()
+                    if c1_normalized == c2_normalized:
+                        return True
         
         return False
     

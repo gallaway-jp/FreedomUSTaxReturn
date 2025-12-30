@@ -59,7 +59,10 @@ class FormField(ttk.Frame):
         self.validation_icon.pack(side="right")
         
         if initial_value:
-            self.entry.insert(0, str(initial_value))
+            if self.field_type == "date":
+                self.set(initial_value)
+            else:
+                self.entry.insert(0, str(initial_value))
         
         # Bind events
         self.entry.bind('<KeyRelease>', self._on_key_release)
