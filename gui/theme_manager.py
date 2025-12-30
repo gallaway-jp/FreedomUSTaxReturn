@@ -131,7 +131,11 @@ class ThemeManager:
     def get_color(self, color_name: str) -> str:
         """Get a color value from the current theme"""
         return self.themes[self.current_theme].get(color_name, "#000000")
-
+    
+    def get_current_theme(self) -> Dict[str, str]:
+        """Get the current theme colors"""
+        return self.themes[self.current_theme]
+    
     def toggle_theme(self) -> str:
         """Toggle between light and dark themes"""
         new_theme = "dark" if self.current_theme == "light" else "light"

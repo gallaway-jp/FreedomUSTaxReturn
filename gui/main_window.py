@@ -153,7 +153,7 @@ class MainWindow:
         self.root.bind('<Control-f>', lambda e: self._focus_search())
     
     def create_menu_bar(self):
-        """Create the main menu bar with File menu for PDF export"""
+        """Create the main menu bar with File and View menus"""
         # Create menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -170,6 +170,13 @@ class MainWindow:
         file_menu.add_command(label="Export PDF", command=self._export_pdf, accelerator="Ctrl+E")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
+        
+        # View menu
+        view_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="View", menu=view_menu)
+        
+        # View menu items
+        view_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
     
     def _export_pdf(self):
         """Export the current tax return as PDF"""
@@ -200,6 +207,63 @@ class MainWindow:
     def _focus_search(self):
         """Focus on search field (placeholder for future search functionality)"""
         pass  # Could implement search functionality later
+    
+    def _toggle_theme(self):
+        """Toggle between light and dark themes"""
+        if self.theme_manager:
+            new_theme = self.theme_manager.toggle_theme()
+            self._apply_theme()
+            # Update status
+            self.status_label.config(text=f"Switched to {new_theme} theme")
+    
+    def _apply_theme(self):
+        """Apply the current theme to all UI elements"""
+        if not self.theme_manager:
+            return
+            
+        # Apply theme to root window
+        theme_colors = self.theme_manager.get_current_theme()
+        self.root.configure(bg=theme_colors["bg"])
+        
+        # Update all widgets that support theming
+        self._update_widget_theme(self.root, theme_colors)
+    
+    def _update_widget_theme(self, widget, theme_colors):
+        """Recursively apply theme to all widgets"""
+        try:
+            # Apply theme based on widget type
+            if isinstance(widget, tk.Tk) or isinstance(widget, ttk.Frame):
+                widget.configure(bg=theme_colors["bg"])
+            elif isinstance(widget, ttk.Label):
+                widget.configure(
+                    bg=theme_colors["label_bg"],
+                    fg=theme_colors["label_fg"]
+                )
+            elif isinstance(widget, ttk.Button):
+                widget.configure(
+                    bg=theme_colors["button_bg"],
+                    fg=theme_colors["button_fg"]
+                )
+            elif isinstance(widget, ttk.Entry):
+                widget.configure(
+                    bg=theme_colors["entry_bg"],
+                    fg=theme_colors["entry_fg"],
+                    insertcolor=theme_colors["fg"]
+                )
+            elif isinstance(widget, tk.Text):
+                widget.configure(
+                    bg=theme_colors["entry_bg"],
+                    fg=theme_colors["entry_fg"],
+                    insertbackground=theme_colors["fg"]
+                )
+            
+            # Recursively apply to children
+            for child in widget.winfo_children():
+                self._update_widget_theme(child, theme_colors)
+                
+        except tk.TclError:
+            # Some widgets might not support certain options
+            pass
     
     def update_progress(self):
         """Update the completion progress indicator"""
