@@ -304,12 +304,83 @@ class TestTaxDataCalculateTotalIncome:
         
         assert total == 60000
     
+    def test_calculate_total_income_with_self_employment(self):
+        """Test total income including self-employment income"""
+        tax_data = TaxData()
+        tax_data.add_w2_form({'wages': 30000})
+        tax_data.set('income.self_employment', [
+            {'business_name': 'Freelance work', 'net_profit': 25000}
+        ])
+        
+        income = tax_data.get_section('income')
+        total = tax_data._calculate_total_income(income)
+        
+        assert total == 55000
+    
+    def test_calculate_total_income_with_retirement_distributions(self):
+        """Test total income including retirement distributions"""
+        tax_data = TaxData()
+        tax_data.add_w2_form({'wages': 40000})
+        tax_data.set('income.retirement_distributions', [
+            {'source': '401(k)', 'amount': 15000}
+        ])
+        
+        income = tax_data.get_section('income')
+        total = tax_data._calculate_total_income(income)
+        
+        assert total == 55000
+    
+    def test_calculate_total_income_with_social_security(self):
+        """Test total income including Social Security benefits"""
+        tax_data = TaxData()
+        tax_data.add_w2_form({'wages': 35000})
+        tax_data.set('income.social_security', [
+            {'amount': 12000}
+        ])
+        
+        income = tax_data.get_section('income')
+        total = tax_data._calculate_total_income(income)
+        
+        assert total == 47000
+    
+    def test_calculate_total_income_with_capital_gains(self):
+        """Test total income including capital gains"""
+        tax_data = TaxData()
+        tax_data.add_w2_form({'wages': 45000})
+        tax_data.set('income.capital_gains', [
+            {'description': 'Stock sale', 'gain_loss': 8000},
+            {'description': 'Loss', 'gain_loss': -2000}  # Losses should not be added
+        ])
+        
+        income = tax_data.get_section('income')
+        total = tax_data._calculate_total_income(income)
+        
+        assert total == 53000  # 45000 + 8000 (only gains)
+    
+    def test_calculate_total_income_with_rental_income(self):
+        """Test total income including rental income"""
+        tax_data = TaxData()
+        tax_data.add_w2_form({'wages': 50000})
+        tax_data.set('income.rental_income', [
+            {'property': 'Apartment', 'amount': 18000}
+        ])
+        
+        income = tax_data.get_section('income')
+        total = tax_data._calculate_total_income(income)
+        
+        assert total == 68000
+
     def test_calculate_total_income_all_sources(self):
         """Test total income with all income sources combined"""
         tax_data = TaxData()
         tax_data.add_w2_form({'wages': 50000})
         tax_data.set('income.interest_income', [{'amount': 1000}])
         tax_data.set('income.dividend_income', [{'amount': 2000}])
+        tax_data.set('income.self_employment', [{'net_profit': 12000}])
+        tax_data.set('income.retirement_distributions', [{'amount': 8000}])
+        tax_data.set('income.social_security', [{'amount': 6000}])
+        tax_data.set('income.capital_gains', [{'gain_loss': 4000}])
+        tax_data.set('income.rental_income', [{'amount': 10000}])
         tax_data.set('income.business_income', [{'net_profit': 15000}])
         tax_data.set('income.unemployment', 3000)
         tax_data.set('income.other_income', [{'amount': 500}])
@@ -317,8 +388,8 @@ class TestTaxDataCalculateTotalIncome:
         income = tax_data.get_section('income')
         total = tax_data._calculate_total_income(income)
         
-        # 50000 + 1000 + 2000 + 15000 + 3000 + 500 = 71500
-        assert total == 71500
+        # 50000 + 1000 + 2000 + 12000 + 8000 + 6000 + 4000 + 10000 + 15000 + 3000 + 500 = 111500
+        assert total == 111500
 
 
 class TestTaxDataCalculateAGI:

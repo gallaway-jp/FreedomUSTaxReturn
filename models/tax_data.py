@@ -458,7 +458,25 @@ class TaxData:
         total += sum(item.get("amount", 0) for item in income.get("interest_income", []))
         total += sum(item.get("amount", 0) for item in income.get("dividend_income", []))
         
-        # Business income
+        # Self-employment income
+        total += sum(item.get("net_profit", 0) for item in income.get("self_employment", []))
+        
+        # Retirement distributions
+        total += sum(item.get("amount", 0) for item in income.get("retirement_distributions", []))
+        
+        # Social Security benefits
+        total += sum(item.get("amount", 0) for item in income.get("social_security", []))
+        
+        # Capital gains/losses (only gains are taxable)
+        for item in income.get("capital_gains", []):
+            gain = item.get("gain_loss", 0)
+            if gain > 0:  # Only add positive gains
+                total += gain
+        
+        # Rental income
+        total += sum(item.get("amount", 0) for item in income.get("rental_income", []))
+        
+        # Business income (legacy - may be deprecated in favor of self-employment)
         total += sum(business.get("net_profit", 0) for business in income.get("business_income", []))
         
         # Unemployment income
