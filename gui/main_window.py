@@ -13,6 +13,7 @@ from gui.pages.income import IncomePage
 from gui.pages.deductions import DeductionsPage
 from gui.pages.credits import CreditsPage
 from gui.pages.payments import PaymentsPage
+from gui.pages.dependents import DependentsPage
 from gui.pages.form_viewer import FormViewerPage
 from gui.widgets.validation_summary import ValidationSummary
 from gui.theme_manager import ThemeManager
@@ -65,11 +66,12 @@ class MainWindow:
         # Navigation shortcuts (Alt + number)
         self.root.bind('<Alt-Key-1>', lambda e: self.show_page("personal_info"))
         self.root.bind('<Alt-Key-2>', lambda e: self.show_page("filing_status"))
-        self.root.bind('<Alt-Key-3>', lambda e: self.show_page("income"))
-        self.root.bind('<Alt-Key-4>', lambda e: self.show_page("deductions"))
-        self.root.bind('<Alt-Key-5>', lambda e: self.show_page("credits"))
-        self.root.bind('<Alt-Key-6>', lambda e: self.show_page("payments"))
-        self.root.bind('<Alt-Key-7>', lambda e: self.show_page("form_viewer"))
+        self.root.bind('<Alt-Key-3>', lambda e: self.show_page("dependents"))
+        self.root.bind('<Alt-Key-4>', lambda e: self.show_page("income"))
+        self.root.bind('<Alt-Key-5>', lambda e: self.show_page("deductions"))
+        self.root.bind('<Alt-Key-6>', lambda e: self.show_page("credits"))
+        self.root.bind('<Alt-Key-7>', lambda e: self.show_page("payments"))
+        self.root.bind('<Alt-Key-8>', lambda e: self.show_page("form_viewer"))
         
         # Common actions
         self.root.bind('<Control-s>', lambda e: self.save_progress())
@@ -94,8 +96,9 @@ class MainWindow:
         """Update the completion progress indicator"""
         # Define page weights (approximate completion percentage per page)
         page_weights = {
-            "personal_info": 15,
-            "filing_status": 25,
+            "personal_info": 10,
+            "filing_status": 20,
+            "dependents": 30,
             "income": 50,
             "deductions": 70,
             "credits": 85,
@@ -137,6 +140,7 @@ class MainWindow:
         pages_to_check = [
             ("personal_info", "Personal Information"),
             ("filing_status", "Filing Status"), 
+            ("dependents", "Dependents"),
             ("income", "Income"),
             ("deductions", "Deductions"),
             ("credits", "Credits & Taxes"),
@@ -159,6 +163,7 @@ class MainWindow:
         section_mapping = {
             "personal_info": "personal_info",
             "filing_status": "filing_status",
+            "dependents": "dependents",
             "income": "income",
             "deductions": "deductions", 
             "credits": "credits",
@@ -176,6 +181,8 @@ class MainWindow:
             errors.extend(self._validate_personal_info(data))
         elif page_id == "filing_status":
             errors.extend(self._validate_filing_status(data))
+        elif page_id == "dependents":
+            errors.extend(self._validate_dependents(data))
         elif page_id == "income":
             errors.extend(self._validate_income(data))
         # Add more page validations as needed
@@ -243,6 +250,50 @@ class MainWindow:
         
         if not has_income:
             errors.append("At least one source of income must be reported")
+        
+        return errors
+    
+    def _validate_dependents(self, data: List) -> List[str]:
+        """Validate dependents data"""
+        errors = []
+        
+        dependents = data if isinstance(data, list) else data.get("dependents", [])
+        if not isinstance(dependents, list):
+            errors.append("Dependents data must be a list")
+            return errors
+        
+        for i, dependent in enumerate(dependents):
+            if not isinstance(dependent, dict):
+                errors.append(f"Dependent {i+1}: Invalid data format")
+                continue
+                
+            # Check required fields
+            required_fields = [
+                ("first_name", "First name"),
+                ("last_name", "Last name"),
+                ("ssn", "Social Security Number"),
+                ("birth_date", "Birth date"),
+                ("relationship", "Relationship"),
+            ]
+            
+            for field, label in required_fields:
+                if not dependent.get(field):
+                    errors.append(f"Dependent {i+1}: {label} is required")
+            
+            # Validate SSN format
+            ssn = dependent.get("ssn", "")
+            if ssn and not self._is_valid_ssn(ssn):
+                errors.append(f"Dependent {i+1}: Social Security Number must be in XXX-XX-XXXX format")
+            
+            # Validate months lived in home
+            months = dependent.get("months_lived_in_home")
+            if months is not None:
+                try:
+                    months_int = int(months)
+                    if months_int < 0 or months_int > 12:
+                        errors.append(f"Dependent {i+1}: Months lived in home must be between 0 and 12")
+                except (ValueError, TypeError):
+                    errors.append(f"Dependent {i+1}: Months lived in home must be a valid number")
         
         return errors
     
@@ -345,6 +396,7 @@ class MainWindow:
         nav_sections = [
             ("Personal Information", "personal_info"),
             ("Filing Status", "filing_status"),
+            ("Dependents", "dependents"),
             ("Income", "income"),
             ("Deductions", "deductions"),
             ("Credits & Taxes", "credits"),
@@ -416,6 +468,7 @@ class MainWindow:
         page_classes = {
             "personal_info": PersonalInfoPage,
             "filing_status": FilingStatusPage,
+            "dependents": DependentsPage,
             "income": IncomePage,
             "deductions": DeductionsPage,
             "credits": CreditsPage,
@@ -523,6 +576,7 @@ class MainWindow:
         page_mapping = {
             PersonalInfoPage: "personal_info",
             FilingStatusPage: "filing_status",
+            DependentsPage: "dependents",
             IncomePage: "income",
             DeductionsPage: "deductions",
             CreditsPage: "credits",
