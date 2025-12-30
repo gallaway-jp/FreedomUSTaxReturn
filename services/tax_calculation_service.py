@@ -212,8 +212,14 @@ class TaxCalculationService:
         """Calculate total business income (net profit)"""
         get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
+        
+        # Check for self-employment businesses (new format)
+        self_employment = income_section.get('self_employment', [])
+        if isinstance(self_employment, list) and self_employment:
+            return sum(biz.get('net_profit', 0) for biz in self_employment)
+        
+        # Fallback to old format
         business_income = income_section.get('business_income', [])
-        # Handle both old format (single number) and new format (list of businesses)
         if isinstance(business_income, (int, float)):
             return float(business_income)
         elif isinstance(business_income, list):
