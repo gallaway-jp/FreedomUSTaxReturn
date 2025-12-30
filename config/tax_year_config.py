@@ -42,6 +42,12 @@ class TaxYearConfig:
     # Child and dependent care credit phase-out limits
     child_dependent_care_limits: Dict[str, Dict[str, float]]
     
+    # Retirement contribution limits
+    retirement_limits: Dict[str, float]
+    
+    # IRA deductibility limits by filing status
+    ira_deductibility_limits: Dict[str, Dict[str, float]]
+    
     additional_medicare_rate: float = 0.009
     
     # Child tax credit amounts
@@ -277,6 +283,45 @@ TAX_YEAR_2025 = TaxYearConfig(
             "threshold": 30000,
         },
     },
+    
+    # Retirement contribution limits for 2025
+    retirement_limits={
+        "traditional_ira": 7000.0,  # $7,000 for 2025
+        "roth_ira": 7000.0,         # $7,000 for 2025
+        "401k": 23000.0,            # $23,000 for 2025
+        "catch_up_50_plus": 1000.0, # Additional catch-up contribution
+    },
+    
+    # IRA deductibility limits (Modified AGI limits for Traditional IRA deductions)
+    ira_deductibility_limits={
+        "Single": {
+            "magi_limit": 77000,  # Full deduction up to $77,000 MAGI for 2025
+        },
+        "MFJ": {
+            "magi_limit": 123000,  # Full deduction up to $123,000 MAGI for 2025
+        },
+        "Married Filing Jointly": {
+            "magi_limit": 123000,
+        },
+        "MFS": {
+            "magi_limit": 10000,  # Very low limit for separate filers
+        },
+        "Married Filing Separately": {
+            "magi_limit": 10000,
+        },
+        "HOH": {
+            "magi_limit": 77000,
+        },
+        "Head of Household": {
+            "magi_limit": 77000,
+        },
+        "QW": {
+            "magi_limit": 123000,
+        },
+        "Qualifying Widow(er)": {
+            "magi_limit": 123000,
+        },
+    },
 )
 
 
@@ -414,6 +459,45 @@ TAX_YEAR_2023 = TaxYearConfig(
         "QW": {
             "threshold": 30000,
         }
+    },
+    
+    # Retirement contribution limits for 2023
+    retirement_limits={
+        "traditional_ira": 6500.0,  # $6,500 for 2023
+        "roth_ira": 6500.0,         # $6,500 for 2023
+        "401k": 22500.0,            # $22,500 for 2023
+        "catch_up_50_plus": 1000.0, # Additional catch-up contribution
+    },
+    
+    # IRA deductibility limits (Modified AGI limits for Traditional IRA deductions)
+    ira_deductibility_limits={
+        "Single": {
+            "magi_limit": 73000,  # Full deduction up to $73,000 MAGI for 2023
+        },
+        "MFJ": {
+            "magi_limit": 116000,  # Full deduction up to $116,000 MAGI for 2023
+        },
+        "Married Filing Jointly": {
+            "magi_limit": 116000,
+        },
+        "MFS": {
+            "magi_limit": 10000,  # Very low limit for separate filers
+        },
+        "Married Filing Separately": {
+            "magi_limit": 10000,
+        },
+        "HOH": {
+            "magi_limit": 73000,
+        },
+        "Head of Household": {
+            "magi_limit": 73000,
+        },
+        "QW": {
+            "magi_limit": 116000,
+        },
+        "Qualifying Widow(er)": {
+            "magi_limit": 116000,
+        },
     },
 )
 

@@ -148,6 +148,7 @@ class MainWindow:
         self.root.bind('<Control-o>', lambda e: self.load_progress())
         self.root.bind('<Control-n>', lambda e: self._new_return())
         self.root.bind('<Control-e>', lambda e: self._export_pdf())
+        self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
         
         # Focus shortcuts
         self.root.bind('<Control-f>', lambda e: self._focus_search())
@@ -186,6 +187,13 @@ class MainWindow:
         
         # View menu items
         view_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
+        
+        # Tools menu
+        tools_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Tools", menu=tools_menu)
+        
+        # Tools menu items
+        tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
     
     def _export_pdf(self):
         """Export the current tax return as PDF"""
@@ -229,6 +237,15 @@ class MainWindow:
             self._apply_theme()
             # Update status
             self.status_label.config(text=f"Switched to {new_theme} theme")
+    
+    def _open_tax_planning(self):
+        """Open the tax planning tools window"""
+        try:
+            from gui.tax_planning_window import open_tax_planning_window
+            open_tax_planning_window(self.root, self.tax_data)
+        except Exception as e:
+            messagebox.showerror("Tax Planning Error", 
+                f"Failed to open tax planning tools:\n\n{str(e)}")
     
     def _apply_theme(self):
         """Apply the current theme to all UI elements"""
