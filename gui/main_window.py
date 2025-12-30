@@ -167,6 +167,15 @@ class MainWindow:
         file_menu.add_command(label="Open", command=self.load_progress, accelerator="Ctrl+O")
         file_menu.add_command(label="Save", command=self.save_progress, accelerator="Ctrl+S")
         file_menu.add_separator()
+        
+        # Import submenu
+        import_menu = tk.Menu(file_menu, tearoff=0)
+        file_menu.add_cascade(label="Import", menu=import_menu)
+        import_menu.add_command(label="Prior Year Return", command=self._import_prior_year)
+        import_menu.add_command(label="W-2 Form (PDF)", command=self._import_w2_pdf)
+        import_menu.add_command(label="1099 Form (PDF)", command=self._import_1099_pdf)
+        import_menu.add_command(label="Tax Software (TXF)", command=self._import_txf)
+        
         file_menu.add_command(label="Export PDF", command=self._export_pdf, accelerator="Ctrl+E")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
@@ -753,6 +762,211 @@ class MainWindow:
                     "Load Failed", 
                     "Failed to load tax return. The file may be corrupted or encrypted with a different key."
                 )
+    
+    def _import_prior_year(self):
+        """Import data from a prior year tax return"""
+        from tkinter import filedialog
+        from pathlib import Path
+        from utils.import_utils import import_prior_year_return
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        filename = filedialog.askopenfilename(
+            title="Select prior year tax return",
+            filetypes=[
+                ("JSON files", "*.json"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            try:
+                imported_data = import_prior_year_return(filename)
+                
+                # Ask user what to import
+                import_options = self._show_import_options_dialog(imported_data)
+                
+                if import_options:
+                    # Merge imported data with current tax data
+                    self._merge_imported_data(imported_data, import_options)
+                    
+                    messagebox.showinfo(
+                        "Import Complete",
+                        f"Successfully imported data from prior year return:\n{Path(filename).name}"
+                    )
+                    self.status_label.config(text=f"Imported: {Path(filename).name}")
+                    
+                    # Refresh current page to show imported data
+                    if self.current_page:
+                        page_id = self.get_current_page_id()
+                        self.show_page(page_id)
+                        
+                    logger.info(f"Prior year return imported: {filename}")
+                else:
+                    messagebox.showinfo("Import Cancelled", "Import was cancelled by user.")
+                    
+            except Exception as e:
+                logger.error(f"Import failed: {e}", exc_info=True)
+                messagebox.showerror(
+                    "Import Failed",
+                    f"Failed to import prior year return:\n\n{str(e)}"
+                )
+    
+    def _import_w2_pdf(self):
+        """Import W-2 data from PDF"""
+        from tkinter import filedialog
+        from pathlib import Path
+        from utils.import_utils import import_w2_from_pdf
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        filename = filedialog.askopenfilename(
+            title="Select W-2 PDF",
+            filetypes=[
+                ("PDF files", "*.pdf"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            try:
+                w2_data = import_w2_from_pdf(filename)
+                
+                # Add W-2 data to current tax return
+                if 'income' in w2_data and 'w2_forms' in w2_data['income']:
+                    # Check if we already have W-2 forms
+                    existing_w2s = self.tax_data.data.get('income', {}).get('w2_forms', [])
+                    
+                    # Add the new W-2
+                    new_w2 = w2_data['income']['w2_forms'][0]
+                    existing_w2s.append(new_w2)
+                    
+                    # Update tax data
+                    if 'income' not in self.tax_data.data:
+                        self.tax_data.data['income'] = {}
+                    self.tax_data.data['income']['w2_forms'] = existing_w2s
+                    
+                    messagebox.showinfo(
+                        "W-2 Import Complete",
+                        f"Successfully imported W-2 data from:\n{Path(filename).name}\n\n"
+                        f"Employer: {new_w2.get('employer_name', 'Unknown')}\n"
+                        f"Wages: ${new_w2.get('wages', 0):,.2f}"
+                    )
+                    
+                    # Refresh income page to show new W-2
+                    self.show_page("income")
+                    self.status_label.config(text=f"W-2 imported: {Path(filename).name}")
+                    
+                    logger.info(f"W-2 imported from PDF: {filename}")
+                else:
+                    messagebox.showwarning("Import Warning", "No W-2 data found in the selected PDF.")
+                    
+            except Exception as e:
+                logger.error(f"W-2 import failed: {e}", exc_info=True)
+                messagebox.showerror(
+                    "Import Failed",
+                    f"Failed to import W-2 from PDF:\n\n{str(e)}"
+                )
+    
+    def _import_1099_pdf(self):
+        """Import 1099 data from PDF"""
+        from tkinter import filedialog
+        from pathlib import Path
+        from utils.import_utils import import_1099_from_pdf
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        filename = filedialog.askopenfilename(
+            title="Select 1099 PDF",
+            filetypes=[
+                ("PDF files", "*.pdf"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            try:
+                form1099_data = import_1099_from_pdf(filename)
+                
+                # Merge 1099 data with current tax return
+                self._merge_imported_data(form1099_data, {
+                    'income': True,
+                    'dividends': True,
+                    'interest': True,
+                    'capital_gains': True
+                })
+                
+                messagebox.showinfo(
+                    "1099 Import Complete",
+                    f"Successfully imported 1099 data from:\n{Path(filename).name}"
+                )
+                
+                # Refresh income page to show new data
+                self.show_page("income")
+                self.status_label.config(text=f"1099 imported: {Path(filename).name}")
+                
+                logger.info(f"1099 imported from PDF: {filename}")
+                
+            except Exception as e:
+                logger.error(f"1099 import failed: {e}", exc_info=True)
+                messagebox.showerror(
+                    "Import Failed",
+                    f"Failed to import 1099 from PDF:\n\n{str(e)}"
+                )
+    
+    def _import_txf(self):
+        """Import data from TXF (Tax Exchange Format) file"""
+        from tkinter import filedialog
+        from pathlib import Path
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        filename = filedialog.askopenfilename(
+            title="Select TXF file",
+            filetypes=[
+                ("TXF files", "*.txf"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            messagebox.showinfo(
+                "TXF Import",
+                "TXF (Tax Exchange Format) import is not yet implemented.\n\n"
+                "This feature will be available in a future version."
+            )
+            logger.info(f"TXF import requested but not implemented: {filename}")
+    
+    def _show_import_options_dialog(self, imported_data):
+        """Show dialog for selecting what data to import"""
+        # This is a simplified implementation
+        # In a real application, you'd show a dialog with checkboxes for each data type
+        import_options = {}
+        
+        # Check what data types are available in the imported data
+        if 'personal_info' in imported_data:
+            import_options['personal_info'] = True
+        if 'filing_status' in imported_data:
+            import_options['filing_status'] = True
+        if 'income' in imported_data:
+            import_options['income'] = True
+        if 'deductions' in imported_data:
+            import_options['deductions'] = True
+        if 'credits' in imported_data:
+            import_options['credits'] = True
+            
+        return import_options
+    
+    def _merge_imported_data(self, imported_data, import_options):
+        """Merge imported data with current tax data"""
+        for section, should_import in import_options.items():
+            if should_import and section in imported_data:
+                if section not in self.tax_data.data:
+                    self.tax_data.data[section] = {}
+                
+                # For simple cases, replace the section data
+                # In a real implementation, you'd handle conflicts and merging more carefully
+                self.tax_data.data[section] = imported_data[section]
     
     def get_current_page_id(self):
         """Get the ID of the current page"""
