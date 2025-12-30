@@ -9,10 +9,11 @@ from gui.widgets.section_header import SectionHeader
 class FilingStatusPage(ttk.Frame):
     """Filing status selection page"""
     
-    def __init__(self, parent, tax_data, main_window):
+    def __init__(self, parent, tax_data, main_window, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.main_window = main_window
+        self.theme_manager = theme_manager
         
         # Create scrollable canvas
         self.canvas = tk.Canvas(self, highlightthickness=0)

@@ -10,10 +10,11 @@ from gui.widgets.form_field import FormField
 class CreditsPage(ttk.Frame):
     """Credits and taxes page"""
     
-    def __init__(self, parent, tax_data, main_window):
+    def __init__(self, parent, tax_data, main_window, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.main_window = main_window
+        self.theme_manager = theme_manager
         
         # Create scrollable canvas
         self.canvas = tk.Canvas(self, highlightthickness=0)
@@ -70,7 +71,8 @@ class CreditsPage(ttk.Frame):
         self.num_children = FormField(
             ctc_frame,
             "Number of qualifying children",
-            str(len(self.tax_data.get("credits.child_tax_credit.qualifying_children", [])))
+            str(len(self.tax_data.get("credits.child_tax_credit.qualifying_children", []))),
+            theme_manager=self.theme_manager
         )
         self.num_children.pack(fill="x", pady=5)
         
@@ -134,7 +136,9 @@ class CreditsPage(ttk.Frame):
         self.retire_contrib = FormField(
             retire_frame,
             "Retirement plan contributions",
-            str(self.tax_data.get("credits.retirement_savings_credit", 0))
+            str(self.tax_data.get("credits.retirement_savings_credit", 0)),
+            field_type="currency",
+            theme_manager=self.theme_manager
         )
         self.retire_contrib.pack(fill="x", pady=5)
         
@@ -154,7 +158,8 @@ class CreditsPage(ttk.Frame):
             care_frame,
             "Qualified care expenses paid",
             str(self.tax_data.get("credits.child_dependent_care.expenses", 0)),
-            field_type="currency"
+            field_type="currency",
+            theme_manager=self.theme_manager
         )
         self.care_expenses.pack(fill="x", pady=5)
         
@@ -174,7 +179,8 @@ class CreditsPage(ttk.Frame):
             energy_frame,
             "Energy credit amount",
             str(self.tax_data.get("credits.residential_energy.amount", 0)),
-            field_type="currency"
+            field_type="currency",
+            theme_manager=self.theme_manager
         )
         self.energy_credit.pack(fill="x", pady=5)
         

@@ -5,7 +5,8 @@ Form field widget - reusable labeled entry field with validation
 import tkinter as tk
 from tkinter import ttk
 import re
-from datetime import datetime
+from datetime import datetime, date
+from .date_picker import DatePicker
 
 class FormField(ttk.Frame):
     """Labeled entry field widget with validation"""
@@ -43,9 +44,15 @@ class FormField(ttk.Frame):
         entry_frame = ttk.Frame(self)
         entry_frame.pack(fill="x")
         
-        # Entry
-        self.entry = ttk.Entry(entry_frame, width=width)
-        self.entry.pack(side="left", fill="x", expand=True)
+        # Create entry or date picker based on field type
+        if field_type == "date":
+            self.date_picker = DatePicker(entry_frame, command=self._on_date_selected)
+            self.date_picker.pack(side="left", fill="x", expand=True)
+            self.entry = self.date_picker.entry  # For compatibility
+        else:
+            # Entry
+            self.entry = ttk.Entry(entry_frame, width=width)
+            self.entry.pack(side="left", fill="x", expand=True)
         
         # Validation indicator
         self.validation_icon = ttk.Label(entry_frame, text="", width=2)
@@ -64,6 +71,10 @@ class FormField(ttk.Frame):
         if tooltip:
             self.entry.bind('<Enter>', self._show_tooltip)
             self.entry.bind('<Leave>', self._hide_tooltip)
+    
+    def _on_date_selected(self):
+        """Handle date selection from date picker"""
+        self._validate()
     def _apply_field_type_formatting(self):
         """Apply formatting based on field type"""
         if self.field_type == "ssn":
@@ -72,8 +83,8 @@ class FormField(ttk.Frame):
         elif self.field_type == "currency":
             self.entry.bind('<KeyRelease>', self._format_currency)
         elif self.field_type == "date":
-            self.entry.config(width=12)  # MM/DD/YYYY
-            # Could add date picker button here
+            # Date picker is already created in __init__
+            pass
 
     def _format_ssn(self, event):
         """Format SSN as XXX-XX-XXXX"""
@@ -185,52 +196,57 @@ class FormField(ttk.Frame):
 
     def _validate(self):
         """Validate the field"""
-        value = self.entry.get().strip()
-        is_valid = True
-        error_msg = ""
+        if self.field_type == "date":
+            # For date fields, validation is handled by the date picker
+            value = self.get()  # This returns a date object
+            is_valid = True
+            error_msg = ""
+            
+            # Required field validation
+            if self.required and not value:
+                is_valid = False
+                error_msg = "This field is required"
+            # Date validation is implicit - date picker only allows valid dates
+        else:
+            value = self.entry.get().strip()
+            is_valid = True
+            error_msg = ""
 
-        # Required field validation
-        if self.required and not value:
-            is_valid = False
-            error_msg = "This field is required"
-        elif value:
-            # Type-specific validation
-            if self.field_type == "ssn":
-                # Check SSN format XXX-XX-XXXX
-                if not re.match(r'^\d{3}-\d{2}-\d{4}$', value):
-                    is_valid = False
-                    error_msg = "SSN must be in format XXX-XX-XXXX"
-            elif self.field_type == "email":
-                # Basic email validation
-                if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', value):
-                    is_valid = False
-                    error_msg = "Invalid email format"
-            elif self.field_type == "date":
-                # Date validation MM/DD/YYYY
-                try:
-                    datetime.strptime(value, '%m/%d/%Y')
-                except ValueError:
-                    is_valid = False
-                    error_msg = "Date must be in format MM/DD/YYYY"
-            elif self.field_type == "currency":
-                # Currency validation
-                clean_value = value.replace('$', '').replace(',', '')
-                try:
-                    float(clean_value)
-                except ValueError:
-                    is_valid = False
-                    error_msg = "Invalid currency format"
-            elif self.field_type == "zip":
-                # ZIP code validation
-                if not re.match(r'^\d{5}(-\d{4})?$', value):
-                    is_valid = False
-                    error_msg = "ZIP code must be 5 or 9 digits"
-            elif self.field_type == "phone":
-                # Phone validation - basic
-                digits_only = re.sub(r'\D', '', value)
-                if len(digits_only) < 10:
-                    is_valid = False
-                    error_msg = "Phone number must have at least 10 digits"
+            # Required field validation
+            if self.required and not value:
+                is_valid = False
+                error_msg = "This field is required"
+            elif value:
+                # Type-specific validation
+                if self.field_type == "ssn":
+                    # Check SSN format XXX-XX-XXXX
+                    if not re.match(r'^\d{3}-\d{2}-\d{4}$', value):
+                        is_valid = False
+                        error_msg = "SSN must be in format XXX-XX-XXXX"
+                elif self.field_type == "email":
+                    # Basic email validation
+                    if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', value):
+                        is_valid = False
+                        error_msg = "Invalid email format"
+                elif self.field_type == "currency":
+                    # Currency validation
+                    clean_value = value.replace('$', '').replace(',', '')
+                    try:
+                        float(clean_value)
+                    except ValueError:
+                        is_valid = False
+                        error_msg = "Invalid currency format"
+                elif self.field_type == "zip":
+                    # ZIP code validation
+                    if not re.match(r'^\d{5}(-\d{4})?$', value):
+                        is_valid = False
+                        error_msg = "ZIP code must be 5 or 9 digits"
+                elif self.field_type == "phone":
+                    # Phone validation - basic
+                    digits_only = re.sub(r'\D', '', value)
+                    if len(digits_only) < 10:
+                        is_valid = False
+                        error_msg = "Phone number must have at least 10 digits"
 
         # Update visual indicators
         self._update_validation_display(is_valid, error_msg)
@@ -262,17 +278,36 @@ class FormField(ttk.Frame):
 
     def get(self):
         """Get the current value"""
+        if self.field_type == "date":
+            return self.date_picker.get_date()
         return self.entry.get()
 
     def set(self, value):
         """Set the value"""
-        self.entry.delete(0, tk.END)
-        self.entry.insert(0, str(value))
+        if self.field_type == "date":
+            if isinstance(value, str):
+                try:
+                    parsed_date = datetime.strptime(value, '%m/%d/%Y').date()
+                    self.date_picker.set_date(parsed_date)
+                except ValueError:
+                    # Invalid date string, use today
+                    self.date_picker.set_date(date.today())
+            elif isinstance(value, date):
+                self.date_picker.set_date(value)
+            else:
+                # Invalid type, use today
+                self.date_picker.set_date(date.today())
+        else:
+            self.entry.delete(0, tk.END)
+            self.entry.insert(0, str(value))
         self._validate()
 
     def clear(self):
         """Clear the field"""
-        self.entry.delete(0, tk.END)
+        if self.field_type == "date":
+            self.date_picker.set_date(date.today())
+        else:
+            self.entry.delete(0, tk.END)
         self._validate()
 
     def focus(self):

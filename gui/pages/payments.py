@@ -11,10 +11,11 @@ from utils.w2_calculator import W2Calculator
 class PaymentsPage(ttk.Frame):
     """Tax payments page"""
     
-    def __init__(self, parent, tax_data, main_window):
+    def __init__(self, parent, tax_data, main_window, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.main_window = main_window
+        self.theme_manager = theme_manager
         
         # Create scrollable canvas
         self.canvas = tk.Canvas(self, highlightthickness=0)
@@ -96,7 +97,8 @@ class PaymentsPage(ttk.Frame):
         self.prior_overpayment = FormField(
             self.scrollable_frame,
             "Prior year overpayment applied to this year",
-            str(self.tax_data.get("payments.prior_year_overpayment", 0))
+            str(self.tax_data.get("payments.prior_year_overpayment", 0)),
+            theme_manager=self.theme_manager
         )
         self.prior_overpayment.pack(fill="x", pady=5)
         
@@ -146,7 +148,7 @@ class PaymentsPage(ttk.Frame):
     
     def add_estimated_payment(self):
         """Add estimated tax payment"""
-        dialog = EstimatedPaymentDialog(self, self.tax_data)
+        dialog = EstimatedPaymentDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_estimated_list()
         self.calculate_total()
@@ -206,9 +208,10 @@ class PaymentsPage(ttk.Frame):
 class EstimatedPaymentDialog(tk.Toplevel):
     """Dialog for entering estimated tax payments"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Estimated Tax Payment")
         self.geometry("400x250")
         
@@ -220,10 +223,10 @@ class EstimatedPaymentDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Estimated Tax Payment", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.date = FormField(main_frame, "Payment Date (MM/DD/YYYY)", "")
+        self.date = FormField(main_frame, "Payment Date (MM/DD/YYYY)", "", field_type="date", theme_manager=self.theme_manager)
         self.date.pack(fill="x", pady=5)
         
-        self.amount = FormField(main_frame, "Amount Paid", "")
+        self.amount = FormField(main_frame, "Amount Paid", "", field_type="currency", theme_manager=self.theme_manager)
         self.amount.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)

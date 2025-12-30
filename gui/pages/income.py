@@ -10,10 +10,11 @@ from gui.widgets.form_field import FormField
 class IncomePage(ttk.Frame):
     """Income information collection page"""
     
-    def __init__(self, parent, tax_data, main_window):
+    def __init__(self, parent, tax_data, main_window, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.main_window = main_window
+        self.theme_manager = theme_manager
         
         # Create scrollable canvas
         self.canvas = tk.Canvas(self, highlightthickness=0)
@@ -280,7 +281,7 @@ class IncomePage(ttk.Frame):
     
     def add_w2(self):
         """Add new W-2 form"""
-        dialog = W2Dialog(self, self.tax_data)
+        dialog = W2Dialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_w2_list()
     
@@ -315,7 +316,7 @@ class IncomePage(ttk.Frame):
     
     def add_interest(self):
         """Add interest income"""
-        dialog = InterestDialog(self, self.tax_data)
+        dialog = InterestDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_interest_list()
     
@@ -350,7 +351,7 @@ class IncomePage(ttk.Frame):
     
     def add_dividend(self):
         """Add dividend income"""
-        dialog = DividendDialog(self, self.tax_data)
+        dialog = DividendDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_dividend_list()
     
@@ -385,7 +386,7 @@ class IncomePage(ttk.Frame):
     
     def add_self_employment(self):
         """Add self-employment income"""
-        dialog = SelfEmploymentDialog(self, self.tax_data)
+        dialog = SelfEmploymentDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_se_list()
     
@@ -420,7 +421,7 @@ class IncomePage(ttk.Frame):
     
     def add_retirement(self):
         """Add retirement distribution"""
-        dialog = RetirementDialog(self, self.tax_data)
+        dialog = RetirementDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_retirement_list()
     
@@ -455,7 +456,7 @@ class IncomePage(ttk.Frame):
     
     def add_social_security(self):
         """Add Social Security benefits"""
-        dialog = SocialSecurityDialog(self, self.tax_data)
+        dialog = SocialSecurityDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_ss_list()
     
@@ -492,7 +493,7 @@ class IncomePage(ttk.Frame):
     
     def add_capital_gain(self):
         """Add capital gain/loss"""
-        dialog = CapitalGainDialog(self, self.tax_data)
+        dialog = CapitalGainDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_capital_list()
     
@@ -527,7 +528,7 @@ class IncomePage(ttk.Frame):
     
     def add_rental_income(self):
         """Add rental income"""
-        dialog = RentalIncomeDialog(self, self.tax_data)
+        dialog = RentalIncomeDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_rental_list()
     
@@ -545,9 +546,10 @@ class IncomePage(ttk.Frame):
 class W2Dialog(tk.Toplevel):
     """Dialog for entering W-2 information"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add W-2")
         self.geometry("500x400")
         
@@ -561,22 +563,22 @@ class W2Dialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="W-2 Information", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.employer = FormField(main_frame, "Employer Name", "")
+        self.employer = FormField(main_frame, "Employer Name", "", theme_manager=self.theme_manager)
         self.employer.pack(fill="x", pady=5)
         
-        self.ein = FormField(main_frame, "Employer ID Number (EIN)", "")
+        self.ein = FormField(main_frame, "Employer ID Number (EIN)", "", theme_manager=self.theme_manager)
         self.ein.pack(fill="x", pady=5)
         
-        self.wages = FormField(main_frame, "Wages (Box 1)", "", field_type="currency")
+        self.wages = FormField(main_frame, "Wages (Box 1)", "", field_type="currency", theme_manager=self.theme_manager)
         self.wages.pack(fill="x", pady=5)
         
-        self.federal_withholding = FormField(main_frame, "Federal Income Tax Withheld (Box 2)", "", field_type="currency")
+        self.federal_withholding = FormField(main_frame, "Federal Income Tax Withheld (Box 2)", "", field_type="currency", theme_manager=self.theme_manager)
         self.federal_withholding.pack(fill="x", pady=5)
         
-        self.social_security_wages = FormField(main_frame, "Social Security Wages (Box 3)", "", field_type="currency")
+        self.social_security_wages = FormField(main_frame, "Social Security Wages (Box 3)", "", field_type="currency", theme_manager=self.theme_manager)
         self.social_security_wages.pack(fill="x", pady=5)
         
-        self.medicare_wages = FormField(main_frame, "Medicare Wages (Box 5)", "", field_type="currency")
+        self.medicare_wages = FormField(main_frame, "Medicare Wages (Box 5)", "", field_type="currency", theme_manager=self.theme_manager)
         self.medicare_wages.pack(fill="x", pady=5)
         
         # Buttons
@@ -607,9 +609,10 @@ class W2Dialog(tk.Toplevel):
 class InterestDialog(tk.Toplevel):
     """Dialog for entering interest income"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Interest Income")
         self.geometry("400x250")
         
@@ -621,10 +624,10 @@ class InterestDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Interest Income (1099-INT)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.payer = FormField(main_frame, "Payer Name", "")
+        self.payer = FormField(main_frame, "Payer Name", "", theme_manager=self.theme_manager)
         self.payer.pack(fill="x", pady=5)
         
-        self.amount = FormField(main_frame, "Interest Amount", "", field_type="currency")
+        self.amount = FormField(main_frame, "Interest Amount", "", field_type="currency", theme_manager=self.theme_manager)
         self.amount.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -650,9 +653,10 @@ class InterestDialog(tk.Toplevel):
 class DividendDialog(tk.Toplevel):
     """Dialog for entering dividend income"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Dividend Income")
         self.geometry("400x250")
         
@@ -664,10 +668,10 @@ class DividendDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Dividend Income (1099-DIV)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.payer = FormField(main_frame, "Payer Name", "")
+        self.payer = FormField(main_frame, "Payer Name", "", theme_manager=self.theme_manager)
         self.payer.pack(fill="x", pady=5)
         
-        self.amount = FormField(main_frame, "Dividend Amount", "", field_type="currency")
+        self.amount = FormField(main_frame, "Dividend Amount", "", field_type="currency", theme_manager=self.theme_manager)
         self.amount.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -693,9 +697,10 @@ class DividendDialog(tk.Toplevel):
 class SelfEmploymentDialog(tk.Toplevel):
     """Dialog for entering self-employment income"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Self-Employment Income")
         self.geometry("500x400")
         
@@ -707,19 +712,19 @@ class SelfEmploymentDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Self-Employment Income (Schedule C)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.business_name = FormField(main_frame, "Business Name/Description", "")
+        self.business_name = FormField(main_frame, "Business Name/Description", "", theme_manager=self.theme_manager)
         self.business_name.pack(fill="x", pady=5)
         
-        self.business_code = FormField(main_frame, "Business Code (from instructions)", "")
+        self.business_code = FormField(main_frame, "Business Code (from instructions)", "", theme_manager=self.theme_manager)
         self.business_code.pack(fill="x", pady=5)
         
-        self.gross_income = FormField(main_frame, "Gross Receipts/Income", "", field_type="currency")
+        self.gross_income = FormField(main_frame, "Gross Receipts/Income", "", field_type="currency", theme_manager=self.theme_manager)
         self.gross_income.pack(fill="x", pady=5)
         
-        self.expenses = FormField(main_frame, "Business Expenses", "", field_type="currency")
+        self.expenses = FormField(main_frame, "Business Expenses", "", field_type="currency", theme_manager=self.theme_manager)
         self.expenses.pack(fill="x", pady=5)
         
-        self.net_profit = FormField(main_frame, "Net Profit/Loss", "", field_type="currency")
+        self.net_profit = FormField(main_frame, "Net Profit/Loss", "", field_type="currency", theme_manager=self.theme_manager)
         self.net_profit.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -748,9 +753,10 @@ class SelfEmploymentDialog(tk.Toplevel):
 class RetirementDialog(tk.Toplevel):
     """Dialog for entering retirement distributions"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Retirement Distribution")
         self.geometry("500x350")
         
@@ -762,16 +768,16 @@ class RetirementDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Retirement Distribution (1099-R)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.payer = FormField(main_frame, "Payer Name", "")
+        self.payer = FormField(main_frame, "Payer Name", "", theme_manager=self.theme_manager)
         self.payer.pack(fill="x", pady=5)
         
-        self.gross_distribution = FormField(main_frame, "Gross Distribution", "", field_type="currency")
+        self.gross_distribution = FormField(main_frame, "Gross Distribution", "", field_type="currency", theme_manager=self.theme_manager)
         self.gross_distribution.pack(fill="x", pady=5)
         
-        self.taxable_amount = FormField(main_frame, "Taxable Amount", "", field_type="currency")
+        self.taxable_amount = FormField(main_frame, "Taxable Amount", "", field_type="currency", theme_manager=self.theme_manager)
         self.taxable_amount.pack(fill="x", pady=5)
         
-        self.federal_tax_withheld = FormField(main_frame, "Federal Income Tax Withheld", "", field_type="currency")
+        self.federal_tax_withheld = FormField(main_frame, "Federal Income Tax Withheld", "", field_type="currency", theme_manager=self.theme_manager)
         self.federal_tax_withheld.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -799,9 +805,10 @@ class RetirementDialog(tk.Toplevel):
 class SocialSecurityDialog(tk.Toplevel):
     """Dialog for entering Social Security benefits"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Social Security Benefits")
         self.geometry("400x250")
         
@@ -813,10 +820,10 @@ class SocialSecurityDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Social Security Benefits", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.net_benefits = FormField(main_frame, "Net Benefits Received", "", field_type="currency")
+        self.net_benefits = FormField(main_frame, "Net Benefits Received", "", field_type="currency", theme_manager=self.theme_manager)
         self.net_benefits.pack(fill="x", pady=5)
         
-        self.repayment = FormField(main_frame, "Repayment/Recovery", "", field_type="currency")
+        self.repayment = FormField(main_frame, "Repayment/Recovery", "", field_type="currency", theme_manager=self.theme_manager)
         self.repayment.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -842,9 +849,10 @@ class SocialSecurityDialog(tk.Toplevel):
 class CapitalGainDialog(tk.Toplevel):
     """Dialog for entering capital gains/losses"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Capital Gain/Loss")
         self.geometry("500x350")
         
@@ -856,22 +864,22 @@ class CapitalGainDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Capital Gain/Loss (Schedule D)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.description = FormField(main_frame, "Description of Property", "")
+        self.description = FormField(main_frame, "Description of Property", "", theme_manager=self.theme_manager)
         self.description.pack(fill="x", pady=5)
         
-        self.date_acquired = FormField(main_frame, "Date Acquired (MM/DD/YYYY)", "", field_type="date")
+        self.date_acquired = FormField(main_frame, "Date Acquired (MM/DD/YYYY)", "", field_type="date", theme_manager=self.theme_manager)
         self.date_acquired.pack(fill="x", pady=5)
         
-        self.date_sold = FormField(main_frame, "Date Sold (MM/DD/YYYY)", "", field_type="date")
+        self.date_sold = FormField(main_frame, "Date Sold (MM/DD/YYYY)", "", field_type="date", theme_manager=self.theme_manager)
         self.date_sold.pack(fill="x", pady=5)
         
-        self.sales_price = FormField(main_frame, "Sales Price", "", field_type="currency")
+        self.sales_price = FormField(main_frame, "Sales Price", "", field_type="currency", theme_manager=self.theme_manager)
         self.sales_price.pack(fill="x", pady=5)
         
-        self.cost_basis = FormField(main_frame, "Cost Basis", "", field_type="currency")
+        self.cost_basis = FormField(main_frame, "Cost Basis", "", field_type="currency", theme_manager=self.theme_manager)
         self.cost_basis.pack(fill="x", pady=5)
         
-        self.gain_loss = FormField(main_frame, "Gain/Loss Amount", "", field_type="currency")
+        self.gain_loss = FormField(main_frame, "Gain/Loss Amount", "", field_type="currency", theme_manager=self.theme_manager)
         self.gain_loss.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
@@ -903,9 +911,10 @@ class CapitalGainDialog(tk.Toplevel):
 class RentalIncomeDialog(tk.Toplevel):
     """Dialog for entering rental income"""
     
-    def __init__(self, parent, tax_data):
+    def __init__(self, parent, tax_data, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
+        self.theme_manager = theme_manager
         self.title("Add Rental Income")
         self.geometry("500x400")
         
@@ -917,19 +926,19 @@ class RentalIncomeDialog(tk.Toplevel):
         
         ttk.Label(main_frame, text="Rental Income (Schedule E)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
         
-        self.property_address = FormField(main_frame, "Property Address", "")
+        self.property_address = FormField(main_frame, "Property Address", "", theme_manager=self.theme_manager)
         self.property_address.pack(fill="x", pady=5)
         
-        self.gross_rent = FormField(main_frame, "Gross Rents Received", "", field_type="currency")
+        self.gross_rent = FormField(main_frame, "Gross Rents Received", "", field_type="currency", theme_manager=self.theme_manager)
         self.gross_rent.pack(fill="x", pady=5)
         
-        self.expenses = FormField(main_frame, "Rental Expenses", "", field_type="currency")
+        self.expenses = FormField(main_frame, "Rental Expenses", "", field_type="currency", theme_manager=self.theme_manager)
         self.expenses.pack(fill="x", pady=5)
         
-        self.depreciation = FormField(main_frame, "Depreciation", "", field_type="currency")
+        self.depreciation = FormField(main_frame, "Depreciation", "", field_type="currency", theme_manager=self.theme_manager)
         self.depreciation.pack(fill="x", pady=5)
         
-        self.net_income = FormField(main_frame, "Net Rental Income/Loss", "", field_type="currency")
+        self.net_income = FormField(main_frame, "Net Rental Income/Loss", "", field_type="currency", theme_manager=self.theme_manager)
         self.net_income.pack(fill="x", pady=5)
         
         button_frame = ttk.Frame(main_frame)
