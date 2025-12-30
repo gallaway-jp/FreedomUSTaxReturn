@@ -9,7 +9,7 @@ import hmac
 import hashlib
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Union
 from functools import lru_cache, wraps
 from cryptography.fernet import Fernet
@@ -862,6 +862,90 @@ class TaxData:
         else:
             instance.data["metadata"]["last_modified"] = datetime.now().isoformat()
         return instance
+    
+    def detect_wash_sales(self) -> List[Dict]:
+        """
+        Detect potential wash sales in capital gains transactions.
+        
+        A wash sale occurs when you sell a security at a loss and buy the same or 
+        substantially identical security within 30 days before or after the sale.
+        
+        Returns:
+            List of dictionaries containing wash sale information
+        """
+        wash_sales = []
+        capital_gains = self.get("income.capital_gains", [])
+        
+        for i, sale in enumerate(capital_gains):
+            if sale.get('gain_loss', 0) >= 0:  # Only check losses
+                continue
+                
+            sale_date = self._parse_date(sale.get('date_sold', ''))
+            if not sale_date:
+                continue
+                
+            description = sale.get('description', '').lower()
+            
+            # Check 30 days before and after sale
+            start_date = sale_date - timedelta(days=30)
+            end_date = sale_date + timedelta(days=30)
+            
+            for j, purchase in enumerate(capital_gains):
+                if i == j:  # Don't compare with itself
+                    continue
+                    
+                purchase_date = self._parse_date(purchase.get('date_acquired', ''))
+                if not purchase_date:
+                    continue
+                    
+                # Check if purchase is within 30-day window
+                if start_date <= purchase_date <= end_date:
+                    # Check if descriptions are similar (basic check)
+                    purchase_desc = purchase.get('description', '').lower()
+                    if self._are_similar_securities(description, purchase_desc):
+                        wash_sales.append({
+                            'sale_index': i,
+                            'purchase_index': j,
+                            'sale_description': sale.get('description'),
+                            'purchase_description': purchase.get('description'),
+                            'sale_date': sale.get('date_sold'),
+                            'purchase_date': purchase.get('date_acquired'),
+                            'loss_amount': abs(sale.get('gain_loss', 0)),
+                            'days_between': abs((purchase_date - sale_date).days)
+                        })
+        
+        return wash_sales
+    
+    def _parse_date(self, date_str: str) -> Optional[datetime]:
+        """Parse date string into datetime object"""
+        if not date_str:
+            return None
+        try:
+            # Try MM/DD/YYYY format
+            return datetime.strptime(date_str, '%m/%d/%Y')
+        except ValueError:
+            try:
+                # Try YYYY-MM-DD format
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                return None
+    
+    def _are_similar_securities(self, desc1: str, desc2: str) -> bool:
+        """
+        Basic check if two security descriptions are similar.
+        This is a simplified implementation - real wash sale rules are more complex.
+        """
+        # Remove common words and compare
+        common_words = {'the', 'and', 'or', 'of', 'to', 'in', 'on', 'at', 'by', 'for', 'with', 'as', 'an', 'a'}
+        words1 = set(desc1.split()) - common_words
+        words2 = set(desc2.split()) - common_words
+        
+        # If significant overlap in words, consider them similar
+        if words1 and words2:
+            overlap = len(words1.intersection(words2))
+            return overlap >= min(len(words1), len(words2)) * 0.5  # 50% overlap
+        
+        return False
     
     def save(self, filename: str):
         """Save tax data to file (alias for save_to_file)"""

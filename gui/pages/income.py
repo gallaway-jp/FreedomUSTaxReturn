@@ -214,6 +214,22 @@ class IncomePage(ttk.Frame):
         )
         add_capital_btn.pack(anchor="w", pady=5)
         
+        # Wash sale analysis button
+        wash_sale_btn = ttk.Button(
+            self.scrollable_frame,
+            text="🔍 Check for Wash Sales",
+            command=self.check_wash_sales
+        )
+        wash_sale_btn.pack(anchor="w", pady=5)
+        
+        # Form 8949 generation button
+        form_8949_btn = ttk.Button(
+            self.scrollable_frame,
+            text="📄 Generate Form 8949 Summary",
+            command=self.generate_form_8949
+        )
+        form_8949_btn.pack(anchor="w", pady=5)
+        
         # Rental Income (Schedule E)
         SectionHeader(self.scrollable_frame, "Rental Income").pack(fill="x", pady=(20, 10))
         
@@ -490,38 +506,234 @@ class IncomePage(ttk.Frame):
         """Refresh capital gains/losses list"""
         for widget in self.capital_list_frame.winfo_children():
             widget.destroy()
-        
+
         capital_forms = self.tax_data.get("income.capital_gains", [])
-        
+
         for idx, capital in enumerate(capital_forms):
             frame = ttk.Frame(self.capital_list_frame, relief="solid", borderwidth=1)
             frame.pack(fill="x", pady=5, padx=5)
-            
+
+            # Enhanced display with more details
+            description = capital.get('description', 'N/A')
             gain_loss = capital.get('gain_loss', 0)
+            holding_period = capital.get('holding_period', 'Unknown')
             gain_loss_text = f"Gain: ${gain_loss:,.2f}" if gain_loss >= 0 else f"Loss: ${abs(gain_loss):,.2f}"
-            info_text = f"Description: {capital.get('description', 'N/A')} | {gain_loss_text}"
-            
+            wash_sale_indicator = " (Wash Sale)" if capital.get('wash_sale', False) else ""
+
+            info_text = f"{description} | {holding_period} | {gain_loss_text}{wash_sale_indicator}"
+
             label = ttk.Label(frame, text=info_text)
             label.pack(side="left", padx=10, pady=10)
-            
+
+            # Button frame for actions
+            button_frame = ttk.Frame(frame)
+            button_frame.pack(side="right", padx=10, pady=10)
+
+            edit_btn = ttk.Button(
+                button_frame,
+                text="Edit",
+                command=lambda i=idx: self.edit_capital_gain(i)
+            )
+            edit_btn.pack(side="left", padx=5)
+
             delete_btn = ttk.Button(
-                frame,
+                button_frame,
                 text="Delete",
                 command=lambda i=idx: self.delete_capital_gain(i)
             )
-            delete_btn.pack(side="right", padx=10, pady=10)
-    
+            delete_btn.pack(side="left", padx=5)
+
     def add_capital_gain(self):
         """Add capital gain/loss"""
         dialog = CapitalGainDialog(self, self.tax_data, self.theme_manager)
         self.wait_window(dialog)
         self.refresh_capital_list()
-    
+
+    def edit_capital_gain(self, index):
+        """Edit capital gain/loss"""
+        dialog = CapitalGainDialog(self, self.tax_data, self.theme_manager, edit_index=index)
+        self.wait_window(dialog)
+        self.refresh_capital_list()
+
     def delete_capital_gain(self, index):
         """Delete capital gain/loss"""
         if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this capital gain/loss?"):
             self.tax_data.remove_from_list("income.capital_gains", index)
             self.refresh_capital_list()
+    
+    def check_wash_sales(self):
+        """Check for potential wash sales and display results"""
+        wash_sales = self.tax_data.detect_wash_sales()
+        
+        if not wash_sales:
+            messagebox.showinfo("Wash Sale Check", "No potential wash sales detected in your capital gains transactions.")
+            return
+        
+        # Create dialog to show wash sale results
+        dialog = tk.Toplevel(self)
+        dialog.title("Wash Sale Analysis")
+        dialog.geometry("700x500")
+        dialog.transient(self)
+        dialog.grab_set()
+        
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.pack(fill="both", expand=True)
+        
+        ttk.Label(main_frame, text="Potential Wash Sales Detected", font=("Arial", 14, "bold")).pack(pady=(0, 20))
+        
+        # Create text widget to display results
+        text_frame = ttk.Frame(main_frame)
+        text_frame.pack(fill="both", expand=True)
+        
+        text_widget = tk.Text(text_frame, wrap="word", padx=10, pady=10)
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Add wash sale information
+        text_widget.insert("1.0", f"Found {len(wash_sales)} potential wash sale(s):\n\n")
+        
+        for i, ws in enumerate(wash_sales, 1):
+            text_widget.insert("end", f"Wash Sale #{i}:\n")
+            text_widget.insert("end", f"  Sale: {ws['sale_description']} (sold {ws['sale_date']})\n")
+            text_widget.insert("end", f"  Purchase: {ws['purchase_description']} (acquired {ws['purchase_date']})\n")
+            text_widget.insert("end", f"  Loss Amount: ${ws['loss_amount']:,.2f}\n")
+            text_widget.insert("end", f"  Days Between: {ws['days_between']} days\n")
+            text_widget.insert("end", "  ⚠️  This loss may be disallowed due to wash sale rules\n\n")
+        
+        text_widget.insert("end", "Note: This is a basic analysis. Consult a tax professional for definitive wash sale determination.\n")
+        text_widget.insert("end", "Wash sales can occur when you sell at a loss and buy substantially identical securities within 30 days.")
+        
+        text_widget.config(state="disabled")  # Make read-only
+        
+        # OK button
+        ttk.Button(main_frame, text="OK", command=dialog.destroy).pack(pady=(20, 0))
+    
+    def generate_form_8949(self):
+        """Generate Form 8949 summary organized by holding period"""
+        capital_gains = self.tax_data.get("income.capital_gains", [])
+        
+        if not capital_gains:
+            messagebox.showinfo("Form 8949", "No capital gains/losses to report on Form 8949.")
+            return
+        
+        # Organize by holding period and report type
+        short_term = []
+        long_term = []
+        
+        for gain in capital_gains:
+            holding_period = gain.get('holding_period', 'Long-term')
+            if holding_period == 'Short-term':
+                short_term.append(gain)
+            else:
+                long_term.append(gain)
+        
+        # Create Form 8949 summary dialog
+        dialog = tk.Toplevel(self)
+        dialog.title("Form 8949 - Sales and Other Dispositions of Capital Assets")
+        dialog.geometry("900x700")
+        dialog.transient(self)
+        dialog.grab_set()
+        
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.pack(fill="both", expand=True)
+        
+        ttk.Label(main_frame, text="Form 8949 Summary", font=("Arial", 16, "bold")).pack(pady=(0, 20))
+        
+        # Create notebook for different parts
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill="both", expand=True, pady=(0, 20))
+        
+        # Short-term tab
+        if short_term:
+            short_frame = ttk.Frame(notebook, padding="10")
+            notebook.add(short_frame, text=f"Short-Term ({len(short_term)} transactions)")
+            self._create_8949_section(short_frame, short_term, "Short-Term")
+        
+        # Long-term tab
+        if long_term:
+            long_frame = ttk.Frame(notebook, padding="10")
+            notebook.add(long_frame, text=f"Long-Term ({len(long_term)} transactions)")
+            self._create_8949_section(long_frame, long_term, "Long-Term")
+        
+        # Summary tab
+        summary_frame = ttk.Frame(notebook, padding="10")
+        notebook.add(summary_frame, text="Summary")
+        
+        ttk.Label(summary_frame, text="Form 8949 Summary", font=("Arial", 12, "bold")).pack(anchor="w", pady=(0, 10))
+        
+        # Calculate totals
+        short_term_totals = self._calculate_8949_totals(short_term)
+        long_term_totals = self._calculate_8949_totals(long_term)
+        
+        summary_text = tk.Text(summary_frame, wrap="word", height=15, padx=10, pady=10)
+        summary_text.pack(fill="both", expand=True)
+        
+        summary_text.insert("1.0", "SHORT-TERM CAPITAL GAINS AND LOSSES:\n")
+        summary_text.insert("end", f"  Total Proceeds: ${short_term_totals['proceeds']:,.2f}\n")
+        summary_text.insert("end", f"  Total Cost Basis: ${short_term_totals['basis']:,.2f}\n")
+        summary_text.insert("end", f"  Total Gain/Loss: ${short_term_totals['net']:,.2f}\n\n")
+        
+        summary_text.insert("end", "LONG-TERM CAPITAL GAINS AND LOSSES:\n")
+        summary_text.insert("end", f"  Total Proceeds: ${long_term_totals['proceeds']:,.2f}\n")
+        summary_text.insert("end", f"  Total Cost Basis: ${long_term_totals['basis']:,.2f}\n")
+        summary_text.insert("end", f"  Total Gain/Loss: ${long_term_totals['net']:,.2f}\n\n")
+        
+        total_proceeds = short_term_totals['proceeds'] + long_term_totals['proceeds']
+        total_basis = short_term_totals['basis'] + long_term_totals['basis']
+        total_net = short_term_totals['net'] + long_term_totals['net']
+        
+        summary_text.insert("end", "COMBINED TOTALS:\n")
+        summary_text.insert("end", f"  Total Proceeds: ${total_proceeds:,.2f}\n")
+        summary_text.insert("end", f"  Total Cost Basis: ${total_basis:,.2f}\n")
+        summary_text.insert("end", f"  Total Gain/Loss: ${total_net:,.2f}\n")
+        
+        summary_text.config(state="disabled")
+        
+        # Close button
+        ttk.Button(main_frame, text="Close", command=dialog.destroy).pack(pady=(0, 0))
+    
+    def _create_8949_section(self, parent, transactions, holding_period):
+        """Create a section of Form 8949 for given transactions"""
+        # Create treeview for transactions
+        columns = ("Description", "Date Acquired", "Date Sold", "Proceeds", "Cost Basis", "Gain/Loss")
+        tree = ttk.Treeview(parent, columns=columns, show="headings", height=15)
+        
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=120, anchor="center")
+        
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Add transactions
+        for transaction in transactions:
+            tree.insert("", "end", values=(
+                transaction.get('description', ''),
+                transaction.get('date_acquired', ''),
+                transaction.get('date_sold', ''),
+                f"${transaction.get('sales_price', 0):,.2f}",
+                f"${transaction.get('adjusted_basis', transaction.get('cost_basis', 0)):,.2f}",
+                f"${transaction.get('gain_loss', 0):,.2f}"
+            ))
+    
+    def _calculate_8949_totals(self, transactions):
+        """Calculate totals for Form 8949 section"""
+        proceeds = sum(t.get('sales_price', 0) for t in transactions)
+        basis = sum(t.get('adjusted_basis', t.get('cost_basis', 0)) for t in transactions)
+        net = sum(t.get('gain_loss', 0) for t in transactions)
+        
+        return {
+            'proceeds': proceeds,
+            'basis': basis,
+            'net': net
+        }
     
     def refresh_rental_list(self):
         """Refresh rental income list"""
@@ -1202,62 +1414,168 @@ class SocialSecurityDialog(tk.Toplevel):
 
 
 class CapitalGainDialog(tk.Toplevel):
-    """Dialog for entering capital gains/losses"""
-    
-    def __init__(self, parent, tax_data, theme_manager=None):
+    """Enhanced dialog for entering capital gains/losses with Form 8949 support"""
+
+    def __init__(self, parent, tax_data, theme_manager=None, edit_index=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.theme_manager = theme_manager
-        self.title("Add Capital Gain/Loss")
-        self.geometry("500x350")
-        
+        self.edit_index = edit_index
+        self.title("Add/Edit Capital Gain/Loss (Form 8949)")
+        self.geometry("600x550")
+
         self.transient(parent)
         self.grab_set()
-        
+
+        # Load existing data if editing
+        self.existing_data = None
+        if edit_index is not None:
+            capital_gains = self.tax_data.get("income.capital_gains", [])
+            if 0 <= edit_index < len(capital_gains):
+                self.existing_data = capital_gains[edit_index]
+
         main_frame = ttk.Frame(self, padding="20")
         main_frame.pack(fill="both", expand=True)
-        
-        ttk.Label(main_frame, text="Capital Gain/Loss (Schedule D)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
-        
-        self.description = FormField(main_frame, "Description of Property", "", theme_manager=self.theme_manager)
+
+        ttk.Label(main_frame, text="Capital Gain/Loss Entry (Form 8949)", font=("Arial", 14, "bold")).pack(pady=(0, 20))
+
+        # Create notebook for different tabs
+        self.notebook = ttk.Notebook(main_frame)
+        self.notebook.pack(fill="both", expand=True, pady=(0, 20))
+
+        # Basic Information Tab
+        basic_frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(basic_frame, text="Basic Info")
+
+        self.description = FormField(basic_frame, "Description of Property", self.existing_data.get('description', '') if self.existing_data else '', theme_manager=self.theme_manager)
         self.description.pack(fill="x", pady=5)
-        
-        self.date_acquired = FormField(main_frame, "Date Acquired (MM/DD/YYYY)", "", field_type="date", theme_manager=self.theme_manager)
+
+        # Transaction Type
+        type_frame = ttk.Frame(basic_frame)
+        type_frame.pack(fill="x", pady=5)
+        ttk.Label(type_frame, text="Transaction Type:").pack(side="left")
+        self.transaction_type = tk.StringVar(value=self.existing_data.get('transaction_type', 'Sale') if self.existing_data else 'Sale')
+        ttk.Radiobutton(type_frame, text="Sale", variable=self.transaction_type, value="Sale").pack(side="left", padx=(10, 5))
+        ttk.Radiobutton(type_frame, text="Exchange", variable=self.transaction_type, value="Exchange").pack(side="left", padx=(10, 5))
+
+        # Holding Period
+        holding_frame = ttk.Frame(basic_frame)
+        holding_frame.pack(fill="x", pady=5)
+        ttk.Label(holding_frame, text="Holding Period:").pack(side="left")
+        self.holding_period = tk.StringVar(value=self.existing_data.get('holding_period', 'Long-term') if self.existing_data else 'Long-term')
+        ttk.Radiobutton(holding_frame, text="Short-term", variable=self.holding_period, value="Short-term").pack(side="left", padx=(10, 5))
+        ttk.Radiobutton(holding_frame, text="Long-term", variable=self.holding_period, value="Long-term").pack(side="left", padx=(10, 5))
+
+        # Dates Tab
+        dates_frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(dates_frame, text="Dates")
+
+        self.date_acquired = FormField(dates_frame, "Date Acquired (MM/DD/YYYY)", self.existing_data.get('date_acquired', '') if self.existing_data else '', field_type="date", theme_manager=self.theme_manager)
         self.date_acquired.pack(fill="x", pady=5)
-        
-        self.date_sold = FormField(main_frame, "Date Sold (MM/DD/YYYY)", "", field_type="date", theme_manager=self.theme_manager)
+
+        self.date_sold = FormField(dates_frame, "Date Sold (MM/DD/YYYY)", self.existing_data.get('date_sold', '') if self.existing_data else '', field_type="date", theme_manager=self.theme_manager)
         self.date_sold.pack(fill="x", pady=5)
-        
-        self.sales_price = FormField(main_frame, "Sales Price", "", field_type="currency", theme_manager=self.theme_manager)
+
+        # Amounts Tab
+        amounts_frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(amounts_frame, text="Amounts")
+
+        self.sales_price = FormField(amounts_frame, "Sales Price", f"${self.existing_data.get('sales_price', 0):,.2f}" if self.existing_data else '', field_type="currency", theme_manager=self.theme_manager)
         self.sales_price.pack(fill="x", pady=5)
-        
-        self.cost_basis = FormField(main_frame, "Cost Basis", "", field_type="currency", theme_manager=self.theme_manager)
+
+        self.cost_basis = FormField(amounts_frame, "Cost Basis", f"${self.existing_data.get('cost_basis', 0):,.2f}" if self.existing_data else '', field_type="currency", theme_manager=self.theme_manager)
         self.cost_basis.pack(fill="x", pady=5)
-        
-        self.gain_loss = FormField(main_frame, "Gain/Loss Amount", "", field_type="currency", theme_manager=self.theme_manager)
-        self.gain_loss.pack(fill="x", pady=5)
-        
+
+        # Adjustment for basis
+        self.adjustment = FormField(amounts_frame, "Adjustment to Basis", f"${self.existing_data.get('adjustment', 0):,.2f}" if self.existing_data else '', field_type="currency", theme_manager=self.theme_manager)
+        self.adjustment.pack(fill="x", pady=5)
+
+        # Calculated gain/loss display
+        calc_frame = ttk.Frame(amounts_frame)
+        calc_frame.pack(fill="x", pady=10)
+        ttk.Label(calc_frame, text="Calculated Gain/Loss:").pack(side="left")
+        self.calculated_gain_loss = tk.StringVar(value="$0.00")
+        ttk.Label(calc_frame, textvariable=self.calculated_gain_loss, font=("Arial", 10, "bold")).pack(side="right")
+
+        # Bind events to recalculate
+        self.sales_price.field.bind('<KeyRelease>', self._recalculate_gain_loss)
+        self.cost_basis.field.bind('<KeyRelease>', self._recalculate_gain_loss)
+        self.adjustment.field.bind('<KeyRelease>', self._recalculate_gain_loss)
+
+        # Initialize calculation
+        self._recalculate_gain_loss()
+
+        # Additional Info Tab
+        additional_frame = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(additional_frame, text="Additional Info")
+
+        self.brokerage_firm = FormField(additional_frame, "Brokerage Firm", self.existing_data.get('brokerage_firm', '') if self.existing_data else '', theme_manager=self.theme_manager)
+        self.brokerage_firm.pack(fill="x", pady=5)
+
+        self.confirmation_number = FormField(additional_frame, "Confirmation Number", self.existing_data.get('confirmation_number', '') if self.existing_data else '', theme_manager=self.theme_manager)
+        self.confirmation_number.pack(fill="x", pady=5)
+
+        # Wash sale indicator
+        wash_frame = ttk.Frame(additional_frame)
+        wash_frame.pack(fill="x", pady=5)
+        self.wash_sale = tk.BooleanVar(value=self.existing_data.get('wash_sale', False) if self.existing_data else False)
+        ttk.Checkbutton(wash_frame, text="Wash Sale (substantially identical securities purchased within 30 days)", variable=self.wash_sale).pack(anchor="w")
+
+        # Button frame
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill="x", pady=20)
-        
+
         ttk.Button(button_frame, text="Cancel", command=self.destroy).pack(side="left")
-        ttk.Button(button_frame, text="Add", command=self.add_capital_gain).pack(side="right")
-    
-    def add_capital_gain(self):
-        """Add capital gain/loss to tax data"""
+        save_text = "Update" if self.edit_index is not None else "Add"
+        ttk.Button(button_frame, text=save_text, command=self.save_capital_gain).pack(side="right")
+
+    def _recalculate_gain_loss(self, event=None):
+        """Recalculate gain/loss based on current values"""
         try:
-            gain_loss_value = float(self.gain_loss.get().replace('$', '').replace(',', '') or 0)
-            
+            sales_price = float(self.sales_price.get().replace('$', '').replace(',', '') or 0)
+            cost_basis = float(self.cost_basis.get().replace('$', '').replace(',', '') or 0)
+            adjustment = float(self.adjustment.get().replace('$', '').replace(',', '') or 0)
+
+            adjusted_basis = cost_basis + adjustment
+            gain_loss = sales_price - adjusted_basis
+
+            self.calculated_gain_loss.set(f"${gain_loss:,.2f}")
+        except ValueError:
+            self.calculated_gain_loss.set("$0.00")
+
+    def save_capital_gain(self):
+        """Save capital gain/loss to tax data"""
+        try:
+            sales_price = float(self.sales_price.get().replace('$', '').replace(',', '') or 0)
+            cost_basis = float(self.cost_basis.get().replace('$', '').replace(',', '') or 0)
+            adjustment = float(self.adjustment.get().replace('$', '').replace(',', '') or 0)
+
+            adjusted_basis = cost_basis + adjustment
+            gain_loss = sales_price - adjusted_basis
+
             capital_data = {
                 "description": self.description.get(),
+                "transaction_type": self.transaction_type.get(),
+                "holding_period": self.holding_period.get(),
                 "date_acquired": self.date_acquired.get(),
                 "date_sold": self.date_sold.get(),
-                "sales_price": float(self.sales_price.get().replace('$', '').replace(',', '') or 0),
-                "cost_basis": float(self.cost_basis.get().replace('$', '').replace(',', '') or 0),
-                "gain_loss": gain_loss_value,
+                "sales_price": sales_price,
+                "cost_basis": cost_basis,
+                "adjustment": adjustment,
+                "adjusted_basis": adjusted_basis,
+                "gain_loss": gain_loss,
+                "brokerage_firm": self.brokerage_firm.get(),
+                "confirmation_number": self.confirmation_number.get(),
+                "wash_sale": self.wash_sale.get(),
             }
-            
-            self.tax_data.add_to_list("income.capital_gains", capital_data)
+
+            if self.edit_index is not None:
+                # Update existing entry
+                self.tax_data.update_in_list("income.capital_gains", self.edit_index, capital_data)
+            else:
+                # Add new entry
+                self.tax_data.add_to_list("income.capital_gains", capital_data)
+
             self.destroy()
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter valid numbers for amounts and dates.")

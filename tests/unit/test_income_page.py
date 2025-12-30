@@ -94,3 +94,39 @@ class TestIncomePage:
         # Verify dialog was created with edit_index
         mock_dialog.assert_called_once_with(page, page.tax_data, page.theme_manager, edit_index=0)
         mock_wait.assert_called_once_with(mock_instance)
+    
+    def test_wash_sale_detection(self, setup_page):
+        """Test wash sale detection functionality"""
+        page = setup_page
+        
+        # Add test capital gains data with potential wash sale
+        page.tax_data.data['income']['capital_gains'] = [
+            {
+                'description': 'Apple Inc Common Stock',
+                'date_acquired': '01/15/2025',
+                'date_sold': '02/10/2025',
+                'sales_price': 5000.00,
+                'cost_basis': 6000.00,
+                'gain_loss': -1000.00,
+                'holding_period': 'Short-term'
+            },
+            {
+                'description': 'Apple Inc Common Stock',
+                'date_acquired': '02/15/2025',  # Within 30 days of sale
+                'date_sold': '',  # This is a purchase
+                'sales_price': 0.00,
+                'cost_basis': 5500.00,
+                'gain_loss': 0.00,
+                'holding_period': 'Short-term'
+            }
+        ]
+        
+        # Test wash sale detection
+        wash_sales = page.tax_data.detect_wash_sales()
+        
+        # Should detect the wash sale
+        assert len(wash_sales) == 1
+        assert wash_sales[0]['sale_index'] == 0
+        assert wash_sales[0]['purchase_index'] == 1
+        assert wash_sales[0]['loss_amount'] == 1000.00
+        assert wash_sales[0]['days_between'] == 5  # Feb 10 to Feb 15
