@@ -371,3 +371,131 @@ def calculate_premium_tax_credit(credit_amount: float) -> float:
     # The credit amount is calculated by the IRS based on income and premium costs
     # We just return the amount as entered by the user
     return round(credit_amount, 2)
+
+
+def calculate_alternative_minimum_tax(agi: float, filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Alternative Minimum Tax (AMT).
+    
+    Args:
+        agi: Adjusted Gross Income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Alternative Minimum Tax amount
+        
+    Note:
+        AMT is calculated using Form 6251. This is a simplified implementation
+        that calculates the tentative minimum tax and compares it to regular tax.
+    """
+    config = get_tax_year_config(tax_year)
+    
+    # Get AMT exemption amount
+    exemption = config.amt_exemptions.get(filing_status, config.amt_exemptions["Single"])
+    
+    # Phase out exemption for high income
+    phase_out_threshold = config.amt_phase_out_thresholds.get(filing_status, 
+                                                             config.amt_phase_out_thresholds["Single"])
+    
+    if agi > phase_out_threshold:
+        # Exemption phases out at 25 cents per dollar over threshold
+        excess = agi - phase_out_threshold
+        exemption_reduction = excess * 0.25
+        exemption = max(0, exemption - exemption_reduction)
+    
+    # AMT taxable income = AGI - exemption
+    amt_taxable_income = max(0, agi - exemption)
+    
+    # Calculate tentative AMT using AMT tax brackets
+    # AMT brackets are: 26% on first $220,700, 28% on excess
+    amt_bracket_1_threshold = 220700.0
+    
+    if amt_taxable_income <= amt_bracket_1_threshold:
+        tentative_amt = amt_taxable_income * 0.26
+    else:
+        tentative_amt = (amt_bracket_1_threshold * 0.26) + \
+                       ((amt_taxable_income - amt_bracket_1_threshold) * 0.28)
+    
+    # Calculate regular tax for comparison
+    regular_tax = calculate_income_tax(amt_taxable_income, filing_status, tax_year)
+    
+    # AMT is the excess of tentative AMT over regular tax
+    amt = max(0, tentative_amt - regular_tax)
+    
+    return round(amt, 2)
+
+
+def calculate_net_investment_income_tax(investment_income: float, agi: float, 
+                                       filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Net Investment Income Tax (NIIT).
+    
+    Args:
+        investment_income: Net investment income (interest, dividends, capital gains, etc.)
+        agi: Adjusted Gross Income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Net Investment Income Tax amount (3.8% of investment income over threshold)
+        
+    Note:
+        NIIT applies to individuals with AGI over certain thresholds.
+        The tax rate is 3.8% on the lesser of net investment income or
+        the amount by which AGI exceeds the threshold.
+    """
+    config = get_tax_year_config(tax_year)
+    
+    # Get NIIT threshold
+    threshold = config.niit_thresholds.get(filing_status, config.niit_thresholds["Single"])
+    
+    if agi <= threshold:
+        return 0.0
+    
+    # NIIT applies to the lesser of:
+    # 1. Net investment income
+    # 2. AGI minus threshold
+    niit_base = min(investment_income, agi - threshold)
+    
+    # Tax rate is 3.8%
+    niit = niit_base * 0.038
+    
+    return round(niit, 2)
+
+
+def calculate_additional_medicare_tax(wages: float, investment_income: float, 
+                                    filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Additional Medicare Tax on wages and investment income.
+    
+    Args:
+        wages: Total wages and compensation
+        investment_income: Net investment income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Additional Medicare Tax amount (0.9% on combined income over threshold)
+        
+    Note:
+        Additional Medicare Tax applies to the combined wages and net investment 
+        income that exceed $200,000 (single) or $250,000 (MFJ).
+        This is separate from the additional Medicare tax on self-employment income.
+    """
+    config = get_tax_year_config(tax_year)
+    
+    # Threshold for additional Medicare tax
+    threshold = config.niit_thresholds.get(filing_status, config.niit_thresholds["Single"])
+    
+    # Combined income subject to additional Medicare tax
+    combined_income = wages + investment_income
+    
+    if combined_income <= threshold:
+        return 0.0
+    
+    # Additional Medicare tax applies to the excess over threshold
+    excess = combined_income - threshold
+    additional_medicare_tax = excess * config.additional_medicare_rate
+    
+    return round(additional_medicare_tax, 2)

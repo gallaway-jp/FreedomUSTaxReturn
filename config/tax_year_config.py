@@ -29,6 +29,13 @@ class TaxYearConfig:
     ss_wage_base: float
     medicare_threshold: float
     
+    # Alternative Minimum Tax (AMT) thresholds
+    amt_exemptions: Dict[str, float]
+    amt_phase_out_thresholds: Dict[str, float]
+    
+    # Net Investment Income Tax (NIIT) thresholds
+    niit_thresholds: Dict[str, float]
+    
     # Retirement savings credit income limits by filing status
     retirement_savings_credit_limits: Dict[str, Dict[str, float]]
     
@@ -44,12 +51,6 @@ class TaxYearConfig:
     # Education credits
     aotc_max_credit: float = 2500.0
     llc_max_credit: float = 2000.0
-    
-    # Retirement savings credit income limits by filing status
-    retirement_savings_credit_limits: Dict[str, Dict[str, float]]
-    
-    # Child and dependent care credit phase-out limits
-    child_dependent_care_limits: Dict[str, Dict[str, float]]
     
     # SE tax rates
     se_tax_rate: float = 0.9235
@@ -159,6 +160,43 @@ TAX_YEAR_2025 = TaxYearConfig(
     
     ss_wage_base=176100.0,
     medicare_threshold=200000.0,
+    
+    # Alternative Minimum Tax (AMT) thresholds for 2025
+    amt_exemptions={
+        "Single": 81300.0,
+        "MFJ": 126500.0,
+        "Married Filing Jointly": 126500.0,
+        "MFS": 63250.0,
+        "Married Filing Separately": 63250.0,
+        "HOH": 81300.0,
+        "Head of Household": 81300.0,
+        "QW": 126500.0,
+        "Qualifying Widow(er)": 126500.0,
+    },
+    amt_phase_out_thresholds={
+        "Single": 609350.0,
+        "MFJ": 1218700.0,
+        "Married Filing Jointly": 1218700.0,
+        "MFS": 609350.0,
+        "Married Filing Separately": 609350.0,
+        "HOH": 609350.0,
+        "Head of Household": 609350.0,
+        "QW": 1218700.0,
+        "Qualifying Widow(er)": 1218700.0,
+    },
+    
+    # Net Investment Income Tax (NIIT) thresholds for 2025
+    niit_thresholds={
+        "Single": 200000.0,
+        "MFJ": 250000.0,
+        "Married Filing Jointly": 250000.0,
+        "MFS": 125000.0,
+        "Married Filing Separately": 125000.0,
+        "HOH": 200000.0,
+        "Head of Household": 200000.0,
+        "QW": 250000.0,
+        "Qualifying Widow(er)": 250000.0,
+    },
     
     # Retirement savings credit limits (AGI thresholds for credit percentages)
     retirement_savings_credit_limits={
@@ -304,6 +342,31 @@ TAX_YEAR_2023 = TaxYearConfig(
     
     ss_wage_base=160200.0,
     medicare_threshold=200000.0,
+    
+    # Alternative Minimum Tax (AMT) thresholds for 2023
+    amt_exemptions={
+        "Single": 75900.0,
+        "MFJ": 118100.0,
+        "MFS": 59050.0,
+        "HOH": 75900.0,
+        "QW": 118100.0,
+    },
+    amt_phase_out_thresholds={
+        "Single": 578150.0,
+        "MFJ": 1156300.0,
+        "MFS": 578150.0,
+        "HOH": 578150.0,
+        "QW": 1156300.0,
+    },
+    
+    # Net Investment Income Tax (NIIT) thresholds for 2023
+    niit_thresholds={
+        "Single": 200000.0,
+        "MFJ": 250000.0,
+        "MFS": 125000.0,
+        "HOH": 200000.0,
+        "QW": 250000.0,
+    },
     
     # Retirement savings credit limits (2023 values)
     retirement_savings_credit_limits={
