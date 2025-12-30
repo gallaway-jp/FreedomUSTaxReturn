@@ -66,7 +66,8 @@ class PersonalInfoPage(ttk.Frame):
             name_frame,
             "First Name",
             self.tax_data.get("personal_info.first_name"),
-            width=25
+            width=25,
+            required=True
         )
         self.first_name.pack(side="left", padx=(0, 10))
         
@@ -82,7 +83,8 @@ class PersonalInfoPage(ttk.Frame):
             name_frame,
             "Last Name",
             self.tax_data.get("personal_info.last_name"),
-            width=25
+            width=25,
+            required=True
         )
         self.last_name.pack(side="left")
         
@@ -92,9 +94,11 @@ class PersonalInfoPage(ttk.Frame):
         
         self.ssn = FormField(
             ssn_dob_frame,
-            "Social Security Number (XXX-XX-XXXX)",
+            "Social Security Number",
             self.tax_data.get("personal_info.ssn"),
-            width=20
+            field_type="ssn",
+            required=True,
+            tooltip="Enter your 9-digit Social Security Number in XXX-XX-XXXX format. This is required for your tax return."
         )
         self.ssn.pack(side="left", padx=(0, 10))
         
@@ -102,7 +106,9 @@ class PersonalInfoPage(ttk.Frame):
             ssn_dob_frame,
             "Date of Birth (MM/DD/YYYY)",
             self.tax_data.get("personal_info.date_of_birth"),
-            width=20
+            field_type="date",
+            required=True,
+            tooltip="Enter your date of birth in MM/DD/YYYY format. This helps determine your filing requirements."
         )
         self.dob.pack(side="left", padx=(0, 10))
         
@@ -124,7 +130,8 @@ class PersonalInfoPage(ttk.Frame):
             address_frame,
             "Street Address",
             self.tax_data.get("personal_info.address"),
-            width=60
+            width=60,
+            required=True
         )
         self.address.pack(fill="x", pady=5)
         
@@ -135,7 +142,8 @@ class PersonalInfoPage(ttk.Frame):
             city_state_zip,
             "City",
             self.tax_data.get("personal_info.city"),
-            width=30
+            width=30,
+            required=True
         )
         self.city.pack(side="left", padx=(0, 10))
         
@@ -143,7 +151,8 @@ class PersonalInfoPage(ttk.Frame):
             city_state_zip,
             "State",
             self.tax_data.get("personal_info.state"),
-            width=10
+            width=10,
+            required=True
         )
         self.state.pack(side="left", padx=(0, 10))
         
@@ -151,7 +160,9 @@ class PersonalInfoPage(ttk.Frame):
             city_state_zip,
             "ZIP Code",
             self.tax_data.get("personal_info.zip_code"),
-            width=15
+            width=15,
+            field_type="zip",
+            required=True
         )
         self.zip_code.pack(side="left")
         
@@ -168,7 +179,9 @@ class PersonalInfoPage(ttk.Frame):
             contact_row,
             "Email Address",
             self.tax_data.get("personal_info.email"),
-            width=35
+            width=35,
+            field_type="email",
+            tooltip="Enter your email address. This will be used for IRS communications if you e-file."
         )
         self.email.pack(side="left", padx=(0, 10))
         
@@ -176,7 +189,9 @@ class PersonalInfoPage(ttk.Frame):
             contact_row,
             "Phone Number",
             self.tax_data.get("personal_info.phone"),
-            width=20
+            width=20,
+            field_type="phone",
+            tooltip="Enter your phone number including area code. This may be used for IRS verification."
         )
         self.phone.pack(side="left")
         
@@ -193,6 +208,24 @@ class PersonalInfoPage(ttk.Frame):
     
     def save_and_continue(self):
         """Save data and move to next page"""
+        # Validate all required fields
+        fields_to_validate = [
+            self.first_name, self.last_name, self.ssn, self.dob,
+            self.address, self.city, self.state, self.zip_code
+        ]
+        
+        all_valid = True
+        for field in fields_to_validate:
+            if not field.is_field_valid():
+                all_valid = False
+                field.focus()  # Focus on first invalid field
+                break
+        
+        if not all_valid:
+            from tkinter import messagebox
+            messagebox.showerror("Validation Error", "Please correct the highlighted fields before continuing.")
+            return
+        
         # Save all fields
         self.tax_data.set("personal_info.first_name", self.first_name.get())
         self.tax_data.set("personal_info.middle_initial", self.middle_initial.get())

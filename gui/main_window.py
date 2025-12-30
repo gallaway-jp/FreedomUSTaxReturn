@@ -43,6 +43,111 @@ class MainWindow:
         
         # Show initial page
         self.show_page("personal_info")
+        
+        # Update progress
+        self.update_progress()
+        
+        # Bind keyboard shortcuts
+        self._bind_keyboard_shortcuts()
+    
+    def _bind_keyboard_shortcuts(self):
+        """Bind keyboard shortcuts for common actions"""
+        # Navigation shortcuts (Alt + number)
+        self.root.bind('<Alt-Key-1>', lambda e: self.show_page("personal_info"))
+        self.root.bind('<Alt-Key-2>', lambda e: self.show_page("filing_status"))
+        self.root.bind('<Alt-Key-3>', lambda e: self.show_page("income"))
+        self.root.bind('<Alt-Key-4>', lambda e: self.show_page("deductions"))
+        self.root.bind('<Alt-Key-5>', lambda e: self.show_page("credits"))
+        self.root.bind('<Alt-Key-6>', lambda e: self.show_page("payments"))
+        self.root.bind('<Alt-Key-7>', lambda e: self.show_page("form_viewer"))
+        
+        # Common actions
+        self.root.bind('<Control-s>', lambda e: self.save_progress())
+        self.root.bind('<Control-o>', lambda e: self.load_progress())
+        self.root.bind('<Control-n>', lambda e: self._new_return())
+        
+        # Focus shortcuts
+        self.root.bind('<Control-f>', lambda e: self._focus_search())
+    
+    def _new_return(self):
+        """Start a new tax return"""
+        if messagebox.askyesno("New Return", "Start a new tax return? Any unsaved changes will be lost."):
+            self.tax_data = TaxData(self.config)
+            self.show_page("personal_info")
+            self.update_progress()
+    
+    def _focus_search(self):
+        """Focus on search field (placeholder for future search functionality)"""
+        pass  # Could implement search functionality later
+    
+    def update_progress(self):
+        """Update the completion progress indicator"""
+        # Define page weights (approximate completion percentage per page)
+        page_weights = {
+            "personal_info": 15,
+            "filing_status": 25,
+            "income": 50,
+            "deductions": 70,
+            "credits": 85,
+            "payments": 95,
+            "form_viewer": 100,
+        }
+        
+        # Get current page weight
+        current_page_id = self.get_current_page_id()
+        base_progress = page_weights.get(current_page_id, 0)
+        
+        # Add bonus for completed sections
+        bonus_progress = 0
+        
+        # Check if personal info is complete
+        if self._is_personal_info_complete():
+            bonus_progress += 5
+        
+        # Check if income has data
+        if self._has_income_data():
+            bonus_progress += 10
+            
+        # Check if deductions/credits have data
+        if self._has_deductions_data():
+            bonus_progress += 5
+            
+        if self._has_credits_data():
+            bonus_progress += 5
+        
+        total_progress = min(base_progress + bonus_progress, 100)
+        self.progress_var.set(total_progress)
+        self.progress_text.config(text=f"{int(total_progress)}% Complete")
+    
+    def _is_personal_info_complete(self):
+        """Check if personal information is reasonably complete"""
+        personal_info = self.tax_data.get_section("personal_info")
+        required_fields = ["first_name", "last_name", "ssn", "date_of_birth", "address", "city", "state", "zip_code"]
+        return all(personal_info.get(field) for field in required_fields)
+    
+    def _has_income_data(self):
+        """Check if income data has been entered"""
+        income = self.tax_data.get_section("income")
+        return any([
+            income.get("w2_forms"),
+            income.get("interest_income"),
+            income.get("dividend_income"),
+            income.get("self_employment"),
+            income.get("retirement_distributions"),
+            income.get("social_security"),
+            income.get("capital_gains"),
+            income.get("rental_income"),
+        ])
+    
+    def _has_deductions_data(self):
+        """Check if deductions data has been entered"""
+        deductions = self.tax_data.get_section("deductions")
+        return any(value for value in deductions.values() if isinstance(value, (int, float)) and value > 0)
+    
+    def _has_credits_data(self):
+        """Check if credits data has been entered"""
+        credits = self.tax_data.get_section("credits")
+        return any(value for value in credits.values() if isinstance(value, (int, float)) and value > 0)
     
     def create_sidebar(self):
         """Create navigation sidebar"""
@@ -67,6 +172,33 @@ class MainWindow:
             foreground="blue"
         )
         tax_year_label.pack(pady=(0, 20))
+        
+        # Progress indicator
+        progress_frame = ttk.Frame(sidebar)
+        progress_frame.pack(fill="x", pady=(0, 10))
+        
+        progress_label = ttk.Label(
+            progress_frame,
+            text="Completion Progress",
+            font=("Arial", 9, "bold")
+        )
+        progress_label.pack(anchor="w")
+        
+        self.progress_var = tk.DoubleVar()
+        self.progress_bar = ttk.Progressbar(
+            progress_frame,
+            variable=self.progress_var,
+            maximum=100,
+            mode='determinate'
+        )
+        self.progress_bar.pack(fill="x", pady=(2, 0))
+        
+        self.progress_text = ttk.Label(
+            progress_frame,
+            text="0% Complete",
+            font=("Arial", 8)
+        )
+        self.progress_text.pack(anchor="w")
         
         # Navigation buttons
         nav_sections = [
@@ -152,6 +284,9 @@ class MainWindow:
                     btn.state(["pressed"])
                 else:
                     btn.state(["!pressed"])
+            
+            # Update progress
+            self.update_progress()
     
     def save_progress(self):
         """Save current progress to encrypted file"""

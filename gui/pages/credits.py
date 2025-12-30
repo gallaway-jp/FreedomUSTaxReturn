@@ -138,7 +138,65 @@ class CreditsPage(ttk.Frame):
         )
         self.retire_contrib.pack(fill="x", pady=5)
         
-        # Navigation buttons
+        # Child and Dependent Care Credit
+        care_frame = ttk.LabelFrame(self.scrollable_frame, text="Child and Dependent Care Credit", padding="10")
+        care_frame.pack(fill="x", pady=10)
+        
+        care_info = ttk.Label(
+            care_frame,
+            text="Credit for expenses paid for care of children under 13 or dependents who are physically or mentally unable to care for themselves",
+            foreground="gray",
+            font=("Arial", 9)
+        )
+        care_info.pack(anchor="w", pady=(0, 5))
+        
+        self.care_expenses = FormField(
+            care_frame,
+            "Qualified care expenses paid",
+            str(self.tax_data.get("credits.child_dependent_care.expenses", 0)),
+            field_type="currency"
+        )
+        self.care_expenses.pack(fill="x", pady=5)
+        
+        # Residential Energy Credit
+        energy_frame = ttk.LabelFrame(self.scrollable_frame, text="Residential Energy Credit", padding="10")
+        energy_frame.pack(fill="x", pady=10)
+        
+        energy_info = ttk.Label(
+            energy_frame,
+            text="Credit for energy-efficient improvements to your home (solar panels, energy-efficient windows, etc.)",
+            foreground="gray",
+            font=("Arial", 9)
+        )
+        energy_info.pack(anchor="w", pady=(0, 5))
+        
+        self.energy_credit = FormField(
+            energy_frame,
+            "Energy credit amount",
+            str(self.tax_data.get("credits.residential_energy.amount", 0)),
+            field_type="currency"
+        )
+        self.energy_credit.pack(fill="x", pady=5)
+        
+        # Premium Tax Credit (ACA)
+        premium_frame = ttk.LabelFrame(self.scrollable_frame, text="Premium Tax Credit", padding="10")
+        premium_frame.pack(fill="x", pady=10)
+        
+        premium_info = ttk.Label(
+            premium_frame,
+            text="Credit for health insurance premiums purchased through the Marketplace",
+            foreground="gray",
+            font=("Arial", 9)
+        )
+        premium_info.pack(anchor="w", pady=(0, 5))
+        
+        self.premium_credit = FormField(
+            premium_frame,
+            "Premium tax credit amount",
+            str(self.tax_data.get("credits.premium_tax_credit.amount", 0)),
+            field_type="currency"
+        )
+        self.premium_credit.pack(fill="x", pady=5)
         button_frame = ttk.Frame(self.scrollable_frame)
         button_frame.pack(fill="x", pady=30)
         
@@ -176,6 +234,27 @@ class CreditsPage(ttk.Frame):
         try:
             contrib = float(self.retire_contrib.get() or 0)
             self.tax_data.set("credits.retirement_savings_credit", contrib)
+        except ValueError:
+            pass
+        
+        # Save child and dependent care credit
+        try:
+            care_exp = float(self.care_expenses.get().replace('$', '').replace(',', '') or 0)
+            self.tax_data.set("credits.child_dependent_care.expenses", care_exp)
+        except ValueError:
+            pass
+        
+        # Save residential energy credit
+        try:
+            energy_amt = float(self.energy_credit.get().replace('$', '').replace(',', '') or 0)
+            self.tax_data.set("credits.residential_energy.amount", energy_amt)
+        except ValueError:
+            pass
+        
+        # Save premium tax credit
+        try:
+            premium_amt = float(self.premium_credit.get().replace('$', '').replace(',', '') or 0)
+            self.tax_data.set("credits.premium_tax_credit.amount", premium_amt)
         except ValueError:
             pass
         

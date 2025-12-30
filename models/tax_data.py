@@ -161,10 +161,12 @@ class TaxData:
                 "w2_forms": [],
                 "interest_income": [],
                 "dividend_income": [],
-                "business_income": [],
-                "capital_gains": [],
+                "self_employment": [],
                 "retirement_distributions": [],
                 "social_security": [],
+                "capital_gains": [],
+                "rental_income": [],
+                "business_income": [],
                 "unemployment": [],
                 "other_income": [],
             },
@@ -205,8 +207,14 @@ class TaxData:
                     "lifetime_learning": [],
                 },
                 "retirement_savings_credit": 0,
-                "child_care_credit": {
-                    "expenses": [],
+                "child_dependent_care": {
+                    "expenses": 0,
+                },
+                "residential_energy": {
+                    "amount": 0,
+                },
+                "premium_tax_credit": {
+                    "amount": 0,
                 },
                 "other_credits": [],
             },
