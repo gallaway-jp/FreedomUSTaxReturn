@@ -210,7 +210,7 @@ class TaxReturnPDFGenerator:
 
         # Generate PDF
         filler = PDFFormFiller()
-        filler.fill_form("f1040sc.pdf", field_mappings, str(task.output_path))
+        filler.fill_form("Form 1040 (Schedule C)", field_mappings, str(task.output_path))
 
     def _generate_form_8949(self, task: PDFGenerationTask) -> None:
         """
@@ -223,7 +223,7 @@ class TaxReturnPDFGenerator:
         
         # Generate PDF
         filler = PDFFormFiller()
-        filler.fill_form("f8949.pdf", field_mappings, str(task.output_path))
+        filler.fill_form("Form 8949", field_mappings, str(task.output_path))
 
 
 def generate_pdf(
