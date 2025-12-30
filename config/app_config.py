@@ -34,6 +34,7 @@ class AppConfig:
     window_width: int = 1200
     window_height: int = 800
     window_title: str = "Freedom US Tax Return - Free Tax Preparation"
+    theme: str = "light"  # "light" or "dark"
     
     # Tax Year Settings
     tax_year: int = 2025
@@ -70,6 +71,7 @@ class AppConfig:
             tax_year=int(os.getenv("TAX_YEAR", cls.tax_year)),
             window_width=int(os.getenv("WINDOW_WIDTH", cls.window_width)),
             window_height=int(os.getenv("WINDOW_HEIGHT", cls.window_height)),
+            theme=os.getenv("APP_THEME", cls.theme),
             encryption_enabled=os.getenv("ENCRYPTION_ENABLED", "true").lower() == "true",
         )
     

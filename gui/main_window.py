@@ -5,6 +5,7 @@ Main application window with navigation
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
+from typing import List, Dict
 from config.app_config import AppConfig
 from gui.pages.personal_info import PersonalInfoPage
 from gui.pages.filing_status import FilingStatusPage
@@ -13,6 +14,8 @@ from gui.pages.deductions import DeductionsPage
 from gui.pages.credits import CreditsPage
 from gui.pages.payments import PaymentsPage
 from gui.pages.form_viewer import FormViewerPage
+from gui.widgets.validation_summary import ValidationSummary
+from gui.theme_manager import ThemeManager
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -24,6 +27,10 @@ class MainWindow:
         
         self.root.title(self.config.window_title)
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
+        
+        # Initialize theme manager
+        self.theme_manager = ThemeManager(self.root)
+        self.theme_manager.set_theme(self.config.theme)
         
         # Initialize tax data model with config
         self.tax_data = TaxData(self.config)
@@ -46,6 +53,9 @@ class MainWindow:
         
         # Update progress
         self.update_progress()
+        
+        # Update validation summary
+        self.update_validation_summary()
         
         # Bind keyboard shortcuts
         self._bind_keyboard_shortcuts()
@@ -118,6 +128,133 @@ class MainWindow:
         total_progress = min(base_progress + bonus_progress, 100)
         self.progress_var.set(total_progress)
         self.progress_text.config(text=f"{int(total_progress)}% Complete")
+    
+    def update_validation_summary(self):
+        """Update the validation summary with errors from all pages"""
+        errors = {}
+        
+        # Check each page for validation errors
+        pages_to_check = [
+            ("personal_info", "Personal Information"),
+            ("filing_status", "Filing Status"), 
+            ("income", "Income"),
+            ("deductions", "Deductions"),
+            ("credits", "Credits & Taxes"),
+            ("payments", "Payments")
+        ]
+        
+        for page_id, page_name in pages_to_check:
+            page_errors = self._validate_page(page_id)
+            if page_errors:
+                errors[page_id] = page_errors
+        
+        # Update the validation summary widget
+        self.validation_summary.update_errors(errors)
+    
+    def _validate_page(self, page_id: str) -> List[str]:
+        """Validate a specific page and return list of errors"""
+        errors = []
+        
+        # Get the data section for this page
+        section_mapping = {
+            "personal_info": "personal_info",
+            "filing_status": "filing_status",
+            "income": "income",
+            "deductions": "deductions", 
+            "credits": "credits",
+            "payments": "payments"
+        }
+        
+        section = section_mapping.get(page_id)
+        if not section:
+            return errors
+            
+        data = self.tax_data.get_section(section)
+        
+        # Validate based on page type
+        if page_id == "personal_info":
+            errors.extend(self._validate_personal_info(data))
+        elif page_id == "filing_status":
+            errors.extend(self._validate_filing_status(data))
+        elif page_id == "income":
+            errors.extend(self._validate_income(data))
+        # Add more page validations as needed
+        
+        return errors
+    
+    def _validate_personal_info(self, data: Dict) -> List[str]:
+        """Validate personal information"""
+        errors = []
+        
+        required_fields = [
+            ("first_name", "First name"),
+            ("last_name", "Last name"),
+            ("ssn", "Social Security Number"),
+            ("date_of_birth", "Date of birth"),
+            ("address", "Street address"),
+            ("city", "City"),
+            ("state", "State"),
+            ("zip_code", "ZIP code")
+        ]
+        
+        for field, label in required_fields:
+            if not data.get(field):
+                errors.append(f"{label} is required")
+        
+        # Validate SSN format
+        ssn = data.get("ssn", "")
+        if ssn and not self._is_valid_ssn(ssn):
+            errors.append("Social Security Number must be in XXX-XX-XXXX format")
+        
+        # Validate ZIP code
+        zip_code = data.get("zip_code", "")
+        if zip_code and not self._is_valid_zip(zip_code):
+            errors.append("ZIP code must be 5 or 9 digits")
+        
+        return errors
+    
+    def _validate_filing_status(self, data: Dict) -> List[str]:
+        """Validate filing status"""
+        errors = []
+        
+        if not data.get("status"):
+            errors.append("Filing status must be selected")
+        
+        return errors
+    
+    def _validate_income(self, data: Dict) -> List[str]:
+        """Validate income data"""
+        errors = []
+        
+        # Check if at least one income source is provided
+        has_income = (
+            data.get("w2_forms") or
+            data.get("interest_income") or
+            data.get("dividend_income") or
+            data.get("business_income") or
+            data.get("self_employment") or
+            data.get("retirement_distributions") or
+            data.get("social_security") or
+            data.get("capital_gains") or
+            data.get("rental_income") or
+            data.get("unemployment") or
+            data.get("other_income")
+        )
+        
+        if not has_income:
+            errors.append("At least one source of income must be reported")
+        
+        return errors
+    
+    def _is_valid_ssn(self, ssn: str) -> bool:
+        """Check if SSN is in valid format"""
+        import re
+        return bool(re.match(r'^\d{3}-\d{2}-\d{4}$', ssn))
+    
+    def _is_valid_zip(self, zip_code: str) -> bool:
+        """Check if ZIP code is valid"""
+        import re
+        return bool(re.match(r'^\d{5}(-\d{4})?$', zip_code))
     
     def _is_personal_info_complete(self):
         """Check if personal information is reasonably complete"""
@@ -200,6 +337,10 @@ class MainWindow:
         )
         self.progress_text.pack(anchor="w")
         
+        # Validation summary
+        self.validation_summary = ValidationSummary(sidebar, self)
+        self.validation_summary.pack(fill="x", pady=(10, 0))
+        
         # Navigation buttons
         nav_sections = [
             ("Personal Information", "personal_info"),
@@ -240,6 +381,15 @@ class MainWindow:
         )
         load_btn.pack(pady=5, fill="x")
         
+        # Theme toggle button
+        theme_text = "☀️ Light Mode" if self.config.theme == "dark" else "🌙 Dark Mode"
+        theme_btn = ttk.Button(
+            sidebar,
+            text=theme_text,
+            command=self.toggle_theme
+        )
+        theme_btn.pack(pady=5, fill="x")
+        
         # Status label
         self.status_label = ttk.Label(
             sidebar,
@@ -275,7 +425,7 @@ class MainWindow:
         
         page_class = page_classes.get(page_id)
         if page_class:
-            self.current_page = page_class(self.content_frame, self.tax_data, self)
+            self.current_page = page_class(self.content_frame, self.tax_data, self, self.theme_manager)
             self.current_page.pack(fill="both", expand=True)
             
             # Update navigation button states
@@ -380,3 +530,25 @@ class MainWindow:
             FormViewerPage: "form_viewer",
         }
         return page_mapping.get(type(self.current_page), "personal_info")
+    
+    def toggle_theme(self):
+        """Toggle between light and dark themes"""
+        new_theme = self.theme_manager.toggle_theme()
+        self.config.theme = new_theme
+        
+        # Update theme toggle button text
+        theme_btn = None
+        for widget in self.root.winfo_children():
+            if isinstance(widget, ttk.Frame):  # sidebar
+                for child in widget.winfo_children():
+                    if isinstance(child, ttk.Button) and "🌙" in str(child.cget("text")) or "☀️" in str(child.cget("text")):
+                        theme_btn = child
+                        break
+                if theme_btn:
+                    break
+        
+        if theme_btn:
+            if new_theme == "dark":
+                theme_btn.config(text="☀️ Light Mode")
+            else:
+                theme_btn.config(text="🌙 Dark Mode")

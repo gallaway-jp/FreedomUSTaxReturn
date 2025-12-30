@@ -10,10 +10,11 @@ from gui.widgets.section_header import SectionHeader
 class PersonalInfoPage(ttk.Frame):
     """Personal information collection page"""
     
-    def __init__(self, parent, tax_data, main_window):
+    def __init__(self, parent, tax_data, main_window, theme_manager=None):
         super().__init__(parent)
         self.tax_data = tax_data
         self.main_window = main_window
+        self.theme_manager = theme_manager
         
         # Create scrollable canvas
         self.canvas = tk.Canvas(self, highlightthickness=0)
@@ -67,7 +68,8 @@ class PersonalInfoPage(ttk.Frame):
             "First Name",
             self.tax_data.get("personal_info.first_name"),
             width=25,
-            required=True
+            required=True,
+            theme_manager=self.theme_manager
         )
         self.first_name.pack(side="left", padx=(0, 10))
         
@@ -75,7 +77,8 @@ class PersonalInfoPage(ttk.Frame):
             name_frame,
             "MI",
             self.tax_data.get("personal_info.middle_initial"),
-            width=5
+            width=5,
+            theme_manager=self.theme_manager
         )
         self.middle_initial.pack(side="left", padx=(0, 10))
         

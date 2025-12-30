@@ -11,7 +11,8 @@ class FormField(ttk.Frame):
     """Labeled entry field widget with validation"""
 
     def __init__(self, parent, label_text, initial_value="", width=None,
-                 field_type="text", required=False, validation_callback=None, tooltip=""):
+                 field_type="text", required=False, validation_callback=None, tooltip="",
+                 theme_manager=None):
         super().__init__(parent)
         
         self.label_text = label_text
@@ -19,6 +20,7 @@ class FormField(ttk.Frame):
         self.required = required
         self.validation_callback = validation_callback
         self.tooltip_text = tooltip
+        self.theme_manager = theme_manager
         self.is_valid = True
         
         # Label with required indicator
@@ -243,16 +245,19 @@ class FormField(ttk.Frame):
     def _update_validation_display(self, is_valid, error_msg):
         """Update visual validation indicators"""
         if is_valid:
-            self.validation_icon.config(text="✓", foreground="green")
-            self.label.config(foreground="black")
+            color = self.theme_manager.get_color("success") if self.theme_manager else "green"
+            self.validation_icon.config(text="✓", foreground=color)
+            color = self.theme_manager.get_color("fg") if self.theme_manager else "black"
+            self.label.config(foreground=color)
             # Remove tooltip if it exists
             try:
                 self.entry.config(state="normal")
             except:
                 pass
         else:
-            self.validation_icon.config(text="✗", foreground="red")
-            self.label.config(foreground="red")
+            color = self.theme_manager.get_color("error") if self.theme_manager else "red"
+            self.validation_icon.config(text="✗", foreground=color)
+            self.label.config(foreground=color)
             # Could add tooltip with error message here
 
     def get(self):
