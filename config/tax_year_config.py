@@ -28,6 +28,13 @@ class TaxYearConfig:
     # Self-employment tax thresholds
     ss_wage_base: float
     medicare_threshold: float
+    
+    # Retirement savings credit income limits by filing status
+    retirement_savings_credit_limits: Dict[str, Dict[str, float]]
+    
+    # Child and dependent care credit phase-out limits
+    child_dependent_care_limits: Dict[str, Dict[str, float]]
+    
     additional_medicare_rate: float = 0.009
     
     # Child tax credit amounts
@@ -37,6 +44,12 @@ class TaxYearConfig:
     # Education credits
     aotc_max_credit: float = 2500.0
     llc_max_credit: float = 2000.0
+    
+    # Retirement savings credit income limits by filing status
+    retirement_savings_credit_limits: Dict[str, Dict[str, float]]
+    
+    # Child and dependent care credit phase-out limits
+    child_dependent_care_limits: Dict[str, Dict[str, float]]
     
     # SE tax rates
     se_tax_rate: float = 0.9235
@@ -146,6 +159,86 @@ TAX_YEAR_2025 = TaxYearConfig(
     
     ss_wage_base=176100.0,
     medicare_threshold=200000.0,
+    
+    # Retirement savings credit limits (AGI thresholds for credit percentages)
+    retirement_savings_credit_limits={
+        "Single": {
+            "50_percent": 37500,  # 50% credit up to $37,500 AGI
+            "20_percent": 41250,  # 20% credit up to $41,250 AGI
+            "10_percent": 68750,  # 10% credit up to $68,750 AGI
+        },
+        "MFJ": {
+            "50_percent": 75000,
+            "20_percent": 82500,
+            "10_percent": 137500,
+        },
+        "Married Filing Jointly": {
+            "50_percent": 75000,
+            "20_percent": 82500,
+            "10_percent": 137500,
+        },
+        "MFS": {
+            "50_percent": 37500,
+            "20_percent": 41250,
+            "10_percent": 68750,
+        },
+        "Married Filing Separately": {
+            "50_percent": 37500,
+            "20_percent": 41250,
+            "10_percent": 68750,
+        },
+        "HOH": {
+            "50_percent": 56250,
+            "20_percent": 61875,
+            "10_percent": 103125,
+        },
+        "Head of Household": {
+            "50_percent": 56250,
+            "20_percent": 61875,
+            "10_percent": 103125,
+        },
+        "QW": {
+            "50_percent": 75000,
+            "20_percent": 82500,
+            "10_percent": 137500,
+        },
+        "Qualifying Widow(er)": {
+            "50_percent": 75000,
+            "20_percent": 82500,
+            "10_percent": 137500,
+        },
+    },
+    
+    # Child and dependent care credit phase-out limits
+    child_dependent_care_limits={
+        "Single": {
+            "threshold": 15000,  # Phase out starts at $15,000 AGI
+        },
+        "MFJ": {
+            "threshold": 30000,  # Phase out starts at $30,000 AGI
+        },
+        "Married Filing Jointly": {
+            "threshold": 30000,
+        },
+        "MFS": {
+            "threshold": 15000,
+        },
+        "Married Filing Separately": {
+            "threshold": 15000,
+        },
+        "HOH": {
+            "threshold": 15000,
+        },
+        "Head of Household": {
+            "threshold": 15000,
+        },
+        "QW": {
+            "threshold": 30000,
+        },
+        "Qualifying Widow(er)": {
+            "threshold": 30000,
+        },
+    },
 )
 
 
@@ -211,6 +304,54 @@ TAX_YEAR_2023 = TaxYearConfig(
     
     ss_wage_base=160200.0,
     medicare_threshold=200000.0,
+    
+    # Retirement savings credit limits (2023 values)
+    retirement_savings_credit_limits={
+        "Single": {
+            "50_percent": 35000,
+            "20_percent": 38500,
+            "10_percent": 64125,
+        },
+        "MFJ": {
+            "50_percent": 70000,
+            "20_percent": 77000,
+            "10_percent": 128250,
+        },
+        "MFS": {
+            "50_percent": 35000,
+            "20_percent": 38500,
+            "10_percent": 64125,
+        },
+        "HOH": {
+            "50_percent": 52500,
+            "20_percent": 57750,
+            "10_percent": 96125,
+        },
+        "QW": {
+            "50_percent": 70000,
+            "20_percent": 77000,
+            "10_percent": 128250,
+        }
+    },
+    
+    # Child and dependent care credit phase-out limits (2023 values)
+    child_dependent_care_limits={
+        "Single": {
+            "threshold": 15000,
+        },
+        "MFJ": {
+            "threshold": 30000,
+        },
+        "MFS": {
+            "threshold": 15000,
+        },
+        "HOH": {
+            "threshold": 15000,
+        },
+        "QW": {
+            "threshold": 30000,
+        }
+    },
 )
 
 

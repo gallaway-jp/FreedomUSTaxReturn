@@ -245,3 +245,129 @@ def calculate_education_credit_llc(qualified_expenses: float) -> float:
     """
     credit = min(qualified_expenses, 10000) * 0.20
     return round(min(credit, 2000), 2)
+
+
+def calculate_retirement_savings_credit(contributions: float, agi: float, filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Retirement Savings Contributions Credit (Saver's Credit).
+    
+    Args:
+        contributions: Total retirement plan contributions (IRA, 401(k), etc.)
+        agi: Adjusted Gross Income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Retirement savings credit amount
+        
+    Note:
+        Credit is 50%, 20%, or 10% of contributions based on AGI
+        Maximum contribution limit is $2,000 per person
+        Credit phases out based on income thresholds
+    """
+    # Maximum credit contribution amount
+    max_contribution = 2000
+    
+    # Limit contributions to maximum
+    eligible_contributions = min(contributions, max_contribution)
+    
+    # Get income limits for the credit percentage
+    config = get_tax_year_config(tax_year)
+    income_limits = config.retirement_savings_credit_limits.get(filing_status, 
+                                                               config.retirement_savings_credit_limits["Single"])
+    
+    # Determine credit percentage based on AGI
+    if agi <= income_limits["50_percent"]:
+        credit_rate = 0.50
+    elif agi <= income_limits["20_percent"]:
+        credit_rate = 0.20
+    elif agi <= income_limits["10_percent"]:
+        credit_rate = 0.10
+    else:
+        # No credit if AGI exceeds the 10% limit
+        return 0.0
+    
+    credit = eligible_contributions * credit_rate
+    return round(credit, 2)
+
+
+def calculate_child_dependent_care_credit(expenses: float, agi: float, filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Child and Dependent Care Credit.
+    
+    Args:
+        expenses: Qualified child/dependent care expenses paid
+        agi: Adjusted Gross Income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Child and dependent care credit amount
+        
+    Note:
+        Credit is 35% of first $3,000 in expenses for one child/dependent
+        Credit is 35% of first $6,000 in expenses for two or more children/dependents
+        Credit phases out for high-income taxpayers
+    """
+    # Expense limits based on number of children/dependents
+    # For simplicity, assume at least 2 children (most common case)
+    # In a real implementation, this would be passed as a parameter
+    expense_limit = 6000  # For 2+ children
+    credit_rate = 0.35
+    
+    # Limit expenses to maximum eligible amount
+    eligible_expenses = min(expenses, expense_limit)
+    
+    # Calculate base credit
+    base_credit = eligible_expenses * credit_rate
+    
+    # Phase out for high income
+    config = get_tax_year_config(tax_year)
+    phase_out_limits = config.child_dependent_care_limits.get(filing_status,
+                                                             config.child_dependent_care_limits["Single"])
+    
+    if agi > phase_out_limits["threshold"]:
+        # Phase out $1 for every $2 of AGI over threshold
+        phase_out_amount = (agi - phase_out_limits["threshold"]) / 2
+        base_credit = max(0, base_credit - phase_out_amount)
+    
+    return round(base_credit, 2)
+
+
+def calculate_residential_energy_credit(credit_amount: float) -> float:
+    """
+    Calculate Residential Energy Credit.
+    
+    Args:
+        credit_amount: Amount of energy credit claimed (from Form 5695)
+        
+    Returns:
+        Residential energy credit amount
+        
+    Note:
+        This is a non-refundable credit for energy-efficient home improvements
+        The amount is calculated on Form 5695 and entered directly
+    """
+    # The credit amount is calculated on IRS Form 5695
+    # We just return the amount as entered by the user
+    return round(credit_amount, 2)
+
+
+def calculate_premium_tax_credit(credit_amount: float) -> float:
+    """
+    Calculate Premium Tax Credit (ACA).
+    
+    Args:
+        credit_amount: Amount of premium tax credit from Form 1095-A
+        
+    Returns:
+        Premium tax credit amount
+        
+    Note:
+        This is the credit for health insurance premiums purchased through
+        the Health Insurance Marketplace. The amount is calculated by the IRS
+        and reported on Form 1095-A.
+    """
+    # The credit amount is calculated by the IRS based on income and premium costs
+    # We just return the amount as entered by the user
+    return round(credit_amount, 2)

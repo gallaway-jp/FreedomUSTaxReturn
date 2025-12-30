@@ -564,6 +564,62 @@ class TestTaxDataCalculateCredits:
         # This test documents expected behavior
         assert 'child_tax_credit' in credits_high
         assert 'child_tax_credit' in credits_low
+    
+    def test_calculate_credits_retirement_savings(self):
+        """Test retirement savings contributions credit calculation"""
+        tax_data = TaxData()
+        tax_data.set('filing_status.status', 'Single')
+        
+        # Set retirement contributions
+        tax_data.set('credits.retirement_savings_credit', 2000)
+        
+        credits = tax_data.calculate_credits(agi=30000)
+        
+        # Should get 50% credit on $2,000 = $1,000
+        assert credits['retirement_savings_credit'] == 1000.0
+        assert credits['total_credits'] >= 1000.0
+    
+    def test_calculate_credits_child_dependent_care(self):
+        """Test child and dependent care credit calculation"""
+        tax_data = TaxData()
+        tax_data.set('filing_status.status', 'MFJ')
+        
+        # Set care expenses
+        tax_data.set('credits.child_dependent_care.expenses', 6000)
+        
+        credits = tax_data.calculate_credits(agi=25000)  # Below phase-out threshold
+        
+        # Should get 35% credit on $6,000 = $2,100
+        assert credits['child_dependent_care_credit'] == 2100.0
+        assert credits['total_credits'] >= 2100.0
+    
+    def test_calculate_credits_residential_energy(self):
+        """Test residential energy credit calculation"""
+        tax_data = TaxData()
+        tax_data.set('filing_status.status', 'Single')
+        
+        # Set energy credit amount
+        tax_data.set('credits.residential_energy.amount', 8000)
+        
+        credits = tax_data.calculate_credits(agi=50000)
+        
+        # Should return the amount as entered
+        assert credits['residential_energy_credit'] == 8000.0
+        assert credits['total_credits'] >= 8000.0
+    
+    def test_calculate_credits_premium_tax(self):
+        """Test premium tax credit calculation"""
+        tax_data = TaxData()
+        tax_data.set('filing_status.status', 'Single')
+        
+        # Set premium tax credit amount
+        tax_data.set('credits.premium_tax_credit.amount', 4000)
+        
+        credits = tax_data.calculate_credits(agi=50000)
+        
+        # Should return the amount as entered
+        assert credits['premium_tax_credit'] == 4000.0
+        assert credits['total_credits'] >= 4000.0
 
 
 class TestTaxDataCalculateTotals:

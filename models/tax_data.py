@@ -23,7 +23,11 @@ from utils.tax_calculations import (
     calculate_income_tax,
     calculate_self_employment_tax,
     calculate_child_tax_credit,
-    calculate_earned_income_credit
+    calculate_earned_income_credit,
+    calculate_retirement_savings_credit,
+    calculate_child_dependent_care_credit,
+    calculate_residential_energy_credit,
+    calculate_premium_tax_credit
 )
 from utils.w2_calculator import W2Calculator
 
@@ -569,6 +573,10 @@ class TaxData:
             "child_tax_credit": 0,
             "earned_income_credit": 0,
             "education_credits": 0,
+            "retirement_savings_credit": 0,
+            "child_dependent_care_credit": 0,
+            "residential_energy_credit": 0,
+            "premium_tax_credit": 0,
             "other_credits": 0,
             "total_credits": 0
         }
@@ -602,11 +610,39 @@ class TaxData:
                     filing_status
                 )
         
+        # Retirement Savings Credit
+        retire_contrib = self.get("credits.retirement_savings_credit", 0)
+        if retire_contrib > 0:
+            credits["retirement_savings_credit"] = calculate_retirement_savings_credit(
+                retire_contrib, agi, filing_status
+            )
+        
+        # Child and Dependent Care Credit
+        care_expenses = self.get("credits.child_dependent_care.expenses", 0)
+        if care_expenses > 0:
+            credits["child_dependent_care_credit"] = calculate_child_dependent_care_credit(
+                care_expenses, agi, filing_status
+            )
+        
+        # Residential Energy Credit
+        energy_amount = self.get("credits.residential_energy.amount", 0)
+        if energy_amount > 0:
+            credits["residential_energy_credit"] = calculate_residential_energy_credit(energy_amount)
+        
+        # Premium Tax Credit
+        premium_amount = self.get("credits.premium_tax_credit.amount", 0)
+        if premium_amount > 0:
+            credits["premium_tax_credit"] = calculate_premium_tax_credit(premium_amount)
+        
         # Sum all credits
         credits["total_credits"] = sum([
             credits["child_tax_credit"],
             credits["earned_income_credit"],
             credits["education_credits"],
+            credits["retirement_savings_credit"],
+            credits["child_dependent_care_credit"],
+            credits["residential_energy_credit"],
+            credits["premium_tax_credit"],
             credits["other_credits"]
         ])
         
