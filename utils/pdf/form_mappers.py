@@ -200,3 +200,83 @@ class Form1040Mapper:
         fields.update(Form1040Mapper.map_payments(tax_data))
         
         return fields
+
+
+class Form8949Mapper:
+    """Maps tax data to Form 8949 PDF fields"""
+
+    @staticmethod
+    def map_capital_gains(tax_data) -> Dict[str, str]:
+        """Map capital gains/losses to Form 8949 fields"""
+        fields = {}
+        capital_gains = tax_data.get('income', {}).get('capital_gains', [])
+
+        if not capital_gains:
+            return fields
+
+        # Separate short-term and long-term transactions
+        short_term = [cg for cg in capital_gains if cg.get('holding_period') == 'Short-term']
+        long_term = [cg for cg in capital_gains if cg.get('holding_period') == 'Long-term']
+
+        # Map short-term transactions (Part I)
+        fields.update(Form8949Mapper._map_transactions(short_term, "short"))
+
+        # Map long-term transactions (Part II)
+        fields.update(Form8949Mapper._map_transactions(long_term, "long"))
+
+        return fields
+
+    @staticmethod
+    def _map_transactions(transactions: list, term_type: str) -> Dict[str, str]:
+        """Map transactions to Form 8949 fields"""
+        fields = {}
+        prefix = "1" if term_type == "short" else "2"  # Part I or Part II
+
+        for i, transaction in enumerate(transactions[:14]):  # Form 8949 has space for 14 transactions per part
+            base_field = f"{prefix}({chr(97 + i)})"  # a, b, c, etc.
+
+            # Column (a) - Description
+            fields[f"{base_field}_desc"] = transaction.get('description', '')
+
+            # Column (b) - Date acquired
+            fields[f"{base_field}_date_acq"] = transaction.get('date_acquired', '')
+
+            # Column (c) - Date sold
+            fields[f"{base_field}_date_sold"] = transaction.get('date_sold', '')
+
+            # Column (d) - Sales price
+            sales_price = transaction.get('sales_price', 0)
+            fields[f"{base_field}_sales_price"] = f"{sales_price:.2f}"
+
+            # Column (e) - Cost basis
+            cost_basis = transaction.get('cost_basis', 0)
+            fields[f"{base_field}_cost"] = f"{cost_basis:.2f}"
+
+            # Column (g) - Gain or loss
+            gain_loss = transaction.get('gain_loss', 0)
+            fields[f"{base_field}_gain_loss"] = f"{gain_loss:.2f}"
+
+        # Calculate totals for this part
+        if transactions:
+            total_proceeds = sum(t.get('sales_price', 0) for t in transactions)
+            total_basis = sum(t.get('adjusted_basis', t.get('cost_basis', 0)) for t in transactions)
+            total_gain_loss = sum(t.get('gain_loss', 0) for t in transactions)
+
+            fields[f"{prefix}_total_proceeds"] = f"{total_proceeds:.2f}"
+            fields[f"{prefix}_total_basis"] = f"{total_basis:.2f}"
+            fields[f"{prefix}_total_gain_loss"] = f"{total_gain_loss:.2f}"
+
+        return fields
+
+    @staticmethod
+    def get_all_fields(tax_data) -> Dict[str, str]:
+        """Get all mapped fields for Form 8949"""
+        fields = {}
+
+        # Map personal info (for identification)
+        fields.update(Form1040Mapper.map_personal_info(tax_data))
+
+        # Map capital gains transactions
+        fields.update(Form8949Mapper.map_capital_gains(tax_data))
+
+        return fields

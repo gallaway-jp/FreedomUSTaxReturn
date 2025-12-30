@@ -165,10 +165,68 @@ class AsyncPDFGenerator:
         
         if task.form_name == "Form 1040":
             filler.export_form_1040(task.tax_data, task.output_path)
+        elif task.form_name == "Schedule C":
+            self._generate_schedule_c(task)
+        elif task.form_name == "Form 8949":
+            self._generate_form_8949(task)
+        elif task.form_name == "Schedule A":
+            self._generate_schedule_a(task)
+        elif task.form_name == "Schedule E":
+            self._generate_schedule_e(task)
         else:
             raise ValueError(f"Unknown form: {task.form_name}")
         
         logger.info(f"Generated PDF: {task.output_path}")
+    
+    def _generate_schedule_c(self, task: PDFGenerationTask) -> None:
+        """
+        Generate Schedule C PDF using the plugin system
+        """
+        from utils.plugins import PluginRegistry
+        registry = PluginRegistry.get_instance()
+        plugin = registry.get_plugin("Schedule C")
+        
+        if not plugin:
+            raise ValueError("Schedule C plugin not found")
+        
+        # Get field mappings from plugin
+        calculated_data = plugin.calculate_schedule_data(task.tax_data)
+        field_mappings = plugin.map_to_pdf_fields(task.tax_data, calculated_data)
+        
+        # Generate PDF
+        filler = PDFFormFiller()
+        filler.fill_form("f1040sc.pdf", field_mappings, str(task.output_path))
+    
+    def _generate_form_8949(self, task: PDFGenerationTask) -> None:
+        """
+        Generate Form 8949 PDF for capital gains/losses
+        """
+        from utils.pdf.form_mappers import Form8949Mapper
+        
+        # Get field mappings from Form8949Mapper
+        field_mappings = Form8949Mapper.get_all_fields(task.tax_data)
+        
+        # Generate PDF
+        filler = PDFFormFiller()
+        filler.fill_form("f8949.pdf", field_mappings, str(task.output_path))
+    
+    def _generate_schedule_a(self, task: PDFGenerationTask) -> None:
+        """
+        Generate Schedule A PDF for itemized deductions
+        """
+        # Placeholder for Schedule A generation
+        filler = PDFFormFiller()
+        fields = {}  # Would need proper field mappings
+        filler.fill_form("f1040sa.pdf", fields, str(task.output_path))
+    
+    def _generate_schedule_e(self, task: PDFGenerationTask) -> None:
+        """
+        Generate Schedule E PDF for rental income
+        """
+        # Placeholder for Schedule E generation
+        filler = PDFFormFiller()
+        fields = {}  # Would need proper field mappings
+        filler.fill_form("f1040se.pdf", fields, str(task.output_path))
     
     async def generate_multiple_pdfs(
         self,

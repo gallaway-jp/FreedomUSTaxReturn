@@ -448,6 +448,9 @@ class TaxData:
         credits = self.calculate_credits(totals["adjusted_gross_income"])
         totals["total_tax"] = max(0, totals["total_tax"] - credits["total_credits"])
         
+        # Add individual credits to result
+        totals.update(credits)
+        
         # Calculate payments and final result
         payments = self.get_section("payments")
         totals["total_payments"] = self._calculate_total_payments(payments)
@@ -591,20 +594,42 @@ class TaxData:
         # Performance: Direct access to nested data
         filing_status = self.data.get("filing_status", {}).get("status", "Single")
         
-        # Child Tax Credit
-        ctc_children = self.get("credits.child_tax_credit.qualifying_children", [])
-        other_dependents = self.get("credits.child_tax_credit.other_dependents", [])
-        if ctc_children or other_dependents:
+        # Child Tax Credit - automatically determine from dependents
+        dependents = self.get("dependents", [])
+        qualifying_children = []
+        other_dependents = []
+        
+        for dependent in dependents:
+            relationship = dependent.get("relationship", "").lower()
+            birth_date = dependent.get("birth_date", "")
+            months_lived = dependent.get("months_lived_in_home", 0)
+            
+            # Simple qualifying child logic (age < 17, lived with taxpayer more than half year)
+            if relationship in ["son", "daughter", "child"] and months_lived >= 6:
+                try:
+                    # Parse birth date and check age (simplified)
+                    birth_year = int(birth_date.split("/")[-1]) if "/" in birth_date else 2000
+                    current_year = self.data.get("metadata", {}).get("tax_year", 2025)
+                    age = current_year - birth_year
+                    if age < 17:
+                        qualifying_children.append(dependent)
+                    else:
+                        other_dependents.append(dependent)
+                except:
+                    other_dependents.append(dependent)
+            else:
+                other_dependents.append(dependent)
+        
+        if qualifying_children or other_dependents:
             credits["child_tax_credit"] = calculate_child_tax_credit(
-                len(ctc_children),
+                len(qualifying_children),
                 len(other_dependents),
                 agi,
                 filing_status
             )
         
         # Performance: Earned Income Credit with optimized data access
-        eic_children = self.data.get("credits", {}).get("earned_income_credit", {}).get("qualifying_children", [])
-        if eic_children:
+        if qualifying_children:
             # Use centralized W2Calculator
             w2_forms = self.data.get("income", {}).get("w2_forms", [])
             earned_income = W2Calculator.calculate_total_wages(w2_forms)
@@ -613,7 +638,7 @@ class TaxData:
                 credits["earned_income_credit"] = calculate_earned_income_credit(
                     earned_income,
                     agi,
-                    len(eic_children),
+                    len(qualifying_children),
                     filing_status
                 )
         
