@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 
 from utils.async_pdf import AsyncPDFGenerator, PDFGenerationTask, PDFGenerationResult
-from utils.plugins import PluginRegistry
+from utils.plugins import PluginRegistry, get_plugin_registry
 from utils.pdf.form_filler import PDFFormFiller
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class TaxReturnPDFGenerator:
     """
 
     def __init__(self):
-        self.plugin_registry = PluginRegistry.get_instance()
+        self.plugin_registry = get_plugin_registry()
         self.pdf_generator = AsyncPDFGenerator()
 
     def determine_required_forms(self, tax_data: Dict[str, Any]) -> List[str]:
@@ -243,5 +243,4 @@ def generate_pdf(
         List of PDFGenerationResult objects for each generated form
     """
     generator = TaxReturnPDFGenerator()
-    return generator.generate_complete_return(tax_data, output_directory, progress_callback)</content>
-<parameter name="filePath">d:\Development\Python\FreedomUSTaxReturn\utils\pdf_generator.py
+    return generator.generate_complete_return(tax_data, output_directory, progress_callback)

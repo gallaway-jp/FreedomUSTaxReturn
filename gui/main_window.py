@@ -184,14 +184,19 @@ class MainWindow:
             from utils.pdf_generator import generate_pdf
             
             # Generate PDF with current tax data
-            pdf_path = generate_pdf(self.tax_data, self.config)
+            results = generate_pdf(self.tax_data, str(self.config.safe_dir))
             
-            if pdf_path:
+            # Check if any PDFs were generated successfully
+            successful_results = [r for r in results if r.success]
+            
+            if successful_results:
+                pdf_paths = [str(r.output_path) for r in successful_results]
                 messagebox.showinfo("Export Complete", 
-                    f"Tax return PDF exported successfully!\n\nSaved to: {pdf_path}")
+                    f"Tax return PDFs exported successfully!\n\nGenerated {len(successful_results)} form(s):\n" + 
+                    "\n".join(f"• {path}" for path in pdf_paths))
             else:
                 messagebox.showerror("Export Failed", 
-                    "Failed to generate PDF. Please check your tax data and try again.")
+                    "Failed to generate PDFs. Please check your tax data and try again.")
                     
         except Exception as e:
             messagebox.showerror("Export Error", 

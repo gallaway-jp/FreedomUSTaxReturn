@@ -3,7 +3,7 @@ Form Viewer page - shows calculated forms and summary
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox, simpledialog
 from gui.widgets.section_header import SectionHeader
 from utils.w2_calculator import W2Calculator
 
@@ -329,12 +329,10 @@ class FormViewerPage(ttk.Frame):
     
     def view_form(self, form_name):
         """View specific form"""
-        from tkinter import messagebox
         messagebox.showinfo("View Form", f"Viewing {form_name}\n\nForm viewer functionality will display the actual IRS form with your data populated.")
     
     def export_to_pdf(self):
         """Export forms to PDF with password protection"""
-        from tkinter import messagebox, filedialog, simpledialog
         from utils.pdf_form_filler import TaxReturnPDFExporter
         import logging
         

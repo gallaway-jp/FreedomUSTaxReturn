@@ -2,7 +2,11 @@ import pytest
 from utils.tax_calculations import (
     calculate_alternative_minimum_tax,
     calculate_net_investment_income_tax,
-    calculate_additional_medicare_tax
+    calculate_additional_medicare_tax,
+    calculate_retirement_savings_credit,
+    calculate_child_dependent_care_credit,
+    calculate_residential_energy_credit,
+    calculate_premium_tax_credit
 )
 
 
@@ -122,3 +126,134 @@ class TestAdvancedTaxCalculations:
         
         # Additional Medicare tax = (210,000 - 200,000) * 0.009 = 10,000 * 0.009 = 90
         assert amt == 90.0
+
+
+class TestRetirementSavingsCredit:
+    """Test Retirement Savings Credit calculations"""
+
+    def test_retirement_savings_credit_50_percent_bracket(self):
+        """Test credit at 50% rate for low income"""
+        contributions = 2000.0
+        agi = 30000.0  # Below 50% bracket threshold
+        credit = calculate_retirement_savings_credit(contributions, agi, "Single", 2025)
+        assert credit == 1000.0  # 2000 * 0.50
+
+    def test_retirement_savings_credit_20_percent_bracket(self):
+        """Test credit at 20% rate for middle income"""
+        contributions = 2000.0
+        agi = 40000.0  # In 20% bracket
+        credit = calculate_retirement_savings_credit(contributions, agi, "Single", 2025)
+        assert credit == 400.0  # 2000 * 0.20
+
+    def test_retirement_savings_credit_10_percent_bracket(self):
+        """Test credit at 10% rate for higher income"""
+        contributions = 2000.0
+        agi = 50000.0  # In 10% bracket
+        credit = calculate_retirement_savings_credit(contributions, agi, "Single", 2025)
+        assert credit == 200.0  # 2000 * 0.10
+
+    def test_retirement_savings_credit_above_threshold(self):
+        """Test no credit when AGI exceeds maximum threshold"""
+        contributions = 2000.0
+        agi = 80000.0  # Above maximum threshold
+        credit = calculate_retirement_savings_credit(contributions, agi, "Single", 2025)
+        assert credit == 0.0
+
+    def test_retirement_savings_credit_contribution_limit(self):
+        """Test credit limited to $2,000 maximum contribution"""
+        contributions = 3000.0  # Over limit
+        agi = 30000.0
+        credit = calculate_retirement_savings_credit(contributions, agi, "Single", 2025)
+        assert credit == 1000.0  # 2000 * 0.50, not 3000
+
+    def test_retirement_savings_credit_married_filing_jointly(self):
+        """Test credit for married filing jointly"""
+        contributions = 2000.0
+        agi = 50000.0  # In 50% bracket for MFJ (up to $75,000)
+        credit = calculate_retirement_savings_credit(contributions, agi, "MFJ", 2025)
+        assert credit == 1000.0  # 2000 * 0.50
+
+
+class TestChildDependentCareCredit:
+    """Test Child and Dependent Care Credit calculations"""
+
+    def test_child_dependent_care_credit_basic_calculation(self):
+        """Test basic credit calculation"""
+        expenses = 3000.0
+        agi = 10000.0  # Below phase-out threshold ($15,000 for single)
+        credit = calculate_child_dependent_care_credit(expenses, agi, "Single", 2025)
+        assert credit == 1050.0  # 3000 * 0.35
+
+    def test_child_dependent_care_credit_expense_limit(self):
+        """Test credit limited to $6,000 expense maximum"""
+        expenses = 8000.0  # Over limit
+        agi = 10000.0  # Below phase-out threshold
+        credit = calculate_child_dependent_care_credit(expenses, agi, "Single", 2025)
+        assert credit == 2100.0  # 6000 * 0.35
+
+    def test_child_dependent_care_credit_phase_out(self):
+        """Test credit phase-out for high income"""
+        expenses = 6000.0
+        agi = 150000.0  # Above phase-out threshold
+        credit = calculate_child_dependent_care_credit(expenses, agi, "Single", 2025)
+        # Phase out: $1 for every $2 over threshold
+        # Assuming threshold is around $125,000, phase out would reduce credit
+        assert credit < 2100.0  # Should be reduced
+
+    def test_child_dependent_care_credit_no_credit_high_income(self):
+        """Test no credit when AGI is very high"""
+        expenses = 6000.0
+        agi = 300000.0  # Well above phase-out
+        credit = calculate_child_dependent_care_credit(expenses, agi, "Single", 2025)
+        assert credit == 0.0
+
+    def test_child_dependent_care_credit_married_filing_jointly(self):
+        """Test credit for married filing jointly"""
+        expenses = 3000.0
+        agi = 20000.0  # Below MFJ phase-out threshold ($30,000)
+        credit = calculate_child_dependent_care_credit(expenses, agi, "MFJ", 2025)
+        assert credit == 1050.0  # 3000 * 0.35
+
+
+class TestResidentialEnergyCredit:
+    """Test Residential Energy Credit calculations"""
+
+    def test_residential_energy_credit_basic(self):
+        """Test basic residential energy credit calculation"""
+        credit_amount = 1500.0
+        credit = calculate_residential_energy_credit(credit_amount)
+        assert credit == 1500.0
+
+    def test_residential_energy_credit_zero(self):
+        """Test zero residential energy credit"""
+        credit_amount = 0.0
+        credit = calculate_residential_energy_credit(credit_amount)
+        assert credit == 0.0
+
+    def test_residential_energy_credit_rounding(self):
+        """Test residential energy credit rounding"""
+        credit_amount = 1234.567
+        credit = calculate_residential_energy_credit(credit_amount)
+        assert credit == 1234.57
+
+
+class TestPremiumTaxCredit:
+    """Test Premium Tax Credit calculations"""
+
+    def test_premium_tax_credit_basic(self):
+        """Test basic premium tax credit calculation"""
+        credit_amount = 2500.0
+        credit = calculate_premium_tax_credit(credit_amount)
+        assert credit == 2500.0
+
+    def test_premium_tax_credit_zero(self):
+        """Test zero premium tax credit"""
+        credit_amount = 0.0
+        credit = calculate_premium_tax_credit(credit_amount)
+        assert credit == 0.0
+
+    def test_premium_tax_credit_rounding(self):
+        """Test premium tax credit rounding"""
+        credit_amount = 987.654
+        credit = calculate_premium_tax_credit(credit_amount)
+        assert credit == 987.65

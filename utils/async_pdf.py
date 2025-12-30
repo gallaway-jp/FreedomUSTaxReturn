@@ -182,8 +182,8 @@ class AsyncPDFGenerator:
         """
         Generate Schedule C PDF using the plugin system
         """
-        from utils.plugins import PluginRegistry
-        registry = PluginRegistry.get_instance()
+        from utils.plugins import get_plugin_registry
+        registry = get_plugin_registry()
         plugin = registry.get_plugin("Schedule C")
         
         if not plugin:
