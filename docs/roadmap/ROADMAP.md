@@ -122,10 +122,10 @@
 ### Features:
 
 1. **State Tax Returns**
-   - [ ] State tax return preparation
-   - [ ] State-specific forms
-   - [ ] Multi-state returns
-   - [ ] State tax calculations
+   - [x] State tax return preparation
+   - [x] State-specific forms
+   - [x] Multi-state returns
+   - [x] State tax calculations
 
 2. **Multi-Year Support**
    - [ ] Tax year selection

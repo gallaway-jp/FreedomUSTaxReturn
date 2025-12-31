@@ -158,6 +158,7 @@ class MainWindow:
         self.root.bind('<Control-n>', lambda e: self._new_return())
         self.root.bind('<Control-e>', lambda e: self._export_pdf())
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
+        self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         
         # Focus shortcuts
@@ -204,6 +205,7 @@ class MainWindow:
         
         # Tools menu items
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
+        tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
     
     def _export_pdf(self):
@@ -257,6 +259,15 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror("Tax Planning Error", 
                 f"Failed to open tax planning tools:\n\n{str(e)}")
+    
+    def _open_state_taxes(self):
+        """Open the state tax tools window"""
+        try:
+            from gui.state_tax_window import open_state_tax_window
+            open_state_tax_window(self.root, self.tax_data)
+        except Exception as e:
+            messagebox.showerror("State Tax Error", 
+                f"Failed to open state tax tools:\n\n{str(e)}")
     
     def _open_audit_trail(self):
         """Open the audit trail window"""

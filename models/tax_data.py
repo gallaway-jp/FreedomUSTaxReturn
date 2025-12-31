@@ -240,6 +240,14 @@ class TaxData:
                 "other_payments": [],
             },
             
+            # State Taxes
+            "state_taxes": {
+                "selected_states": [],  # List of state codes
+                "calculations": {},     # State tax calculations by state code
+                "forms": [],           # Required state forms
+                "filings": [],         # Filing status for each state
+            },
+            
             # Metadata
             "metadata": {
                 "tax_year": 2025,  # Default to 2025 tax year
