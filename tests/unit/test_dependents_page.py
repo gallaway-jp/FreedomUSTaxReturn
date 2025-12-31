@@ -122,7 +122,7 @@ class TestDependentsPage:
         page.refresh_dependents_list()
         items = page.dependents_listbox.get(0, tk.END)
         assert len(items) == 1
-        assert "John Doe - Son (Age: 15)" in items[0]  # Age calculation for 2025
+        assert "John Doe - Son (Age: 16)" in items[0]  # Age calculation for 2026
 
     def test_add_dependent(self, setup_page):
         """Test adding a dependent"""
@@ -391,9 +391,9 @@ class TestDependentsPageIntegration:
 
         # Test various birth dates
         test_cases = [
-            ("01/01/2010", 15),  # Born in 2010, age 15 in 2025
-            ("12/31/2024", 1),   # Born late 2024, age 1 in 2025 (turns 1 on 12/31/2025)
-            ("07/15/2000", 25),  # Born in 2000, age 25 in 2025
+            ("01/01/2010", 16),  # Born in 2010, age 16 in 2026
+            ("12/31/2024", 1),   # Born late 2024, age 1 in 2026 (turns 1 on 12/31/2025)
+            ("07/15/2000", 25),  # Born in 2000, age 25 in 2026
         ]
 
         for birth_date, expected_age in test_cases:
