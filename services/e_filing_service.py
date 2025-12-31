@@ -286,6 +286,16 @@ class EFilingService:
         estimated_payments = payments_data.get('estimated_tax_payments', 0)
         ET.SubElement(payments_element, "EstimatedPayments").text = str(estimated_payments)
 
+        # Direct deposit information (if enabled)
+        direct_deposit = payments_data.get('direct_deposit', {})
+        if direct_deposit.get('enabled', False):
+            dd_element = ET.SubElement(payments_element, "DirectDeposit")
+            ET.SubElement(dd_element, "RoutingNumber").text = direct_deposit.get('routing_number', '')
+            ET.SubElement(dd_element, "AccountNumber").text = direct_deposit.get('account_number', '')
+            ET.SubElement(dd_element, "AccountType").text = direct_deposit.get('account_type', 'checking')
+            ET.SubElement(dd_element, "BankName").text = direct_deposit.get('bank_name', '')
+            ET.SubElement(dd_element, "AccountHolderName").text = direct_deposit.get('account_holder_name', '')
+
     def validate_efile_xml(self, xml_content: str) -> Dict[str, Any]:
         """
         Validate e-file XML against IRS schemas and business rules.

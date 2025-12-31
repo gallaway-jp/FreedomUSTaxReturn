@@ -261,6 +261,15 @@ class TaxData:
                     "prior_year_overpayment": 0,
                     "eic_payments": 0,
                     "other_payments": [],
+                    "direct_deposit": {
+                        "enabled": False,
+                        "routing_number": "",
+                        "account_number": "",
+                        "account_type": "checking",  # checking or savings
+                        "bank_name": "",
+                        "account_holder_name": "",
+                        "verified": False,
+                    },
                 },
 
                 # State Taxes
