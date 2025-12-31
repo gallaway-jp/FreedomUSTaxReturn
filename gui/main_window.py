@@ -166,12 +166,13 @@ class MainWindow:
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
+        self.root.bind('<Control-f>', lambda e: self._open_e_filing())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
         self.root.bind('<Control-h>', lambda e: self._share_return())
         self.root.bind('<Control-r>', lambda e: self._open_review_mode())
         
         # Focus shortcuts
-        self.root.bind('<Control-f>', lambda e: self._focus_search())
+        self.root.bind('<Control-Shift-F>', lambda e: self._focus_search())
     
     def create_menu_bar(self):
         """Create the main menu bar with File and View menus"""
@@ -216,6 +217,15 @@ class MainWindow:
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
+
+        # E-File menu
+        efile_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="E-File", menu=efile_menu)
+        
+        # E-File menu items
+        efile_menu.add_command(label="Prepare E-File", command=self._open_e_filing, accelerator="Ctrl+F")
+        efile_menu.add_separator()
+        efile_menu.add_command(label="E-File Status", command=self._check_e_file_status)
 
         # Collaboration menu
         collaboration_menu = tk.Menu(menubar, tearoff=0)
@@ -306,6 +316,26 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror("Audit Trail Error", 
                 f"Failed to open audit trail:\n\n{str(e)}")
+    
+    def _open_e_filing(self):
+        """Open the e-filing window"""
+        try:
+            from gui.e_filing_window import open_e_filing_window
+            open_e_filing_window(self.root, self.tax_data, self.config)
+        except Exception as e:
+            messagebox.showerror("E-Filing Error", 
+                f"Failed to open e-filing window:\n\n{str(e)}")
+    
+    def _check_e_file_status(self):
+        """Open e-file status checking window"""
+        try:
+            from gui.e_filing_window import open_e_filing_window
+            # Open e-filing window and switch to status tab
+            window = open_e_filing_window(self.root, self.tax_data, self.config)
+            # Note: In a real implementation, we'd switch to the status tab here
+        except Exception as e:
+            messagebox.showerror("E-File Status Error", 
+                f"Failed to open e-file status:\n\n{str(e)}")
     
     def _share_return(self):
         """Open the sharing dialog to share the current tax return"""

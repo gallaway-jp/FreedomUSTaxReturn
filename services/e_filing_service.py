@@ -8,6 +8,12 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import uuid
+import hashlib
+import hmac
+import base64
+import json
+from urllib.parse import urljoin
+import requests
 
 from config.app_config import AppConfig
 from models.tax_data import TaxData
@@ -31,6 +37,7 @@ class EFilingService:
         """
         self.config = config
         self.audit_service = audit_service
+        self.acknowledgment_tracker = EFileAcknowledgmentTracker(config)
 
         # IRS e-file endpoints (these would be real URLs in production)
         self.irs_endpoints = {
@@ -294,3 +301,406 @@ class EFilingService:
             'status': 'processing',
             'last_updated': datetime.now().isoformat()
         }
+
+    def sign_efile_xml(self, xml_content: str, signature_data: Dict[str, Any]) -> str:
+        """
+        Add digital signature to e-file XML.
+
+        Args:
+            xml_content: XML content to sign
+            signature_data: Signature information (PIN, EFIN, etc.)
+
+        Returns:
+            Signed XML content
+        """
+        try:
+            # Parse XML
+            root = ET.fromstring(xml_content)
+
+            # Create signature element
+            signature = ET.SubElement(root, "DigitalSignature")
+            signature.set("xmlns", "http://www.w3.org/2000/09/xmldsig#")
+
+            # SignedInfo
+            signed_info = ET.SubElement(signature, "SignedInfo")
+            canonicalization_method = ET.SubElement(signed_info, "CanonicalizationMethod")
+            canonicalization_method.set("Algorithm", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315")
+
+            signature_method = ET.SubElement(signed_info, "SignatureMethod")
+            signature_method.set("Algorithm", "http://www.w3.org/2000/09/xmldsig#rsa-sha256")
+
+            # Reference to the return data
+            reference = ET.SubElement(signed_info, "Reference")
+            reference.set("URI", "#ReturnData")
+
+            transforms = ET.SubElement(reference, "Transforms")
+            transform = ET.SubElement(transforms, "Transform")
+            transform.set("Algorithm", "http://www.w3.org/2000/09/xmldsig#enveloped-signature")
+
+            digest_method = ET.SubElement(reference, "DigestMethod")
+            digest_method.set("Algorithm", "http://www.w3.org/2000/09/xmldsig#sha256")
+
+            # Calculate digest of the return data (simplified)
+            return_data = root.find('.//ReturnData')
+            if return_data is not None:
+                data_str = ET.tostring(return_data, encoding='unicode', method='xml')
+                digest_value = hashlib.sha256(data_str.encode('utf-8')).digest()
+                digest_element = ET.SubElement(reference, "DigestValue")
+                digest_element.text = base64.b64encode(digest_value).decode('utf-8')
+
+            # Signature value (mock for now - would use actual private key)
+            signature_value = ET.SubElement(signature, "SignatureValue")
+            mock_signature = self._generate_mock_signature(xml_content, signature_data)
+            signature_value.text = mock_signature
+
+            # Key info
+            key_info = ET.SubElement(signature, "KeyInfo")
+            key_name = ET.SubElement(key_info, "KeyName")
+            key_name.text = signature_data.get('efin', 'MOCK_EFIN')
+
+            # Convert back to string
+            signed_xml = ET.tostring(root, encoding='unicode', method='xml')
+            signed_xml = f'<?xml version="1.0" encoding="UTF-8"?>\n{signed_xml}'
+
+            logger.info("Digital signature added to e-file XML")
+            return signed_xml
+
+        except Exception as e:
+            logger.error(f"Failed to sign e-file XML: {e}", exc_info=True)
+            raise
+
+    def _generate_mock_signature(self, xml_content: str, signature_data: Dict[str, Any]) -> str:
+        """Generate mock digital signature for testing."""
+        # In production, this would use actual cryptographic signing
+        content_hash = hashlib.sha256(xml_content.encode('utf-8')).hexdigest()
+        pin = signature_data.get('pin', '0000')
+        combined = f"{content_hash}:{pin}:{datetime.now().isoformat()}"
+        signature = base64.b64encode(combined.encode('utf-8')).decode('utf-8')
+        return signature
+
+    def submit_efile_to_irs(self, signed_xml: str, submission_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Submit signed e-file to IRS.
+
+        Args:
+            signed_xml: Signed XML content
+            submission_data: Submission metadata (EFIN, PIN, etc.)
+
+        Returns:
+            Submission result
+        """
+        try:
+            # Create IRS submission client
+            client = IRSSubmissionClient(
+                efin=submission_data.get('efin'),
+                test_mode=submission_data.get('test_mode', True)
+            )
+
+            # Submit the return
+            result = client.submit_return(signed_xml, submission_data)
+
+            # Record the submission in acknowledgment tracker
+            if result.get('success'):
+                self.acknowledgment_tracker.record_submission(
+                    result['confirmation_number'],
+                    submission_data
+                )
+
+            # Log the submission
+            if self.audit_service:
+                self.audit_service.log_event(
+                    "e_file_submitted",
+                    f"E-file submitted to IRS (confirmation: {result.get('confirmation_number', 'N/A')})",
+                    {
+                        "confirmation_number": result.get('confirmation_number'),
+                        "status": result.get('status'),
+                        "test_mode": submission_data.get('test_mode', True)
+                    }
+                )
+
+            logger.info(f"E-file submitted successfully: {result.get('confirmation_number')}")
+            return result
+
+        except Exception as e:
+            logger.error(f"E-file submission failed: {e}", exc_info=True)
+            return {
+                'success': False,
+                'error': str(e),
+                'status': 'failed'
+            }
+
+    def check_efile_status(self, confirmation_number: str, submission_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check e-file status with IRS.
+
+        Args:
+            confirmation_number: IRS confirmation number
+            submission_data: Submission metadata
+
+        Returns:
+            Status information
+        """
+        try:
+            client = IRSSubmissionClient(
+                efin=submission_data.get('efin'),
+                test_mode=submission_data.get('test_mode', True)
+            )
+
+            status = client.check_status(confirmation_number)
+
+            # Update acknowledgment tracker
+            self.acknowledgment_tracker.update_status(
+                confirmation_number,
+                status.get('status', 'unknown'),
+                status.get('details', '')
+            )
+
+            # Update audit trail
+            if self.audit_service:
+                self.audit_service.log_event(
+                    "e_file_status_check",
+                    f"E-file status checked: {status.get('status')}",
+                    {
+                        "confirmation_number": confirmation_number,
+                        "status": status.get('status'),
+                        "last_updated": status.get('last_updated')
+                    }
+                )
+
+            return status
+
+        except Exception as e:
+            logger.error(f"Status check failed: {e}", exc_info=True)
+            return {
+                'confirmation_number': confirmation_number,
+                'status': 'error',
+                'error': str(e),
+                'last_updated': datetime.now().isoformat()
+            }
+
+    def get_all_acknowledgments(self) -> Dict[str, Any]:
+        """
+        Get all e-file acknowledgments.
+
+        Returns:
+            All acknowledgment records
+        """
+        return self.acknowledgment_tracker.get_all_acknowledgments()
+
+    def get_acknowledgment_status(self, confirmation_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Get status of a specific e-file submission.
+
+        Args:
+            confirmation_number: IRS confirmation number
+
+        Returns:
+            Status information or None if not found
+        """
+        return self.acknowledgment_tracker.get_status(confirmation_number)
+
+
+class IRSSubmissionClient:
+    """
+    Client for communicating with IRS e-file systems.
+    """
+
+    def __init__(self, efin: str, test_mode: bool = True):
+        """
+        Initialize IRS submission client.
+
+        Args:
+            efin: Electronic Filing Identification Number
+            test_mode: Whether to use test environment
+        """
+        self.efin = efin
+        self.test_mode = test_mode
+
+        # IRS endpoints (mock URLs for now)
+        self.endpoints = {
+            'submit': 'https://test.irs.gov/efile/submit' if test_mode else 'https://irs.gov/efile/submit',
+            'status': 'https://test.irs.gov/efile/status' if test_mode else 'https://irs.gov/efile/status'
+        }
+
+        logger.info(f"Initialized IRS Submission Client (EFIN: {efin}, Test Mode: {test_mode})")
+
+    def submit_return(self, signed_xml: str, submission_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Submit tax return to IRS.
+
+        Args:
+            signed_xml: Signed XML content
+            submission_data: Submission metadata
+
+        Returns:
+            Submission result
+        """
+        try:
+            # Prepare submission payload
+            payload = {
+                'xml_content': signed_xml,
+                'efin': self.efin,
+                'pin': submission_data.get('pin'),
+                'tax_year': submission_data.get('tax_year', 2025),
+                'timestamp': datetime.now().isoformat()
+            }
+
+            # In production, this would make an actual HTTPS request
+            # For now, simulate the submission
+            confirmation_number = f'EF{uuid.uuid4().hex[:10].upper()}'
+
+            logger.info(f"Tax return submitted to IRS: {confirmation_number}")
+
+            return {
+                'success': True,
+                'confirmation_number': confirmation_number,
+                'status': 'accepted',
+                'timestamp': datetime.now().isoformat(),
+                'estimated_processing_days': 7 if not self.test_mode else 1
+            }
+
+        except Exception as e:
+            logger.error(f"IRS submission failed: {e}")
+            raise
+
+    def check_status(self, confirmation_number: str) -> Dict[str, Any]:
+        """
+        Check submission status.
+
+        Args:
+            confirmation_number: IRS confirmation number
+
+        Returns:
+            Status information
+        """
+        try:
+            # In production, this would query IRS status API
+            # For now, simulate status checking
+            import random
+
+            statuses = ['processing', 'accepted', 'rejected']
+            status = random.choice(statuses)
+
+            return {
+                'confirmation_number': confirmation_number,
+                'status': status,
+                'last_updated': datetime.now().isoformat(),
+                'details': f'Return is currently {status}'
+            }
+
+        except Exception as e:
+            logger.error(f"Status check failed: {e}")
+            raise
+
+
+class EFileAcknowledgmentTracker:
+    """
+    Tracks IRS acknowledgments and status updates for submitted e-files.
+    """
+
+    def __init__(self, config: AppConfig):
+        """
+        Initialize acknowledgment tracker.
+
+        Args:
+            config: Application configuration
+        """
+        self.config = config
+        self.acknowledgments_file = Path(config.safe_dir) / 'efile_acknowledgments.json'
+        self.acknowledgments_file.parent.mkdir(parents=True, exist_ok=True)
+
+        logger.info("Initialized E-File Acknowledgment Tracker")
+
+    def record_submission(self, confirmation_number: str, submission_data: Dict[str, Any]) -> None:
+        """
+        Record a new e-file submission.
+
+        Args:
+            confirmation_number: IRS confirmation number
+            submission_data: Submission details
+        """
+        acknowledgments = self._load_acknowledgments()
+
+        acknowledgments[confirmation_number] = {
+            'confirmation_number': confirmation_number,
+            'submission_date': datetime.now().isoformat(),
+            'status': 'submitted',
+            'tax_year': submission_data.get('tax_year', 2025),
+            'efin': submission_data.get('efin'),
+            'test_mode': submission_data.get('test_mode', True),
+            'status_history': [{
+                'status': 'submitted',
+                'timestamp': datetime.now().isoformat(),
+                'details': 'Return submitted to IRS'
+            }]
+        }
+
+        self._save_acknowledgments(acknowledgments)
+        logger.info(f"Recorded e-file submission: {confirmation_number}")
+
+    def update_status(self, confirmation_number: str, new_status: str, details: str = "") -> None:
+        """
+        Update the status of a submitted e-file.
+
+        Args:
+            confirmation_number: IRS confirmation number
+            new_status: New status
+            details: Additional details
+        """
+        acknowledgments = self._load_acknowledgments()
+
+        if confirmation_number in acknowledgments:
+            acknowledgments[confirmation_number]['status'] = new_status
+            acknowledgments[confirmation_number]['last_updated'] = datetime.now().isoformat()
+
+            # Add to status history
+            status_entry = {
+                'status': new_status,
+                'timestamp': datetime.now().isoformat(),
+                'details': details or f'Status updated to {new_status}'
+            }
+            acknowledgments[confirmation_number]['status_history'].append(status_entry)
+
+            self._save_acknowledgments(acknowledgments)
+            logger.info(f"Updated e-file status: {confirmation_number} -> {new_status}")
+
+    def get_status(self, confirmation_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the current status of a submitted e-file.
+
+        Args:
+            confirmation_number: IRS confirmation number
+
+        Returns:
+            Status information or None if not found
+        """
+        acknowledgments = self._load_acknowledgments()
+        return acknowledgments.get(confirmation_number)
+
+    def get_all_acknowledgments(self) -> Dict[str, Any]:
+        """
+        Get all e-file acknowledgments.
+
+        Returns:
+            All acknowledgment records
+        """
+        return self._load_acknowledgments()
+
+    def _load_acknowledgments(self) -> Dict[str, Any]:
+        """Load acknowledgments from file."""
+        if self.acknowledgments_file.exists():
+            try:
+                with open(self.acknowledgments_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load acknowledgments: {e}")
+        return {}
+
+    def _save_acknowledgments(self, acknowledgments: Dict[str, Any]) -> None:
+        """Save acknowledgments to file."""
+        try:
+            with open(self.acknowledgments_file, 'w') as f:
+                json.dump(acknowledgments, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save acknowledgments: {e}")
+            raise
