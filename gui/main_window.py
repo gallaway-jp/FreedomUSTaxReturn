@@ -241,6 +241,7 @@ class MainWindow:
         
         # File menu items
         file_menu.add_command(label="New Return", command=self._new_return, accelerator="Ctrl+N")
+        file_menu.add_command(label="New Amended Return", command=self._new_amended_return)
         file_menu.add_command(label="Open", command=self.load_progress, accelerator="Ctrl+O")
         file_menu.add_command(label="Save", command=self.save_progress, accelerator="Ctrl+S")
         file_menu.add_separator()
@@ -365,6 +366,43 @@ class MainWindow:
             self.tax_data = TaxData(self.config)
             self.show_page("personal_info")
             self.update_progress()
+    
+    def _new_amended_return(self):
+        """Start a new amended return"""
+        # First check if we have an existing return to amend
+        if not self.tax_data or not any(year_data for year_data in self.tax_data.data.get("years", {}).values() 
+                                      if year_data.get("personal_info", {}).get("first_name")):
+            messagebox.showerror("No Original Return", 
+                "You must have an existing tax return loaded to create an amended return.")
+            return
+        
+        # Show dialog to select which year to amend and enter amendment details
+        from gui.amended_return_dialog import AmendedReturnDialog
+        dialog = AmendedReturnDialog(self.root, self.tax_data)
+        if dialog.result:
+            # Create the amended return
+            try:
+                amended_year = dialog.result['original_year']
+                original_filing_date = dialog.result['filing_date']
+                reason_codes = dialog.result['reason_codes']
+                explanation = dialog.result['explanation']
+                
+                self.tax_data.create_amended_return(
+                    amended_year, original_filing_date, reason_codes, explanation
+                )
+                
+                # Refresh the UI to show amended return data
+                self.show_page("personal_info")
+                self.update_progress()
+                self.status_label.config(text=f"Created amended return for {amended_year}")
+                
+                messagebox.showinfo("Amended Return Created", 
+                    f"Amended return for tax year {amended_year} has been created.\n\n" +
+                    f"Reason codes: {', '.join(reason_codes)}\n\n" +
+                    "Please update the tax information as needed for the amendment.")
+                    
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to create amended return: {str(e)}")
     
     def _focus_search(self):
         """Focus on search field (placeholder for future search functionality)"""

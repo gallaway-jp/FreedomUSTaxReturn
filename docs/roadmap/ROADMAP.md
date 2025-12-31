@@ -226,7 +226,7 @@
 - [ ] Foreign income and FBAR
 - [ ] Estate and trust returns
 - [ ] Partnership and S-Corp returns
-- [ ] Amended return support (1040-X)
+- [x] Amended return support (1040-X)
 
 ### Integration:
 - [ ] QuickBooks integration

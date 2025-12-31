@@ -74,6 +74,11 @@ class TaxReturnPDFGenerator:
         """
         required_forms = ["Form 1040"]  # Form 1040 is always required
 
+        # Check if this is an amended return
+        metadata = tax_data.get('metadata', {})
+        if metadata.get('return_type') == 'amended':
+            required_forms.append("Form 1040-X")
+
         # Check for income types that require additional forms
         income = tax_data.get('income', {})
 

@@ -694,3 +694,80 @@ class TestTaxDataMultiYearSupport:
         year_data = tax_data.get_year_data(2019)
 
         assert year_data is None
+
+
+class TestTaxDataAmendedReturns:
+    """Test amended return functionality in TaxData."""
+    
+    def test_is_amended_return_false_for_original(self):
+        """Test is_amended_return returns False for original returns."""
+        tax_data = TaxData()
+        
+        assert not tax_data.is_amended_return(2025)
+    
+    def test_create_amended_return_basic(self):
+        """Test creating a basic amended return."""
+        tax_data = TaxData()
+        
+        # First create some original return data
+        tax_data.set('personal_info.first_name', 'John', 2024)
+        tax_data.set('personal_info.last_name', 'Doe', 2024)
+        
+        # Create amended return
+        amended_year = tax_data.create_amended_return(
+            2024, 
+            '03/15/2025', 
+            ['A'], 
+            'Corrected income amount'
+        )
+        
+        assert amended_year == 2024
+        assert tax_data.is_amended_return(2024)
+        
+        amended_info = tax_data.get_amended_info(2024)
+        assert amended_info['original_filing_date'] == '03/15/2025'
+        assert amended_info['reason_codes'] == ['A']
+        assert amended_info['explanation'] == 'Corrected income amount'
+    
+    def test_create_amended_return_validates_reason_codes(self):
+        """Test that create_amended_return validates reason codes."""
+        tax_data = TaxData()
+        tax_data.set('personal_info.first_name', 'John', 2024)
+        
+        with pytest.raises(ValueError, match="Invalid reason code"):
+            tax_data.create_amended_return(2024, '03/15/2025', ['X'], '')
+    
+    def test_create_amended_return_requires_existing_year(self):
+        """Test that create_amended_return requires existing year data."""
+        tax_data = TaxData()
+        
+        with pytest.raises(ValueError, match="No data found for tax year"):
+            tax_data.create_amended_return(2024, '03/15/2025', ['A'], '')
+    
+    def test_get_amended_info_returns_empty_for_original(self):
+        """Test get_amended_info returns empty dict for original returns."""
+        tax_data = TaxData()
+        
+        amended_info = tax_data.get_amended_info(2025)
+        assert amended_info == {}
+    
+    def test_amended_return_preserves_original_data_structure(self):
+        """Test that amended return preserves the original data structure."""
+        tax_data = TaxData()
+        
+        # Set up original return data
+        tax_data.set('personal_info.first_name', 'Jane', 2024)
+        tax_data.set('personal_info.ssn', '123-45-6789', 2024)
+        tax_data.set('filing_status.status', 'Single', 2024)
+        tax_data.set('income.w2_forms', [{'employer': 'ABC Corp', 'wages': 50000}], 2024)
+        
+        # Create amended return
+        tax_data.create_amended_return(2024, '03/15/2025', ['A'], 'Correction')
+        
+        # Verify data is preserved
+        assert tax_data.get('personal_info.first_name', tax_year=2024) == 'Jane'
+        assert tax_data.get('personal_info.ssn', tax_year=2024) == '123456789'  # SSN validation removes dashes
+        assert tax_data.get('filing_status.status', tax_year=2024) == 'Single'
+        w2_forms = tax_data.get('income.w2_forms', tax_year=2024)
+        assert len(w2_forms) == 1
+        assert w2_forms[0]['employer'] == 'ABC Corp'

@@ -283,6 +283,12 @@ class TaxData:
                 # Year-specific metadata
                 "metadata": {
                     "tax_year": tax_year,
+                    "return_type": "original",  # "original" or "amended"
+                    "amended_info": {  # Only populated for amended returns
+                        "original_filing_date": "",
+                        "reason_codes": [],  # List of reason codes (A, B, C, D, E, F, G)
+                        "explanation": "",
+                    },
                     "created_date": datetime.now().isoformat(),
                     "last_modified": datetime.now().isoformat(),
                     "version": "2.0",
@@ -1292,6 +1298,100 @@ class TaxData:
                         return True
         
         return False
+    
+    def is_amended_return(self, tax_year: Optional[int] = None) -> bool:
+        """Check if the return for the given tax year is an amended return"""
+        if tax_year is None:
+            tax_year = self.get_current_year()
+        
+        # Check if there's an amended version of this year
+        amended_key = f"{tax_year}_amended"
+        if amended_key in self.data["years"]:
+            return True
+            
+        # Check the regular year data
+        if tax_year in self.data["years"]:
+            return self.get(f"metadata.return_type", "original", tax_year) == "amended"
+            
+        return False
+    
+    def create_amended_return(self, original_tax_year: int, original_filing_date: str = "", 
+                            reason_codes: List[str] = None, explanation: str = "") -> int:
+        """
+        Create a new amended return based on an original return.
+        
+        Args:
+            original_tax_year: The tax year of the original return
+            original_filing_date: Date the original return was filed (MM/DD/YYYY)
+            reason_codes: List of reason codes for amendment (A, B, C, D, E, F, G)
+            explanation: Explanation of changes made
+            
+        Returns:
+            The tax year for the amended return (same as original)
+        """
+        if reason_codes is None:
+            reason_codes = []
+            
+        # Validate reason codes
+        valid_codes = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        for code in reason_codes:
+            if code not in valid_codes:
+                raise ValueError(f"Invalid reason code '{code}'. Valid codes are: {valid_codes}")
+        
+        # Ensure original year data exists
+        if original_tax_year not in self.data["years"]:
+            raise ValueError(f"No data found for tax year {original_tax_year}")
+        
+        # Create amended return data by copying original
+        amended_data = self.data["years"][original_tax_year].copy()
+        
+        # Update metadata for amended return
+        amended_data["metadata"] = amended_data["metadata"].copy()
+        amended_data["metadata"]["return_type"] = "amended"
+        amended_data["metadata"]["amended_info"] = {
+            "original_filing_date": original_filing_date,
+            "reason_codes": reason_codes,
+            "explanation": explanation,
+        }
+        amended_data["metadata"]["created_date"] = datetime.now().isoformat()
+        amended_data["metadata"]["last_modified"] = datetime.now().isoformat()
+        
+        # Store as amended return (we'll use a special key to distinguish from original)
+        amended_key = f"{original_tax_year}_amended"
+        self.data["years"][amended_key] = amended_data
+        
+        # Set current year to the amended return
+        self.data["metadata"]["current_year"] = original_tax_year  # Keep same year but mark as amended
+        
+        logger.info(f"Created amended return for tax year {original_tax_year}")
+        
+        # Publish event
+        self.event_bus.publish(Event(
+            type=EventType.TAX_DATA_CHANGED,
+            source='TaxData',
+            data={'action': 'amended_return_created', 'tax_year': original_tax_year}
+        ))
+        
+        return original_tax_year
+    
+    def get_amended_info(self, tax_year: Optional[int] = None) -> Dict[str, Any]:
+        """Get amended return information for the specified tax year"""
+        if tax_year is None:
+            tax_year = self.get_current_year()
+            
+        # Check if there's an amended version
+        amended_key = f"{tax_year}_amended"
+        if amended_key in self.data["years"]:
+            amended_info = self.data["years"][amended_key]["metadata"].get("amended_info", {})
+            return amended_info if amended_info else {}
+        
+        # Check regular year data
+        if tax_year in self.data["years"]:
+            return_type = self.data["years"][tax_year]["metadata"].get("return_type", "original")
+            if return_type == "amended":
+                return self.data["years"][tax_year]["metadata"].get("amended_info", {})
+            
+        return {}
     
     def save(self, filename: str):
         """Save tax data to file (alias for save_to_file)"""

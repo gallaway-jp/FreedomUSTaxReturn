@@ -62,4 +62,57 @@ class ScheduleCFields:
 class ScheduleAFields:
     """Field names for Schedule A (Itemized Deductions)"""
     # TODO: Add Schedule A field names when implementing
+
+
+class Form1040XFields:
+    """Field names for IRS Form 1040-X (Amended Return)"""
+    
+    # Personal Information
+    FULL_NAME = 'topmostSubform[0].Page1[0].Part1[0].Name[0].TextField[0]'
+    SSN = 'topmostSubform[0].Page1[0].Part1[0].SSN[0].TextField[0]'
+    ADDRESS = 'topmostSubform[0].Page1[0].Part1[0].Address[0].TextField[0]'
+    CITY = 'topmostSubform[0].Page1[0].Part1[0].City[0].TextField[0]'
+    STATE = 'topmostSubform[0].Page1[0].Part1[0].State[0].TextField[0]'
+    ZIP_CODE = 'topmostSubform[0].Page1[0].Part1[0].ZIP[0].TextField[0]'
+    
+    # Filing Status (checkboxes)
+    FILING_STATUS_SINGLE = 'topmostSubform[0].Page1[0].Part1[0].FilingStatus[0].c1_1[0]'
+    FILING_STATUS_MARRIED_JOINT = 'topmostSubform[0].Page1[0].Part1[0].FilingStatus[0].c1_1[1]'
+    FILING_STATUS_MARRIED_SEPARATE = 'topmostSubform[0].Page1[0].Part1[0].FilingStatus[0].c1_1[2]'
+    FILING_STATUS_HEAD_OF_HOUSEHOLD = 'topmostSubform[0].Page1[0].Part1[0].FilingStatus[0].c1_1[3]'
+    FILING_STATUS_QUALIFYING_SURVIVING_SPOUSE = 'topmostSubform[0].Page1[0].Part1[0].FilingStatus[0].c1_1[4]'
+    
+    # Original Return Information
+    ORIGINAL_FILING_DATE = 'topmostSubform[0].Page1[0].Part1[0].DateFiled[0].TextField[0]'
+    
+    # Reason Codes (checkboxes A-G)
+    REASON_CODE_A = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[0]'  # Income
+    REASON_CODE_B = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[1]'  # Deductions
+    REASON_CODE_C = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[2]'  # Credits
+    REASON_CODE_D = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[3]'  # Status change
+    REASON_CODE_E = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[4]'  # Payments
+    REASON_CODE_F = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[5]'  # Other
+    REASON_CODE_G = 'topmostSubform[0].Page1[0].Part1[0].Reason[0].c1_2[6]'  # Other (continued)
+    
+    # Part II: Income and Deductions
+    TOTAL_INCOME = 'topmostSubform[0].Page1[0].Part2[0].Line1[0].TextField[0]'
+    STANDARD_DEDUCTION = 'topmostSubform[0].Page1[0].Part2[0].Line2[0].TextField[0]'
+    TAXABLE_INCOME = 'topmostSubform[0].Page1[0].Part2[0].Line3[0].TextField[0]'
+    
+    # Part III: Tax Computation
+    INCOME_TAX = 'topmostSubform[0].Page1[0].Part3[0].Line4[0].TextField[0]'
+    
+    # Part IV: Payments and Refundable Credits
+    TOTAL_PAYMENTS = 'topmostSubform[0].Page1[0].Part4[0].Line5[0].TextField[0]'
+    
+    # Part V: Amount Due or Overpayment
+    REFUND = 'topmostSubform[0].Page1[0].Part5[0].Line6[0].TextField[0]'
+    AMOUNT_DUE = 'topmostSubform[0].Page1[0].Part5[0].Line7[0].TextField[0]'
+    
+    # Explanation
+    EXPLANATION = 'topmostSubform[0].Page1[0].Part6[0].Explanation[0].TextField[0]'
+    
+    # Checkbox Values
+    CHECKBOX_CHECKED = '/1'
+    CHECKBOX_UNCHECKED = '/0'
     pass
