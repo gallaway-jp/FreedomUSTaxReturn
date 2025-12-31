@@ -392,7 +392,7 @@ class TestDependentsPageIntegration:
         # Test various birth dates
         test_cases = [
             ("01/01/2010", 15),  # Born in 2010, age 15 in 2025
-            ("12/31/2024", 0),   # Born late 2024, age 0 in 2025
+            ("12/31/2024", 1),   # Born late 2024, age 1 in 2025 (turns 1 on 12/31/2025)
             ("07/15/2000", 25),  # Born in 2000, age 25 in 2025
         ]
 

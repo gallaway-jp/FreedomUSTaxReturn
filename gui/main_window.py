@@ -18,6 +18,8 @@ from gui.pages.dependents import DependentsPage
 from gui.pages.form_viewer import FormViewerPage
 from gui.widgets.validation_summary import ValidationSummary
 from gui.theme_manager import ThemeManager
+from services.audit_trail_service import AuditTrailService
+from gui.audit_trail_window import AuditTrailWindow
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -36,6 +38,13 @@ class MainWindow:
         
         # Initialize tax data model with config
         self.tax_data = TaxData(self.config)
+        
+        # Initialize audit trail service
+        self.audit_service = AuditTrailService(self.config)
+        self.audit_service.start_session("main_user")
+        
+        # Bind window close event for cleanup
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         # Check if we're in a testing environment with mocked tkinter
         self.is_mocked = isinstance(self.root, Mock)
@@ -149,6 +158,7 @@ class MainWindow:
         self.root.bind('<Control-n>', lambda e: self._new_return())
         self.root.bind('<Control-e>', lambda e: self._export_pdf())
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
+        self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         
         # Focus shortcuts
         self.root.bind('<Control-f>', lambda e: self._focus_search())
@@ -194,6 +204,7 @@ class MainWindow:
         
         # Tools menu items
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
+        tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
     
     def _export_pdf(self):
         """Export the current tax return as PDF"""
@@ -246,6 +257,26 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror("Tax Planning Error", 
                 f"Failed to open tax planning tools:\n\n{str(e)}")
+    
+    def _open_audit_trail(self):
+        """Open the audit trail window"""
+        try:
+            audit_window = AuditTrailWindow(self.root, self.audit_service)
+        except Exception as e:
+            messagebox.showerror("Audit Trail Error", 
+                f"Failed to open audit trail:\n\n{str(e)}")
+    
+    def _on_closing(self):
+        """Handle application closing"""
+        try:
+            # End audit session
+            if hasattr(self, 'audit_service'):
+                self.audit_service.end_session()
+        except Exception as e:
+            print(f"Error ending audit session: {e}")
+        
+        # Close the application
+        self.root.destroy()
     
     def _apply_theme(self):
         """Apply the current theme to all UI elements"""
@@ -713,6 +744,14 @@ class MainWindow:
                 "Your data is encrypted and protected."
             )
             self.status_label.config(text=f"Saved: {Path(filename).name}")
+            
+            # Log audit event
+            self.audit_service.log_action(
+                action="SAVE",
+                entity_type="file",
+                entity_id=str(filename),
+                metadata={"file_type": "encrypted_tax_return"}
+            )
         except ValueError as e:
             # Validation or path errors
             logger.warning(f"Save failed - validation error: {e}")
@@ -761,6 +800,14 @@ class MainWindow:
                     page_id = self.get_current_page_id()
                     self.show_page(page_id)
                 logger.info(f"Tax return loaded: {filename}")
+                
+                # Log audit event
+                self.audit_service.log_action(
+                    action="LOAD",
+                    entity_type="file",
+                    entity_id=str(filename),
+                    metadata={"file_type": "encrypted_tax_return"}
+                )
             except ValueError as e:
                 logger.error(f"Load failed - integrity error: {e}")
                 messagebox.showerror(
