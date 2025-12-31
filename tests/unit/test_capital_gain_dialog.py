@@ -44,7 +44,8 @@ class TestCapitalGainDialog:
         }.get(color, "black")
 
         # Add some existing capital gains data
-        tax_data.data['income']['capital_gains'] = [
+        current_year = tax_data.get_current_year()
+        tax_data.data['years'][current_year]['income']['capital_gains'] = [
             {
                 'description': 'Apple Inc Common Stock',
                 'transaction_type': 'Sale',

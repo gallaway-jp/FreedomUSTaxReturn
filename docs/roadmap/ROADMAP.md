@@ -127,11 +127,11 @@
    - [x] Multi-state returns
    - [x] State tax calculations
 
-2. **Multi-Year Support**
-   - [ ] Tax year selection
-   - [ ] Prior year returns (2023, 2022, etc.)
-   - [ ] Carryover tracking
-   - [ ] Year-over-year comparison
+2. **Multi-Year Support** ✅
+   - [x] Tax year selection
+   - [x] Prior year returns (2023, 2022, etc.)
+   - [x] Carryover tracking
+   - [x] Year-over-year comparison
 
 3. **Collaboration Features**
    - [ ] Share return with spouse

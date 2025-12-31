@@ -116,169 +116,216 @@ class TaxData:
         # Initialize empty tax data with encryption
         # Ensure safe directory exists
         self.config.ensure_directories()
-        
+
         # Initialize encryption service
         self.encryption = EncryptionService(self.config.key_file)
-        
+
         # Get event bus for publishing data changes
         self.event_bus = EventBus.get_instance()
-        
+
+        # Multi-year support: data is now organized by tax year
         self.data = {
-            # Personal Information
-            "personal_info": {
-                "first_name": "",
-                "middle_initial": "",
-                "last_name": "",
-                "ssn": "",
-                "date_of_birth": "",
-                "occupation": "",
-                "address": "",
-                "city": "",
-                "state": "",
-                "zip_code": "",
-                "email": "",
-                "phone": "",
-            },
-            
-            # Spouse Information (if married filing jointly)
-            "spouse_info": {
-                "first_name": "",
-                "middle_initial": "",
-                "last_name": "",
-                "ssn": "",
-                "date_of_birth": "",
-                "occupation": "",
-            },
-            
-            # Dependents
-            "dependents": [],
-            
-            # Filing Status
-            "filing_status": {
-                "status": "Single",  # Single, MFJ, MFS, HOH, QW
-                "is_dependent": False,
-                "can_be_claimed": False,
-            },
-            
-            # Income
-            "income": {
-                "w2_forms": [],
-                "interest_income": [],
-                "dividend_income": [],
-                "self_employment": [],
-                "retirement_distributions": [],
-                "social_security": [],
-                "capital_gains": [],
-                "rental_income": [],
-                "business_income": [],
-                "unemployment": [],
-                "other_income": [],
-            },
-            
-            # Adjustments to Income
-            "adjustments": {
-                "educator_expenses": 0,
-                "hsa_deduction": 0,
-                "self_employment_tax": 0,
-                "self_employed_sep": 0,
-                "self_employed_health": 0,
-                "student_loan_interest": 0,
-                "ira_deduction": 0,
-                "other_adjustments": [],
-            },
-            
-            # Deductions
-            "deductions": {
-                "method": "standard",  # standard or itemized
-                "medical_expenses": 0,
-                "state_local_taxes": 0,
-                "mortgage_interest": 0,
-                "charitable_contributions": 0,
-                "other_itemized": [],
-            },
-            
-            # Credits
-            "credits": {
-                "child_tax_credit": {
-                    "qualifying_children": [],
-                    "other_dependents": [],
-                },
-                "earned_income_credit": {
-                    "qualifying_children": [],
-                },
-                "education_credits": {
-                    "american_opportunity": [],
-                    "lifetime_learning": [],
-                },
-                "retirement_savings_credit": 0,
-                "child_dependent_care": {
-                    "expenses": 0,
-                },
-                "residential_energy": {
-                    "amount": 0,
-                },
-                "premium_tax_credit": {
-                    "amount": 0,
-                },
-                "other_credits": [],
-            },
-            
-            # Other Taxes
-            "other_taxes": {
-                "self_employment_tax": 0,
-                "additional_medicare": 0,
-                "household_employment": 0,
-                "other": [],
-            },
-            
-            # Payments
-            "payments": {
-                "federal_withholding": 0,
-                "estimated_payments": [],
-                "prior_year_overpayment": 0,
-                "eic_payments": 0,
-                "other_payments": [],
-            },
-            
-            # State Taxes
-            "state_taxes": {
-                "selected_states": [],  # List of state codes
-                "calculations": {},     # State tax calculations by state code
-                "forms": [],           # Required state forms
-                "filings": [],         # Filing status for each state
-            },
-            
-            # Metadata
+            "years": {},  # Dictionary of tax year data
             "metadata": {
-                "tax_year": 2025,  # Default to 2025 tax year
+                "current_year": 2025,  # Currently active tax year
+                "supported_years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
                 "created_date": datetime.now().isoformat(),
                 "last_modified": datetime.now().isoformat(),
-                "version": "1.0",
+                "version": "2.0",
             }
         }
+
+        # Initialize current year data
+        self._initialize_year_data(2025)
+
+    def _initialize_year_data(self, tax_year: int):
+        """
+        Initialize data structure for a specific tax year.
+
+        Args:
+            tax_year: The tax year to initialize
+        """
+        if tax_year not in self.data["years"]:
+            self.data["years"][tax_year] = {
+                # Personal Information
+                "personal_info": {
+                    "first_name": "",
+                    "middle_initial": "",
+                    "last_name": "",
+                    "ssn": "",
+                    "date_of_birth": "",
+                    "occupation": "",
+                    "address": "",
+                    "city": "",
+                    "state": "",
+                    "zip_code": "",
+                    "email": "",
+                    "phone": "",
+                },
+
+                # Spouse Information (if married filing jointly)
+                "spouse_info": {
+                    "first_name": "",
+                    "middle_initial": "",
+                    "last_name": "",
+                    "ssn": "",
+                    "date_of_birth": "",
+                    "occupation": "",
+                },
+
+                # Dependents
+                "dependents": [],
+
+                # Filing Status
+                "filing_status": {
+                    "status": "Single",  # Single, MFJ, MFS, HOH, QW
+                    "is_dependent": False,
+                    "can_be_claimed": False,
+                },
+
+                # Income
+                "income": {
+                    "w2_forms": [],
+                    "interest_income": [],
+                    "dividend_income": [],
+                    "self_employment": [],
+                    "retirement_distributions": [],
+                    "social_security": [],
+                    "capital_gains": [],
+                    "rental_income": [],
+                    "business_income": [],
+                    "unemployment": [],
+                    "other_income": [],
+                },
+
+                # Adjustments to Income
+                "adjustments": {
+                    "educator_expenses": 0,
+                    "hsa_deduction": 0,
+                    "self_employment_tax": 0,
+                    "self_employed_sep": 0,
+                    "self_employed_health": 0,
+                    "student_loan_interest": 0,
+                    "ira_deduction": 0,
+                    "other_adjustments": [],
+                },
+
+                # Deductions
+                "deductions": {
+                    "method": "standard",  # standard or itemized
+                    "medical_expenses": 0,
+                    "state_local_taxes": 0,
+                    "mortgage_interest": 0,
+                    "charitable_contributions": 0,
+                    "other_itemized": [],
+                },
+
+                # Credits
+                "credits": {
+                    "child_tax_credit": {
+                        "qualifying_children": [],
+                        "other_dependents": [],
+                    },
+                    "earned_income_credit": {
+                        "qualifying_children": [],
+                    },
+                    "education_credits": {
+                        "american_opportunity": [],
+                        "lifetime_learning": [],
+                    },
+                    "retirement_savings_credit": 0,
+                    "child_dependent_care": {
+                        "expenses": 0,
+                    },
+                    "residential_energy": {
+                        "amount": 0,
+                    },
+                    "premium_tax_credit": {
+                        "amount": 0,
+                    },
+                    "other_credits": [],
+                },
+
+                # Other Taxes
+                "other_taxes": {
+                    "self_employment_tax": 0,
+                    "additional_medicare": 0,
+                    "household_employment": 0,
+                    "other": [],
+                },
+
+                # Payments
+                "payments": {
+                    "federal_withholding": 0,
+                    "estimated_payments": [],
+                    "prior_year_overpayment": 0,
+                    "eic_payments": 0,
+                    "other_payments": [],
+                },
+
+                # State Taxes
+                "state_taxes": {
+                    "selected_states": [],  # List of state codes
+                    "calculations": {},     # State tax calculations by state code
+                    "forms": [],           # Required state forms
+                    "filings": [],         # Filing status for each state
+                },
+
+                # Year-specific metadata
+                "metadata": {
+                    "tax_year": tax_year,
+                    "created_date": datetime.now().isoformat(),
+                    "last_modified": datetime.now().isoformat(),
+                    "version": "2.0",
+                }
+            }
     
-    def get(self, path: str, default=None) -> Any:
+    def get(self, path: str, default=None, tax_year: Optional[int] = None) -> Any:
         """
         Get value from nested dictionary using dot notation
         Example: tax_data.get("personal_info.first_name")
+        Supports multi-year data: tax_data.get("personal_info.first_name", tax_year=2024)
+
+        Args:
+            path: Dot-notation path to the value
+            default: Default value if path not found
+            tax_year: Specific tax year to get data from (uses current year if None)
         """
+        if tax_year is None:
+            tax_year = self.get_current_year()
+
+        # Ensure year data exists
+        self._initialize_year_data(tax_year)
+
         keys = path.split('.')
-        value = self.data
+        value = self.data["years"][tax_year]
         for key in keys:
             if isinstance(value, dict):
                 value = value.get(key, default)
             else:
                 return default
         return value
-    
-    def set(self, path: str, value: Any):
+
+    def set(self, path: str, value: Any, tax_year: Optional[int] = None):
         """
         Set value in nested dictionary using dot notation with validation
         Example: tax_data.set("personal_info.first_name", "John")
+        Supports multi-year data: tax_data.set("personal_info.first_name", "John", tax_year=2024)
+
+        Args:
+            path: Dot-notation path to set
+            value: Value to set
+            tax_year: Specific tax year to set data for (uses current year if None)
         """
+        if tax_year is None:
+            tax_year = self.get_current_year()
+
+        # Ensure year data exists
+        self._initialize_year_data(tax_year)
+
         # Store old value for event
-        old_value = self.get(path)
-        
+        old_value = self.get(path, tax_year=tax_year)
+
         # Validate using field-specific validators
         if path in self.VALIDATORS:
             is_valid, validated_value = self.VALIDATORS[path](value)
@@ -286,14 +333,14 @@ class TaxData:
                 logger.warning(f"Validation failed for {path}: {validated_value}")
                 raise ValueError(f"Invalid value for {path}: {validated_value}")
             value = validated_value
-        
+
         # Check length limits for string fields
         field_name = path.split('.')[-1]
         if field_name in self.MAX_LENGTHS and isinstance(value, str):
             max_len = self.MAX_LENGTHS[field_name]
             if len(value) > max_len:
                 raise ValueError(f"{field_name} exceeds maximum length of {max_len} characters")
-        
+
         # Validate currency values
         if 'amount' in field_name.lower() or field_name in ['wages', 'withholding', 'income']:
             if isinstance(value, (int, float)):
@@ -301,32 +348,167 @@ class TaxData:
                     raise ValueError(f"{field_name} cannot be negative")
                 if value > 999999999.99:
                     raise ValueError(f"{field_name} exceeds maximum allowed value")
-        
+
         keys = path.split('.')
-        data = self.data
+        data = self.data["years"][tax_year]
         for key in keys[:-1]:
             if key not in data:
                 data[key] = {}
             data = data[key]
         data[keys[-1]] = value
+
+        # Update metadata
+        self.data["years"][tax_year]["metadata"]["last_modified"] = datetime.now().isoformat()
         self.data["metadata"]["last_modified"] = datetime.now().isoformat()
-        
-        logger.info(f"Data modified - Field: {path}")
-        
+
+        logger.info(f"Data modified - Field: {path}, Year: {tax_year}")
+
         # Publish event for data change
         self.event_bus.publish(Event(
             type=EventType.TAX_DATA_CHANGED,
             source='TaxData',
-            data={'path': path, 'old_value': old_value, 'new_value': value}
+            data={'path': path, 'old_value': old_value, 'new_value': value, 'tax_year': tax_year}
         ))
-    
-    def get_section(self, section: str) -> Dict:
-        """Get entire section of data"""
-        return self.data.get(section, {})
-    
-    def set_section(self, section: str, data: Dict):
-        """Set entire section of data"""
-        self.data[section] = data
+
+    def get_current_year(self) -> int:
+        """Get the currently active tax year"""
+        return self.data["metadata"]["current_year"]
+
+    def set_current_year(self, tax_year: int):
+        """Set the currently active tax year"""
+        if tax_year not in self.data["metadata"]["supported_years"]:
+            raise ValueError(f"Tax year {tax_year} is not supported")
+
+        old_year = self.get_current_year()
+        self.data["metadata"]["current_year"] = tax_year
+
+        # Initialize data for the new year if it doesn't exist
+        self._initialize_year_data(tax_year)
+
+        logger.info(f"Current tax year changed from {old_year} to {tax_year}")
+
+        # Publish event for year change
+        self.event_bus.publish(Event(
+            type=EventType.TAX_DATA_CHANGED,
+            source='TaxData',
+            data={'action': 'year_changed', 'old_year': old_year, 'new_year': tax_year}
+        ))
+
+    def get_available_years(self) -> List[int]:
+        """Get list of all tax years that have data"""
+        return sorted(self.data["years"].keys())
+
+    def create_new_year(self, tax_year: int, base_year: Optional[int] = None) -> bool:
+        """
+        Create a new tax year, optionally copying data from a base year.
+
+        Args:
+            tax_year: The new tax year to create
+            base_year: Year to copy data from (uses current year if None)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if tax_year in self.data["years"]:
+            logger.warning(f"Tax year {tax_year} already exists")
+            return False
+
+        if base_year is None:
+            base_year = self.get_current_year()
+
+        if base_year not in self.data["years"]:
+            logger.error(f"Base year {base_year} does not exist")
+            return False
+
+        # Copy data from base year
+        import copy
+        self.data["years"][tax_year] = copy.deepcopy(self.data["years"][base_year])
+
+        # Update year-specific metadata
+        self.data["years"][tax_year]["metadata"] = {
+            "tax_year": tax_year,
+            "created_date": datetime.now().isoformat(),
+            "last_modified": datetime.now().isoformat(),
+            "version": "2.0",
+            "based_on_year": base_year
+        }
+
+        # Clear year-specific calculated fields
+        self._clear_calculated_fields(tax_year)
+
+        logger.info(f"Created new tax year {tax_year} based on {base_year}")
+        return True
+
+    def _clear_calculated_fields(self, tax_year: int):
+        """Clear calculated fields when copying data to a new year"""
+        year_data = self.data["years"][tax_year]
+
+        # Clear calculations that should be recalculated for the new year
+        if "calculations" in year_data:
+            year_data["calculations"] = {}
+
+        # Clear state tax calculations
+        if "state_taxes" in year_data and "calculations" in year_data["state_taxes"]:
+            year_data["state_taxes"]["calculations"] = {}
+
+    def get_year_data(self, tax_year: int) -> Optional[Dict[str, Any]]:
+        """Get all data for a specific tax year"""
+        if tax_year not in self.data["years"]:
+            return None
+        return self.data["years"][tax_year]
+
+    def delete_year(self, tax_year: int) -> bool:
+        """
+        Delete data for a specific tax year.
+
+        Returns False if trying to delete the current year or if year doesn't exist.
+        """
+        if tax_year == self.get_current_year():
+            logger.warning("Cannot delete the current tax year")
+            return False
+
+        if tax_year not in self.data["years"]:
+            logger.warning(f"Tax year {tax_year} does not exist")
+            return False
+
+        del self.data["years"][tax_year]
+        logger.info(f"Deleted tax year {tax_year}")
+        return True
+
+    def copy_personal_info_to_year(self, from_year: int, to_year: int):
+        """Copy personal information from one year to another"""
+        if from_year not in self.data["years"] or to_year not in self.data["years"]:
+            return
+
+        import copy
+        self.data["years"][to_year]["personal_info"] = copy.deepcopy(
+            self.data["years"][from_year]["personal_info"]
+        )
+        self.data["years"][to_year]["spouse_info"] = copy.deepcopy(
+            self.data["years"][from_year]["spouse_info"]
+        )
+        self.data["years"][to_year]["dependents"] = copy.deepcopy(
+            self.data["years"][from_year]["dependents"]
+        )
+
+        logger.info(f"Copied personal info from {from_year} to {to_year}")
+
+    def get_section(self, section: str, tax_year: Optional[int] = None) -> Dict:
+        """Get entire section of data for a specific year"""
+        if tax_year is None:
+            tax_year = self.get_current_year()
+
+        self._initialize_year_data(tax_year)
+        return self.data["years"][tax_year].get(section, {})
+
+    def set_section(self, section: str, data: Dict, tax_year: Optional[int] = None):
+        """Set entire section of data for a specific year"""
+        if tax_year is None:
+            tax_year = self.get_current_year()
+
+        self._initialize_year_data(tax_year)
+        self.data["years"][tax_year][section] = data
+        self.data["years"][tax_year]["metadata"]["last_modified"] = datetime.now().isoformat()
         self.data["metadata"]["last_modified"] = datetime.now().isoformat()
     
     def add_to_list(self, path: str, item: Any):

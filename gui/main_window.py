@@ -160,6 +160,7 @@ class MainWindow:
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
+        self.root.bind('<Control-y>', lambda e: self._compare_years())
         
         # Focus shortcuts
         self.root.bind('<Control-f>', lambda e: self._focus_search())
@@ -207,6 +208,17 @@ class MainWindow:
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
+
+        # Year menu
+        year_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Year", menu=year_menu)
+
+        # Year menu items
+        year_menu.add_command(label="New Tax Year", command=self._create_new_year)
+        year_menu.add_command(label="Copy Current Year", command=self._copy_current_year)
+        year_menu.add_command(label="Compare Years", command=self._compare_years, accelerator="Ctrl+Y")
+        year_menu.add_separator()
+        year_menu.add_command(label="Manage Years", command=self._manage_years)
     
     def _export_pdf(self):
         """Export the current tax return as PDF"""
@@ -276,6 +288,173 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror("Audit Trail Error", 
                 f"Failed to open audit trail:\n\n{str(e)}")
+    
+    def _create_new_year(self):
+        """Create a new tax year return"""
+        try:
+            # Get available years
+            supported_years = self.tax_year_service.get_supported_years()
+            current_year = self.tax_data.get_current_year()
+
+            # Create a simple dialog to select the new year
+            from tkinter import simpledialog
+            new_year_str = simpledialog.askstring(
+                "New Tax Year",
+                f"Enter the tax year to create (supported: {min(supported_years)}-{max(supported_years)}):",
+                initialvalue=str(current_year + 1)
+            )
+
+            if new_year_str:
+                try:
+                    new_year = int(new_year_str)
+                    if new_year in supported_years:
+                        if self.tax_data.create_new_year(new_year, current_year):
+                            messagebox.showinfo("Success", f"Created new tax year {new_year} based on {current_year}")
+                            # Switch to the new year
+                            self._on_tax_year_changed(new_year)
+                        else:
+                            messagebox.showerror("Error", f"Failed to create tax year {new_year}")
+                    else:
+                        messagebox.showerror("Invalid Year", f"Tax year {new_year} is not supported")
+                except ValueError:
+                    messagebox.showerror("Invalid Input", "Please enter a valid year number")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to create new tax year: {str(e)}")
+
+    def _copy_current_year(self):
+        """Copy the current year data to a new year"""
+        self._create_new_year()  # Reuse the same logic
+
+    def _compare_years(self):
+        """Open year comparison window"""
+        try:
+            from gui.year_comparison_window import YearComparisonWindow
+
+            # Get available years with data
+            available_years = self.tax_data.get_available_years()
+            if len(available_years) < 2:
+                messagebox.showwarning(
+                    "Insufficient Data",
+                    "Need at least two tax years with data to compare. Create additional years first."
+                )
+                return
+
+            # Get data for all available years
+            tax_data_dict = {}
+            for year in available_years:
+                tax_data_dict[year] = self.tax_data.get_year_data(year)
+
+            # Open comparison window
+            comparison_window = YearComparisonWindow(
+                self.root,
+                self.tax_year_service,
+                tax_data_dict
+            )
+
+        except Exception as e:
+            messagebox.showerror("Comparison Error", f"Failed to open year comparison: {str(e)}")
+
+    def _manage_years(self):
+        """Open year management dialog"""
+        try:
+            # Create a simple management dialog
+            manage_window = tk.Toplevel(self.root)
+            manage_window.title("Manage Tax Years")
+            manage_window.geometry("400x300")
+            manage_window.resizable(True, True)
+
+            # Available years list
+            ttk.Label(manage_window, text="Available Tax Years:", font=("", 10, "bold")).pack(pady=10)
+
+            # Listbox with years
+            listbox_frame = ttk.Frame(manage_window)
+            listbox_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+
+            scrollbar = ttk.Scrollbar(listbox_frame)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            listbox = tk.Listbox(listbox_frame, yscrollcommand=scrollbar.set, height=10)
+            listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            scrollbar.config(command=listbox.yview)
+
+            # Populate listbox
+            available_years = self.tax_data.get_available_years()
+            current_year = self.tax_data.get_current_year()
+
+            for year in sorted(available_years, reverse=True):
+                display_text = f"{year} (Current)" if year == current_year else str(year)
+                listbox.insert(tk.END, display_text)
+
+            # Buttons
+            button_frame = ttk.Frame(manage_window)
+            button_frame.pack(fill=tk.X, padx=20, pady=(0, 20))
+
+            ttk.Button(
+                button_frame,
+                text="Switch To Selected",
+                command=lambda: self._switch_to_selected_year(listbox, manage_window)
+            ).pack(side=tk.LEFT, padx=(0, 10))
+
+            ttk.Button(
+                button_frame,
+                text="Delete Selected",
+                command=lambda: self._delete_selected_year(listbox, manage_window)
+            ).pack(side=tk.LEFT)
+
+            ttk.Button(
+                button_frame,
+                text="Close",
+                command=manage_window.destroy
+            ).pack(side=tk.RIGHT)
+
+        except Exception as e:
+            messagebox.showerror("Management Error", f"Failed to open year management: {str(e)}")
+
+    def _switch_to_selected_year(self, listbox, window):
+        """Switch to the selected year"""
+        try:
+            selection = listbox.curselection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select a tax year first")
+                return
+
+            selected_text = listbox.get(selection[0])
+            year = int(selected_text.split()[0])  # Extract year from "2025 (Current)" format
+
+            self._on_tax_year_changed(year)
+            window.destroy()
+            messagebox.showinfo("Switched", f"Switched to tax year {year}")
+
+        except Exception as e:
+            messagebox.showerror("Switch Error", f"Failed to switch tax year: {str(e)}")
+
+    def _delete_selected_year(self, listbox, window):
+        """Delete the selected year"""
+        try:
+            selection = listbox.curselection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select a tax year first")
+                return
+
+            selected_text = listbox.get(selection[0])
+            year = int(selected_text.split()[0])
+
+            current_year = self.tax_data.get_current_year()
+            if year == current_year:
+                messagebox.showerror("Cannot Delete", "Cannot delete the current tax year")
+                return
+
+            if messagebox.askyesno("Confirm Delete", f"Delete tax year {year}? This action cannot be undone."):
+                if self.tax_data.delete_year(year):
+                    messagebox.showinfo("Deleted", f"Tax year {year} has been deleted")
+                    window.destroy()
+                    self._manage_years()  # Refresh the management window
+                else:
+                    messagebox.showerror("Delete Failed", f"Failed to delete tax year {year}")
+
+        except Exception as e:
+            messagebox.showerror("Delete Error", f"Failed to delete tax year: {str(e)}")
     
     def _on_closing(self):
         """Handle application closing"""
@@ -599,15 +778,17 @@ class MainWindow:
         )
         title_label.pack(pady=(0, 10))
         
-        # Tax Year Info
-        tax_year_label = ttk.Label(
+        # Tax Year Selector
+        from services.tax_year_service import TaxYearService
+        from gui.widgets.tax_year_selector import TaxYearSelector
+
+        self.tax_year_service = TaxYearService()
+        self.tax_year_selector = TaxYearSelector(
             sidebar,
-            text="Tax Year 2025",
-            font=("Arial", 10, "bold"),
-            justify="center",
-            foreground="blue"
+            self.tax_year_service,
+            on_year_changed=self._on_tax_year_changed
         )
-        tax_year_label.pack(pady=(0, 20))
+        self.tax_year_selector.pack(fill="x", pady=(0, 20))
         
         # Progress indicator
         progress_frame = ttk.Frame(sidebar)
@@ -698,6 +879,28 @@ class MainWindow:
             foreground="gray"
         )
         self.status_label.pack(side="bottom", pady=10)
+
+    def _on_tax_year_changed(self, new_year: int):
+        """Handle tax year change"""
+        try:
+            # Update the tax data model to use the new year
+            self.tax_data.set_current_year(new_year)
+
+            # Refresh all pages to show data for the new year
+            if self.current_page:
+                self.current_page.refresh_data()
+
+            # Update progress and validation
+            self.update_progress()
+            self.update_validation_summary()
+
+            # Update status
+            self.status_label.config(text=f"Switched to Tax Year {new_year}")
+
+        except Exception as e:
+            messagebox.showerror("Year Change Error", f"Failed to switch tax year: {str(e)}")
+            # Revert the selector to the current year
+            self.tax_year_selector.set_current_year(self.tax_data.get_current_year())
     
     def create_main_content(self):
         """Create main content area"""
