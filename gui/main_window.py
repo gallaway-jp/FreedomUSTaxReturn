@@ -26,6 +26,7 @@ from services.authentication_service import AuthenticationService
 from services.cloud_backup_service import CloudBackupService
 from gui.two_factor_dialogs import TwoFactorSetupDialog, TwoFactorDisableDialog
 from gui.client_management_dialogs import ClientManagementDialog
+from gui.ptin_ero_dialogs import PTINEROManagementDialog
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -284,6 +285,7 @@ class MainWindow:
         client_menu = tk.Menu(security_menu, tearoff=0)
         security_menu.add_cascade(label="Client Management", menu=client_menu)
         client_menu.add_command(label="Manage Clients...", command=self._open_client_management)
+        client_menu.add_command(label="PTIN/ERO Management...", command=self._open_ptin_ero_management)
         
         security_menu.add_command(label="Change Password", command=self._change_password)
         security_menu.add_separator()
@@ -1637,3 +1639,15 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open client management: {e}")
+    
+    def _open_ptin_ero_management(self):
+        """Open PTIN/ERO management dialog"""
+        try:
+            if not self.session_token:
+                messagebox.showerror("Error", "You must be logged in to manage PTIN/ERO credentials.")
+                return
+            
+            dialog = PTINEROManagementDialog(self.root)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open PTIN/ERO management: {e}")

@@ -12,6 +12,7 @@ from config.app_config import AppConfig
 from config.tax_year_config import get_tax_year_config, TaxYearConfig
 from services.encryption_service import EncryptionService
 from services.tax_calculation_service import TaxCalculationService
+from services.ptin_ero_service import PTINEROService
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class DependencyContainer:
         # Service instances (lazy-loaded)
         self._encryption_service: Optional[EncryptionService] = None
         self._tax_calculation_service: Optional[TaxCalculationService] = None
+        self._ptin_ero_service: Optional[PTINEROService] = None
         
         logger.info(f"Initialized DependencyContainer for tax year {tax_year}")
     
@@ -97,6 +99,18 @@ class DependencyContainer:
             self._tax_calculation_service = TaxCalculationService(self.tax_year)
             logger.debug("Created TaxCalculationService instance")
         return self._tax_calculation_service
+    
+    def get_ptin_ero_service(self) -> PTINEROService:
+        """
+        Get PTIN/ERO service instance.
+        
+        Returns:
+            PTINEROService configured with encryption
+        """
+        if self._ptin_ero_service is None:
+            self._ptin_ero_service = PTINEROService(self.config, self.get_encryption_service())
+            logger.debug("Created PTINEROService instance")
+        return self._ptin_ero_service
     
     def get_tax_data_repository(self):
         """
