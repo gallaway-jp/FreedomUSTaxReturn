@@ -17,6 +17,7 @@ from gui.pages.payments import PaymentsPage
 from gui.pages.dependents import DependentsPage
 from gui.pages.form_viewer import FormViewerPage
 from gui.pages.receipt_scanner_page import ReceiptScannerPage
+from gui.pages.cryptocurrency_page import CryptocurrencyPage
 from gui.widgets.validation_summary import ValidationSummary
 from gui.theme_manager import ThemeManager
 from services.audit_trail_service import AuditTrailService
@@ -125,6 +126,7 @@ class MainWindow:
                 "credits": Mock(),
                 "payments": Mock(),
                 "receipt_scanner": Mock(),
+                "cryptocurrency": Mock(),
                 "form_viewer": Mock(),
             }
             # Configure dependents button mock to behave like a real button
@@ -149,6 +151,7 @@ class MainWindow:
             from gui.pages.payments import PaymentsPage
             from gui.pages.form_viewer import FormViewerPage
             from gui.pages.receipt_scanner_page import ReceiptScannerPage
+            from gui.pages.cryptocurrency_page import CryptocurrencyPage
             
             self.page_mapping = {
                 PersonalInfoPage: "personal_info",
@@ -159,6 +162,7 @@ class MainWindow:
                 CreditsPage: "credits",
                 PaymentsPage: "payments",
                 ReceiptScannerPage: "receipt_scanner",
+                CryptocurrencyPage: "cryptocurrency",
                 FormViewerPage: "form_viewer",
             }
             
@@ -172,6 +176,7 @@ class MainWindow:
                 "credits": 85,
                 "payments": 95,
                 "receipt_scanner": 90,
+                "cryptocurrency": 92,
                 "form_viewer": 100,
             }
             
@@ -189,7 +194,8 @@ class MainWindow:
         self.root.bind('<Alt-Key-6>', lambda e: self.show_page("credits"))
         self.root.bind('<Alt-Key-7>', lambda e: self.show_page("payments"))
         self.root.bind('<Alt-Key-8>', lambda e: self.show_page("receipt_scanner"))
-        self.root.bind('<Alt-Key-9>', lambda e: self.show_page("form_viewer"))
+        self.root.bind('<Alt-Key-9>', lambda e: self.show_page("cryptocurrency"))
+        self.root.bind('<Alt-Key-0>', lambda e: self.show_page("form_viewer"))
         
         # Common actions
         self.root.bind('<Control-s>', lambda e: self.save_progress())
@@ -1109,6 +1115,7 @@ class MainWindow:
             ("Credits & Taxes", "credits"),
             ("Payments", "payments"),
             ("Receipt Scanner", "receipt_scanner"),
+            ("Cryptocurrency", "cryptocurrency"),
             ("View Forms", "form_viewer"),
         ]
         
@@ -1204,6 +1211,7 @@ class MainWindow:
             "credits": CreditsPage,
             "payments": PaymentsPage,
             "receipt_scanner": ReceiptScannerPage,
+            "cryptocurrency": CryptocurrencyPage,
             "form_viewer": FormViewerPage,
         }
         

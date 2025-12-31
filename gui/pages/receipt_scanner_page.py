@@ -7,6 +7,7 @@ Page for scanning receipts and extracting tax-relevant data.
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, Any
+from datetime import datetime
 
 from config.app_config import AppConfig
 from gui.widgets.receipt_scanner_widget import ReceiptScanningWidget
@@ -91,19 +92,81 @@ class ReceiptScannerPage(ttk.Frame):
             receipt_data: Dictionary containing extracted receipt data
         """
         try:
-            # Here we could integrate with the tax data model
-            # For now, just show a success message
-            messagebox.showinfo(
-                "Receipt Scanned",
-                f"Receipt from {receipt_data.get('vendor_name', 'Unknown')} "
-                f"for ${receipt_data.get('total_amount', 0):.2f} has been processed.\n\n"
-                f"Category: {receipt_data.get('category', 'Unknown')}\n"
-                f"Confidence: {receipt_data.get('confidence_score', 0):.1f}%"
-            )
-
-            # TODO: Integrate with deductions/expenses tracking
-            # This could automatically add to business expenses or charitable contributions
-            # based on the category and amount
+            # Integrate with tax data model based on category
+            category = receipt_data.get('category', '').lower()
+            amount = receipt_data.get('total_amount', 0)
+            vendor = receipt_data.get('vendor_name', 'Unknown')
+            
+            # Map receipt categories to tax deduction categories
+            # Note: Only map to categories currently supported in the deductions UI
+            deduction_mapping = {
+                'medical': 'medical_expenses',
+                'charitable': 'charitable_contributions',
+                # Future categories that could be added to UI:
+                # 'business': 'business_expenses',
+                # 'office': 'home_office',
+                # 'vehicle': 'vehicle_expenses', 
+                # 'education': 'education_expenses',
+            }
+            
+            deduction_key = deduction_mapping.get(category)
+            
+            if deduction_key:
+                # Add to existing deduction amount
+                current_amount = self.tax_data.get(f"deductions.{deduction_key}", 0)
+                new_amount = current_amount + amount
+                
+                # Save to tax data
+                self.tax_data.set(f"deductions.{deduction_key}", new_amount)
+                
+                # Also store the receipt details for audit trail
+                receipts = self.tax_data.get("receipts", [])
+                receipt_record = {
+                    'vendor_name': vendor,
+                    'amount': amount,
+                    'category': category,
+                    'date_scanned': datetime.now().isoformat(),
+                    'deduction_category': deduction_key,
+                    'confidence_score': receipt_data.get('confidence_score', 0)
+                }
+                receipts.append(receipt_record)
+                self.tax_data.set("receipts", receipts)
+                
+                messagebox.showinfo(
+                    "Receipt Scanned & Saved",
+                    f"Receipt from {vendor} for ${amount:.2f} has been processed and added to {deduction_key.replace('_', ' ').title()}.\n\n"
+                    f"Total {deduction_key.replace('_', ' ').title()}: ${new_amount:.2f}\n"
+                    f"Confidence: {receipt_data.get('confidence_score', 0):.1f}%"
+                )
+                
+                # Refresh the deductions page if it's currently visible
+                if hasattr(self.main_window, 'current_page') and self.main_window.current_page:
+                    # Check if deductions page is current
+                    if hasattr(self.main_window.current_page, 'calculate_itemized_total'):
+                        self.main_window.current_page.calculate_itemized_total()
+                        
+            else:
+                # Category not recognized for deductions, just show info
+                messagebox.showinfo(
+                    "Receipt Scanned",
+                    f"Receipt from {vendor} for ${amount:.2f} has been processed.\n\n"
+                    f"Category: {category.title()}\n"
+                    f"Confidence: {receipt_data.get('confidence_score', 0):.1f}%\n\n"
+                    f"This category doesn't map to a tax deduction. You may need to add it manually to the appropriate section."
+                )
+                
+                # Still store the receipt for record keeping
+                receipts = self.tax_data.get("receipts", [])
+                receipt_record = {
+                    'vendor_name': vendor,
+                    'amount': amount,
+                    'category': category,
+                    'date_scanned': datetime.now().isoformat(),
+                    'deduction_category': None,
+                    'confidence_score': receipt_data.get('confidence_score', 0)
+                }
+                receipts.append(receipt_record)
+                self.tax_data.set("receipts", receipts)
 
         except Exception as e:
             messagebox.showerror(
