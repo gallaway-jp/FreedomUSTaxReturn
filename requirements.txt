@@ -6,6 +6,12 @@ Pillow>=10.0.0,<11.0.0       # Image processing for QR codes
 pyotp>=2.8.0,<3.0.0          # TOTP (Time-based One-Time Password) for 2FA
 matplotlib>=3.8.0,<4.0.0     # Data visualization for tax analytics
 
+# Web Interface Dependencies
+Flask>=3.0.0,<4.0.0          # Web framework for mobile-responsive interface
+Flask-CORS>=4.0.0,<5.0.0     # Cross-origin resource sharing for mobile apps
+Werkzeug>=3.0.0,<4.0.0       # WSGI utility library for Flask
+Jinja2>=3.1.0,<4.0.0         # Template engine for web interface
+
 # Python standard library (included):
 # - tkinter: GUI framework
 # - json: Data serialization

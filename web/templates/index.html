@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Freedom US Tax Return{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-calculator text-primary"></i>
+                Freedom US Tax Return
+            </h1>
+            <p class="lead">Prepare your taxes with confidence. Free, private, and IRS-compliant.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-rocket"></i> Quick Start
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('start_return') }}" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-plus-circle"></i>
+                            Start New Return
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-outline-primary btn-lg w-100" onclick="loadExistingReturn()">
+                            <i class="fas fa-folder-open"></i>
+                            Load Existing Return
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <button class="btn btn-outline-info btn-lg w-100" onclick="showTaxTips()">
+                            <i class="fas fa-lightbulb"></i>
+                            Tax Tips & Updates
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('analytics') }}" class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="fas fa-chart-line"></i>
+                            View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history"></i> Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="recent-activity" class="text-muted">
+                    <i class="fas fa-info-circle"></i> No recent activity. Start a new return to get started!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Tax Calendar -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt"></i> Tax Deadlines
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Individual Returns:</strong><br>
+                    April 15, 2026
+                </div>
+                <div class="mb-3">
+                    <strong>Extension Deadline:</strong><br>
+                    October 15, 2026
+                </div>
+                <div class="text-muted small">
+                    <i class="fas fa-clock"></i> Days remaining: <span id="days-remaining">Auto-calculated</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-pie"></i> Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 text-primary mb-1" id="total-returns">0</div>
+                        <small class="text-muted">Returns Filed</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-success mb-1" id="total-savings">$0</div>
+                        <small class="text-muted">Tax Savings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Features -->
+        {% if is_mobile %}
+        <div class="card shadow-sm mt-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-mobile-alt"></i> Mobile Features
+                </h6>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-light btn-sm w-100 mb-2" onclick="scanDocument()">
+                    <i class="fas fa-camera"></i> Scan Document
+                </button>
+                <button class="btn btn-outline-light btn-sm w-100" onclick="takePhoto()">
+                    <i class="fas fa-image"></i> Take Photo
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hidden file input for document scanning -->
+<input type="file" id="document-scanner" accept="image/*,.pdf" style="display: none;" onchange="handleDocumentScan(this)">
+
+<script>
+// Calculate days remaining until tax deadline
+function updateDeadline() {
+    const deadline = new Date('2026-04-15');
+    const today = new Date();
+    const diffTime = deadline - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    document.getElementById('days-remaining').textContent = diffDays + ' days';
+}
+
+function loadExistingReturn() {
+    // TODO: Implement file picker for loading existing returns
+    alert('Load existing return feature coming soon!');
+}
+
+function showTaxTips() {
+    // TODO: Show tax tips modal
+    alert('Tax tips and updates feature coming soon!');
+}
+
+function scanDocument() {
+    document.getElementById('document-scanner').click();
+}
+
+function takePhoto() {
+    // Use camera API if available
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        document.getElementById('document-scanner').setAttribute('capture', 'camera');
+        document.getElementById('document-scanner').click();
+    } else {
+        alert('Camera not available on this device');
+    }
+}
+
+function handleDocumentScan(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/scan-document', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Document scanned successfully: ' + data.filename);
+            } else {
+                alert('Error scanning document: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error scanning document');
+        });
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateDeadline();
+});
+</script>
+{% endblock %}

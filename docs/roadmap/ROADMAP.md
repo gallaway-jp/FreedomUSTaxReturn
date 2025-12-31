@@ -173,10 +173,10 @@
    - [x] Tax optimization insights
 
 5. **Mobile Support**
-   - [ ] Mobile-responsive interface
-   - [ ] iOS/Android apps
-   - [ ] Document scanning
-   - [ ] Mobile e-signature
+   - [x] Mobile-responsive interface
+   - [x] iOS/Android web app
+   - [x] Document scanning integration
+   - [x] Mobile e-signature support
 
 ## Version 3.0 Development Plan
 
