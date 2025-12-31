@@ -31,6 +31,7 @@ from gui.client_management_dialogs import ClientManagementDialog
 from gui.client_login_dialog import ClientLoginDialog
 from gui.ptin_ero_dialogs import PTINEROManagementDialog
 from gui.tax_analytics_window import TaxAnalyticsWindow
+from gui.ai_deduction_finder_window import AIDeductionFinderWindow
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -192,6 +193,7 @@ class MainWindow:
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-A>', lambda e: self._open_tax_analytics())
+        self.root.bind('<Control-d>', lambda e: self._open_ai_deduction_finder())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         self.root.bind('<Control-f>', lambda e: self._open_e_filing())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
@@ -273,6 +275,7 @@ class MainWindow:
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Tax Analytics", command=self._open_tax_analytics, accelerator="Ctrl+Shift+A")
+        tools_menu.add_command(label="AI Deduction Finder", command=self._open_ai_deduction_finder, accelerator="Ctrl+D")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
 
         # Security menu
@@ -1725,6 +1728,20 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open tax analytics: {e}")
+    
+    def _open_ai_deduction_finder(self):
+        """Open AI deduction finder window"""
+        try:
+            # Create AI deduction finder window with current tax data
+            ai_window = AIDeductionFinderWindow(
+                self.root,
+                self.config,
+                tax_data=self.tax_data
+            )
+            # Window will show itself
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open AI deduction finder: {e}")
     
     def _open_tax_planning(self):
         """Open tax planning tools (placeholder)"""

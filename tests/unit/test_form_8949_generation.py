@@ -1,6 +1,6 @@
 import pytest
 import tkinter as tk
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from gui.pages.income import IncomePage
 from models.tax_data import TaxData
 from config.app_config import AppConfig
@@ -12,67 +12,95 @@ class TestForm8949Generation:
     @pytest.fixture
     def setup_page_with_capital_gains(self):
         """Set up an IncomePage with capital gains data for testing"""
-        root = tk.Tk()
-        config = AppConfig.from_env()
-        tax_data = TaxData(config)
-        main_window = Mock()
-        theme_manager = Mock()
+        # Mock tkinter to avoid TCL initialization issues
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('gui.pages.income.ttk.Frame') as mock_frame, \
+             patch('gui.pages.income.ttk.Label') as mock_label, \
+             patch('gui.pages.income.ttk.Button') as mock_button, \
+             patch('gui.pages.income.ttk.Treeview') as mock_treeview, \
+             patch('gui.pages.income.ttk.Scrollbar') as mock_scrollbar, \
+             patch('gui.pages.income.ttk.Notebook') as mock_notebook:
+            
+            # Setup mock root
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            
+            # Setup mock widgets
+            mock_frame_instance = MagicMock()
+            mock_frame.return_value = mock_frame_instance
+            
+            mock_label_instance = MagicMock()
+            mock_label.return_value = mock_label_instance
+            
+            mock_button_instance = MagicMock()
+            mock_button.return_value = mock_button_instance
+            
+            mock_treeview_instance = MagicMock()
+            mock_treeview.return_value = mock_treeview_instance
+            
+            mock_scrollbar_instance = MagicMock()
+            mock_scrollbar.return_value = mock_scrollbar_instance
+            
+            mock_notebook_instance = MagicMock()
+            mock_notebook.return_value = mock_notebook_instance
+            
+            config = AppConfig.from_env()
+            tax_data = TaxData(config)
+            main_window = Mock()
+            theme_manager = Mock()
 
-        # Add comprehensive capital gains data
-        tax_data.set('income.capital_gains', [
-            {
-                'description': 'Apple Inc Common Stock',
-                'transaction_type': 'Sale',
-                'holding_period': 'Short-term',
-                'date_acquired': '03/15/2025',
-                'date_sold': '04/15/2025',
-                'sales_price': 10000.00,
-                'cost_basis': 8000.00,
-                'adjustment': 200.00,
-                'adjusted_basis': 8200.00,
-                'gain_loss': 1800.00,
-                'brokerage_firm': 'Fidelity',
-                'confirmation_number': 'CONF001',
-                'wash_sale': False
-            },
-            {
-                'description': 'Microsoft Corp Common Stock',
-                'transaction_type': 'Sale',
-                'holding_period': 'Long-term',
-                'date_acquired': '01/15/2023',
-                'date_sold': '01/15/2025',
-                'sales_price': 15000.00,
-                'cost_basis': 12000.00,
-                'adjustment': 0.00,
-                'adjusted_basis': 12000.00,
-                'gain_loss': 3000.00,
-                'brokerage_firm': 'Charles Schwab',
-                'confirmation_number': 'CONF002',
-                'wash_sale': False
-            },
-            {
-                'description': 'Tesla Inc Common Stock',
-                'transaction_type': 'Sale',
-                'holding_period': 'Short-term',
-                'date_acquired': '05/01/2025',
-                'date_sold': '06/01/2025',
-                'sales_price': 8000.00,
-                'cost_basis': 10000.00,
-                'adjustment': 0.00,
-                'adjusted_basis': 10000.00,
-                'gain_loss': -2000.00,
-                'brokerage_firm': 'Robinhood',
-                'confirmation_number': 'CONF003',
-                'wash_sale': True
-            }
-        ])
+            # Add comprehensive capital gains data
+            tax_data.set('income.capital_gains', [
+                {
+                    'description': 'Apple Inc Common Stock',
+                    'transaction_type': 'Sale',
+                    'holding_period': 'Short-term',
+                    'date_acquired': '03/15/2025',
+                    'date_sold': '04/15/2025',
+                    'sales_price': 10000.00,
+                    'cost_basis': 8000.00,
+                    'adjustment': 200.00,
+                    'adjusted_basis': 8200.00,
+                    'gain_loss': 1800.00,
+                    'brokerage_firm': 'Fidelity',
+                    'confirmation_number': 'CONF001',
+                    'wash_sale': False
+                },
+                {
+                    'description': 'Microsoft Corp Common Stock',
+                    'transaction_type': 'Sale',
+                    'holding_period': 'Long-term',
+                    'date_acquired': '01/15/2023',
+                    'date_sold': '01/15/2025',
+                    'sales_price': 15000.00,
+                    'cost_basis': 12000.00,
+                    'adjustment': 0.00,
+                    'adjusted_basis': 12000.00,
+                    'gain_loss': 3000.00,
+                    'brokerage_firm': 'Charles Schwab',
+                    'confirmation_number': 'CONF002',
+                    'wash_sale': False
+                },
+                {
+                    'description': 'Tesla Inc Common Stock',
+                    'transaction_type': 'Sale',
+                    'holding_period': 'Short-term',
+                    'date_acquired': '05/01/2025',
+                    'date_sold': '06/01/2025',
+                    'sales_price': 8000.00,
+                    'cost_basis': 10000.00,
+                    'adjustment': 0.00,
+                    'adjusted_basis': 10000.00,
+                    'gain_loss': -2000.00,
+                    'brokerage_firm': 'Robinhood',
+                    'confirmation_number': 'CONF003',
+                    'wash_sale': True
+                }
+            ])
 
-        page = IncomePage(root, tax_data, main_window, theme_manager)
+            page = IncomePage(mock_root, tax_data, main_window, theme_manager)
 
-        yield page
-
-        # Clean up
-        root.destroy()
+            yield page
 
     def test_generate_form_8949_with_data(self, setup_page_with_capital_gains):
         """Test Form 8949 generation with capital gains data"""
