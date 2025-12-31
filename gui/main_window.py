@@ -64,15 +64,15 @@ class MainWindow:
         # Initialize cloud backup service
         self.cloud_backup_service = CloudBackupService(self.config)
         
-        # Initialize authentication service
-        self.auth_service = AuthenticationService(self.config)
-        self.session_token = None
-        
         # Initialize encryption service
         self.encryption_service = EncryptionService(self.config.key_file)
         
-        # Initialize PTIN/ERO service
+        # Initialize PTIN/ERO service (needed by authentication service)
         self.ptin_ero_service = PTINEROService(self.config, self.encryption_service)
+        
+        # Initialize authentication service
+        self.auth_service = AuthenticationService(self.config, self.ptin_ero_service)
+        self.session_token = None
         
         # Check authentication on startup
         if not self._check_authentication():

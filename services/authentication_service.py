@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from config.app_config import AppConfig
+from services.ptin_ero_service import PTINEROService
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +41,16 @@ class AuthenticationService:
     - Account lockout protection
     """
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: AppConfig, ptin_ero_service: Optional[PTINEROService] = None):
         """
         Initialize authentication service.
 
         Args:
             config: Application configuration
+            ptin_ero_service: Optional PTIN/ERO service for professional authentication
         """
         self.config = config
+        self.ptin_ero_service = ptin_ero_service
         self.auth_file = config.safe_dir / "auth.json"
         self.sessions_file = config.safe_dir / "sessions.json"
 
@@ -1096,3 +1099,180 @@ class AuthenticationService:
         for _ in range(10):
             codes.append(secrets.token_hex(4).upper())
         return codes
+
+    # PTIN/ERO Authentication Methods
+
+    def authenticate_with_ptin(self, ptin: str, password: Optional[str] = None) -> Tuple[str, Dict]:
+        """
+        Authenticate using PTIN credentials.
+
+        Args:
+            ptin: PTIN number
+            password: Optional password for additional verification
+
+        Returns:
+            Tuple of (session_token, user_info)
+
+        Raises:
+            AuthenticationError: If authentication fails
+        """
+        if not self.ptin_ero_service:
+            raise AuthenticationError("PTIN/ERO service not available")
+
+        # Validate PTIN format
+        if not self.ptin_ero_service.validate_ptin_format(ptin):
+            raise AuthenticationError("Invalid PTIN format")
+
+        # Get PTIN record
+        ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+        if not ptin_record:
+            raise AuthenticationError("PTIN not found or not registered")
+
+        # Check if PTIN is active
+        if ptin_record.status != "active":
+            raise AuthenticationError(f"PTIN is {ptin_record.status}")
+
+        # If password is provided, validate it (optional additional security)
+        if password:
+            # For PTIN authentication, we could implement a separate password
+            # or use the PTIN itself as a form of authentication
+            # For now, we'll just validate the PTIN record exists and is active
+            pass
+
+        # Create session
+        session_token = self._create_session({
+            'user_type': 'professional',
+            'ptin': ptin,
+            'name': f"{ptin_record.first_name} {ptin_record.last_name}",
+            'email': ptin_record.email,
+            'role': 'tax_preparer'
+        })
+
+        user_info = {
+            'user_type': 'professional',
+            'ptin': ptin,
+            'name': f"{ptin_record.first_name} {ptin_record.last_name}",
+            'email': ptin_record.email,
+            'role': 'tax_preparer'
+        }
+
+        return session_token, user_info
+
+    def authenticate_with_ero(self, ero_number: str, ptin: str, password: Optional[str] = None) -> Tuple[str, Dict]:
+        """
+        Authenticate using ERO credentials.
+
+        Args:
+            ero_number: ERO number
+            ptin: Associated PTIN number
+            password: Optional password for additional verification
+
+        Returns:
+            Tuple of (session_token, user_info)
+
+        Raises:
+            AuthenticationError: If authentication fails
+        """
+        if not self.ptin_ero_service:
+            raise AuthenticationError("PTIN/ERO service not available")
+
+        # Validate ERO format
+        if not self.ptin_ero_service.validate_ero_format(ero_number):
+            raise AuthenticationError("Invalid ERO number format")
+
+        # Validate PTIN format
+        if not self.ptin_ero_service.validate_ptin_format(ptin):
+            raise AuthenticationError("Invalid PTIN format")
+
+        # Get ERO record
+        ero_record = self.ptin_ero_service.get_ero_record(ero_number)
+        if not ero_record:
+            raise AuthenticationError("ERO number not found or not registered")
+
+        # Verify PTIN matches
+        if ero_record.ptin.upper() != ptin.upper():
+            raise AuthenticationError("PTIN does not match ERO record")
+
+        # Check if ERO is active
+        if ero_record.status != "active":
+            raise AuthenticationError(f"ERO is {ero_record.status}")
+
+        # Get associated PTIN record
+        ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+        if not ptin_record or ptin_record.status != "active":
+            raise AuthenticationError("Associated PTIN is not active")
+
+        # If password is provided, validate it (optional additional security)
+        if password:
+            # For ERO authentication, we could implement a separate password
+            # For now, we'll just validate the ERO and PTIN records exist and are active
+            pass
+
+        # Create session
+        session_token = self._create_session({
+            'user_type': 'ero',
+            'ero_number': ero_number,
+            'ptin': ptin,
+            'business_name': ero_record.business_name,
+            'contact_name': ero_record.contact_name,
+            'email': ero_record.email,
+            'role': 'ero_administrator'
+        })
+
+        user_info = {
+            'user_type': 'ero',
+            'ero_number': ero_number,
+            'ptin': ptin,
+            'business_name': ero_record.business_name,
+            'contact_name': ero_record.contact_name,
+            'email': ero_record.email,
+            'role': 'ero_administrator'
+        }
+
+        return session_token, user_info
+
+    def validate_professional_credentials(self, ptin: Optional[str] = None, ero_number: Optional[str] = None) -> Tuple[bool, str]:
+        """
+        Validate professional credentials without creating a session.
+
+        Args:
+            ptin: PTIN number to validate
+            ero_number: ERO number to validate
+
+        Returns:
+            Tuple of (is_valid, message)
+        """
+        if not self.ptin_ero_service:
+            return False, "PTIN/ERO service not available"
+
+        try:
+            if ptin:
+                if not self.ptin_ero_service.validate_ptin_format(ptin):
+                    return False, "Invalid PTIN format"
+
+                ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+                if not ptin_record:
+                    return False, "PTIN not registered"
+
+                if ptin_record.status != "active":
+                    return False, f"PTIN is {ptin_record.status}"
+
+            if ero_number:
+                if not self.ptin_ero_service.validate_ero_format(ero_number):
+                    return False, "Invalid ERO number format"
+
+                ero_record = self.ptin_ero_service.get_ero_record(ero_number)
+                if not ero_record:
+                    return False, "ERO number not registered"
+
+                if ero_record.status != "active":
+                    return False, f"ERO is {ero_record.status}"
+
+                # If both PTIN and ERO are provided, verify they match
+                if ptin and ero_record.ptin.upper() != ptin.upper():
+                    return False, "PTIN does not match ERO record"
+
+            return True, "Credentials are valid"
+
+        except Exception as e:
+            return False, f"Validation error: {str(e)}"

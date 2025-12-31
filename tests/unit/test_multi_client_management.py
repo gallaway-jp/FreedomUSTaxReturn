@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 
 from config.app_config import AppConfig
 from services.authentication_service import AuthenticationService, AuthenticationError, PasswordPolicyError
+from services.ptin_ero_service import PTINEROService
+from services.encryption_service import EncryptionService
 
 
 class TestMultiClientManagement:
@@ -23,7 +25,15 @@ class TestMultiClientManagement:
         self.temp_dir = Path(tempfile.mkdtemp())
         self.config = AppConfig()
         self.config.safe_dir = self.temp_dir
-        self.auth_service = AuthenticationService(self.config)
+        
+        # Initialize encryption service
+        self.encryption_service = EncryptionService(self.config.key_file)
+        
+        # Initialize PTIN/ERO service
+        self.ptin_ero_service = PTINEROService(self.config, self.encryption_service)
+        
+        # Initialize authentication service
+        self.auth_service = AuthenticationService(self.config, self.ptin_ero_service)
         
         # Create master session for testing
         self.auth_service.create_master_password("TestPass123!")
