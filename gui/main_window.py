@@ -30,6 +30,7 @@ from gui.two_factor_dialogs import TwoFactorSetupDialog, TwoFactorDisableDialog
 from gui.client_management_dialogs import ClientManagementDialog
 from gui.client_login_dialog import ClientLoginDialog
 from gui.ptin_ero_dialogs import PTINEROManagementDialog
+from gui.tax_analytics_window import TaxAnalyticsWindow
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -190,6 +191,7 @@ class MainWindow:
         self.root.bind('<Control-e>', lambda e: self._export_pdf())
         self.root.bind('<Control-p>', lambda e: self._open_tax_planning())
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
+        self.root.bind('<Control-A>', lambda e: self._open_tax_analytics())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         self.root.bind('<Control-f>', lambda e: self._open_e_filing())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
@@ -269,6 +271,7 @@ class MainWindow:
         # Tools menu items
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
+        tools_menu.add_command(label="Tax Analytics", command=self._open_tax_analytics, accelerator="Ctrl+Shift+A")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
 
         # Security menu
@@ -1670,3 +1673,34 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open PTIN/ERO management: {e}")
+    
+    def _open_tax_analytics(self):
+        """Open tax analytics window"""
+        try:
+            # Create analytics window with current tax data
+            analytics_window = TaxAnalyticsWindow(
+                self.root,
+                self.config,
+                tax_data=self.tax_data
+            )
+            # Window will show itself
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open tax analytics: {e}")
+    
+    def _open_tax_planning(self):
+        """Open tax planning tools (placeholder)"""
+        messagebox.showinfo("Tax Planning", "Tax planning tools coming soon!")
+    
+    def _open_state_taxes(self):
+        """Open state tax tools (placeholder)"""
+        messagebox.showinfo("State Taxes", "State tax tools coming soon!")
+    
+    def _open_audit_trail(self):
+        """Open audit trail window"""
+        try:
+            audit_window = AuditTrailWindow(self.root, self.audit_service)
+            audit_window.show()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open audit trail: {e}")
