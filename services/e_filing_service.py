@@ -19,6 +19,7 @@ from config.app_config import AppConfig
 from models.tax_data import TaxData
 from services.audit_trail_service import AuditTrailService
 from services.ptin_ero_service import PTINEROService
+from services.irs_mef_validator import IRSMeFValidator
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class EFilingService:
         self.audit_service = audit_service
         self.ptin_ero_service = ptin_ero_service
         self.acknowledgment_tracker = EFileAcknowledgmentTracker(config)
+        self.validator = IRSMeFValidator()
 
         # IRS e-file endpoints (these would be real URLs in production)
         self.irs_endpoints = {
@@ -50,6 +52,15 @@ class EFilingService:
 
         # XML namespace for IRS Modernized e-File
         self.mef_namespace = 'http://www.irs.gov/efile'
+
+        # IRS filing status code mapping
+        self.filing_status_codes = {
+            'single': '1',
+            'married_filing_jointly': '2',
+            'married_filing_separately': '3',
+            'head_of_household': '4',
+            'qualifying_survivor': '5'
+        }
 
         logger.info("Initialized EFilingService")
 
@@ -65,13 +76,21 @@ class EFilingService:
             XML string in IRS MeF format
         """
         try:
-            # Create root element with IRS namespace
+            # Create root element with proper IRS MeF namespace
             root = ET.Element("MeF", xmlns=self.mef_namespace)
             root.set("version", "1.0")
+            root.set("id", f"MEF-{tax_year}-{uuid.uuid4().hex[:8].upper()}")
 
-            # Add transmission header
+            # Add transmission header with required metadata
             transmission = ET.SubElement(root, "Transmission")
             transmission.set("id", str(uuid.uuid4()))
+
+            # Transmission metadata
+            header = ET.SubElement(transmission, "Header")
+            ET.SubElement(header, "Timestamp").text = datetime.now().isoformat()
+            ET.SubElement(header, "TaxYear").text = str(tax_year)
+            ET.SubElement(header, "TransmissionType").text = "Original"
+            ET.SubElement(header, "TestIndicator").text = "T"  # Test transmission
 
             # Add taxpayer information
             taxpayer = ET.SubElement(transmission, "Taxpayer")
@@ -106,17 +125,32 @@ class EFilingService:
         """Add taxpayer information to XML."""
         personal_info = tax_data.data['years'][tax_data.data['metadata']['current_year']]['personal_info']
 
-        # Basic taxpayer info
+        # Basic taxpayer info (required)
         ET.SubElement(taxpayer_element, "SSN").text = personal_info.get('ssn', '')
         ET.SubElement(taxpayer_element, "FirstName").text = personal_info.get('first_name', '')
         ET.SubElement(taxpayer_element, "LastName").text = personal_info.get('last_name', '')
 
-        # Address
+        # Middle initial and suffix (optional)
+        if personal_info.get('middle_initial'):
+            ET.SubElement(taxpayer_element, "MiddleInitial").text = personal_info['middle_initial']
+        if personal_info.get('suffix'):
+            ET.SubElement(taxpayer_element, "Suffix").text = personal_info['suffix']
+
+        # Address (required)
         address = ET.SubElement(taxpayer_element, "Address")
         ET.SubElement(address, "Street").text = personal_info.get('address', '')
         ET.SubElement(address, "City").text = personal_info.get('city', '')
         ET.SubElement(address, "State").text = personal_info.get('state', '')
         ET.SubElement(address, "ZIP").text = personal_info.get('zip_code', '')
+
+        # Contact information (optional but recommended)
+        if personal_info.get('phone'):
+            ET.SubElement(taxpayer_element, "Phone").text = personal_info['phone']
+        if personal_info.get('email'):
+            ET.SubElement(taxpayer_element, "Email").text = personal_info['email']
+
+        # Taxpayer type
+        ET.SubElement(taxpayer_element, "TaxpayerType").text = "Individual"
 
     def _add_return_data(self, return_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add tax return data to XML."""
@@ -124,12 +158,18 @@ class EFilingService:
         form1040 = ET.SubElement(return_element, "Form1040")
         form1040.set("taxYear", str(tax_year))
 
-        # Filing status
         year_data = tax_data.data['years'][tax_year]
-        filing_status = year_data['filing_status']['status']
-        ET.SubElement(form1040, "FilingStatus").text = filing_status
 
-        # Income
+        # Filing status (required)
+        filing_status = year_data['filing_status']['status']
+        filing_status_code = self.filing_status_codes.get(filing_status, '1')  # Default to single if unknown
+        ET.SubElement(form1040, "FilingStatus").text = filing_status_code
+
+        # Dependents (required, even if empty)
+        dependents = ET.SubElement(form1040, "Dependents")
+        self._add_dependent_data(dependents, tax_data, tax_year)
+
+        # Income section
         income = ET.SubElement(form1040, "Income")
         self._add_income_data(income, tax_data, tax_year)
 
@@ -144,6 +184,53 @@ class EFilingService:
         # Payments
         payments = ET.SubElement(form1040, "Payments")
         self._add_payment_data(payments, tax_data, tax_year)
+
+        # Calculate and add totals
+        self._add_calculated_totals(form1040, tax_data, tax_year)
+
+    def _add_dependent_data(self, dependents_element: ET.Element, tax_data: TaxData, tax_year: int):
+        """Add dependent information to XML."""
+        year_data = tax_data.data['years'][tax_year]
+        dependents_list = year_data.get('dependents', [])
+
+        for dependent in dependents_list:
+            dep_elem = ET.SubElement(dependents_element, "Dependent")
+
+            # Required dependent information
+            ET.SubElement(dep_elem, "Name").text = dependent.get('name', '')
+            ET.SubElement(dep_elem, "SSN").text = dependent.get('ssn', '')
+            ET.SubElement(dep_elem, "Relationship").text = dependent.get('relationship', '')
+
+            # Qualifying child status
+            qualifying_child = dependent.get('qualifying_child', False)
+            ET.SubElement(dep_elem, "QualifyingChild").text = '1' if qualifying_child else '0'
+
+            # Child tax credit eligible
+            ctc_eligible = dependent.get('child_tax_credit', False)
+            ET.SubElement(dep_elem, "ChildTaxCreditEligible").text = '1' if ctc_eligible else '0'
+
+    def _add_calculated_totals(self, form1040_element: ET.Element, tax_data: TaxData, tax_year: int):
+        """Add calculated totals to Form 1040."""
+        # This would normally use the tax calculation service
+        # For now, add placeholder calculated fields
+
+        # Total income (sum of all income sources)
+        ET.SubElement(form1040_element, "TotalIncome").text = "0.00"
+
+        # Adjusted gross income
+        ET.SubElement(form1040_element, "AdjustedGrossIncome").text = "0.00"
+
+        # Taxable income
+        ET.SubElement(form1040_element, "TaxableIncome").text = "0.00"
+
+        # Total tax
+        ET.SubElement(form1040_element, "TotalTax").text = "0.00"
+
+        # Total payments and credits
+        ET.SubElement(form1040_element, "TotalPayments").text = "0.00"
+
+        # Refund or amount owed
+        ET.SubElement(form1040_element, "RefundOrAmountOwed").text = "0.00"
 
     def _add_income_data(self, income_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add income data to XML."""
@@ -201,65 +288,56 @@ class EFilingService:
 
     def validate_efile_xml(self, xml_content: str) -> Dict[str, Any]:
         """
-        Validate e-file XML against IRS schemas.
+        Validate e-file XML against IRS schemas and business rules.
 
         Args:
             xml_content: XML string to validate
 
         Returns:
-            Validation result with errors/warnings
+            Comprehensive validation result
         """
         try:
-            # Parse XML
-            root = ET.fromstring(xml_content)
+            # Use comprehensive IRS MeF validator
+            validation_result = self.validator.validate_xml(xml_content)
 
-            validation_result = {
-                'valid': True,
-                'errors': [],
-                'warnings': []
-            }
+            # Log validation results
+            if self.audit_service:
+                self.audit_service.log_event(
+                    "e_file_validation",
+                    f"E-file XML validation completed: {'PASSED' if validation_result['valid'] else 'FAILED'}",
+                    {
+                        "errors_count": len(validation_result['errors']),
+                        "warnings_count": len(validation_result['warnings']),
+                        "schema_compliant": validation_result['schema_compliance'],
+                        "business_rules_compliant": validation_result['business_rules_compliant']
+                    }
+                )
 
-            # Basic validation checks
-            if not root.tag.endswith('}MeF'):
-                validation_result['valid'] = False
-                validation_result['errors'].append("Invalid root element")
-
-            # Check required fields
-            # Find taxpayer element (handle namespace)
-            taxpayer = None
-            for elem in root.iter():
-                if elem.tag.endswith('Taxpayer'):
-                    taxpayer = elem
-                    break
-            
-            if taxpayer is None:
-                validation_result['valid'] = False
-                validation_result['errors'].append("Missing taxpayer information")
-
-            # Check SSN format
-            ssn_elem = None
-            for elem in root.iter():
-                if elem.tag.endswith('SSN'):
-                    ssn_elem = elem
-                    break
-            
-            if ssn_elem is not None and ssn_elem.text:
-                if not self._validate_ssn(ssn_elem.text):
-                    validation_result['errors'].append("Invalid SSN format")
-
+            logger.info(f"E-file validation completed: {'PASSED' if validation_result['valid'] else 'FAILED'}")
             return validation_result
 
-        except ET.ParseError as e:
+        except Exception as e:
+            logger.error(f"E-file validation error: {e}")
             return {
                 'valid': False,
-                'errors': [f"XML parsing error: {e}"],
-                'warnings': []
+                'errors': [f"Validation system error: {e}"],
+                'warnings': [],
+                'schema_compliance': False,
+                'business_rules_compliant': False,
+                'sections_validated': []
             }
 
-    def _validate_ssn(self, ssn: str) -> bool:
-        """Validate SSN format (XXX-XX-XXXX)."""
-        import re
-        return bool(re.match(r'^\d{3}-\d{2}-\d{4}$', ssn))
+    def get_validation_summary(self, validation_result: Dict[str, Any]) -> str:
+        """
+        Get a human-readable summary of validation results.
+
+        Args:
+            validation_result: Result from validate_efile_xml
+
+        Returns:
+            Formatted summary string
+        """
+        return self.validator.get_validation_summary(validation_result)
 
     def submit_efile(self, xml_content: str, test_mode: bool = True) -> Dict[str, Any]:
         """
