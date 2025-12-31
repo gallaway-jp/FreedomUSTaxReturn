@@ -12,18 +12,41 @@ class TestIncomePage:
     @pytest.fixture
     def setup_page(self):
         """Set up an IncomePage instance for testing"""
-        root = tk.Tk()
-        config = AppConfig.from_env()
-        tax_data = TaxData(config)
-        main_window = Mock()
-        theme_manager = Mock()
+        # Mock tkinter to avoid GUI requirements in headless environments
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.ttk.Frame') as mock_frame, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.ttk.Treeview') as mock_treeview, \
+             patch('tkinter.ttk.Scrollbar') as mock_scrollbar, \
+             patch('tkinter.StringVar') as mock_stringvar, \
+             patch('tkinter.ttk.Notebook') as mock_notebook:
 
-        page = IncomePage(root, tax_data, main_window, theme_manager)
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
 
-        yield page
+            mock_frame_instance = MagicMock()
+            mock_frame.return_value = mock_frame_instance
 
-        # Clean up
-        root.destroy()
+            mock_treeview_instance = MagicMock()
+            mock_treeview_instance.get_children.return_value = []
+            mock_treeview_instance.insert.return_value = None
+            mock_treeview.return_value = mock_treeview_instance
+
+            mock_stringvar_instance = MagicMock()
+            mock_stringvar_instance.get.return_value = ""
+            mock_stringvar_instance.set.return_value = None
+            mock_stringvar.return_value = mock_stringvar_instance
+
+            config = AppConfig.from_env()
+            tax_data = TaxData(config)
+            main_window = Mock()
+            theme_manager = Mock()
+
+            page = IncomePage(mock_root, tax_data, main_window, theme_manager)
+
+            yield page
 
     def test_income_page_initialization(self, setup_page):
         """Test that IncomePage initializes correctly"""
