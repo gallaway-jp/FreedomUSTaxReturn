@@ -22,6 +22,7 @@ from services.audit_trail_service import AuditTrailService
 from gui.audit_trail_window import AuditTrailWindow
 from services.tax_year_service import TaxYearService
 from services.collaboration_service import CollaborationService
+from services.authentication_service import AuthenticationService
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -48,6 +49,14 @@ class MainWindow:
         self.tax_year_service = TaxYearService(self.config)
         
         self.collaboration_service = CollaborationService(self.config)
+        
+        # Initialize authentication service
+        self.auth_service = AuthenticationService(self.config)
+        self.session_token = None
+        
+        # Check authentication on startup
+        if not self._check_authentication():
+            return
         
         # Bind window close event for cleanup
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -174,6 +183,34 @@ class MainWindow:
         # Focus shortcuts
         self.root.bind('<Control-Shift-F>', lambda e: self._focus_search())
     
+    def _check_authentication(self) -> bool:
+        """Check if user is authenticated, prompt for login if needed"""
+        if self.is_mocked:
+            # Skip authentication in testing environment
+            return True
+            
+        # Check if master password is set
+        if not self.auth_service.is_master_password_set():
+            # First time setup - prompt to create master password
+            from gui.password_dialogs import SetMasterPasswordDialog
+            dialog = SetMasterPasswordDialog(self.root, self.auth_service)
+            result = dialog.show()
+            if not result:
+                # User cancelled setup
+                self.root.quit()
+                return False
+        else:
+            # Prompt for authentication
+            from gui.password_dialogs import AuthenticateDialog
+            dialog = AuthenticateDialog(self.root, self.auth_service)
+            self.session_token = dialog.show()
+            if not self.session_token:
+                # Authentication failed or cancelled
+                self.root.quit()
+                return False
+                
+        return True
+    
     def create_menu_bar(self):
         """Create the main menu bar with File and View menus"""
         # Create menu bar
@@ -217,6 +254,15 @@ class MainWindow:
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
+
+        # Security menu
+        security_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Security", menu=security_menu)
+        
+        # Security menu items
+        security_menu.add_command(label="Change Password", command=self._change_password)
+        security_menu.add_separator()
+        security_menu.add_command(label="Logout", command=self._logout)
 
         # E-File menu
         efile_menu = tk.Menu(menubar, tearoff=0)
@@ -1450,3 +1496,26 @@ class MainWindow:
                 theme_btn.config(text="☀️ Light Mode")
             else:
                 theme_btn.config(text="🌙 Dark Mode")
+    
+    def _change_password(self):
+        """Open change password dialog"""
+        try:
+            from gui.password_dialogs import ChangePasswordDialog
+            dialog = ChangePasswordDialog(self.root, self.auth_service)
+            result = dialog.show()
+            if result:
+                messagebox.showinfo("Success", "Password changed successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to change password: {e}")
+    
+    def _logout(self):
+        """Logout current user and restart authentication"""
+        if messagebox.askyesno("Logout", "Are you sure you want to logout? Any unsaved changes will be lost."):
+            # Clear session
+            if self.session_token:
+                self.auth_service.logout(self.session_token)
+                self.session_token = None
+            
+            # Restart application (simplified - in real app might restart process)
+            messagebox.showinfo("Logged Out", "You have been logged out. Please restart the application to login again.")
+            self.root.quit()

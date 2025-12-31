@@ -1,0 +1,399 @@
+"""
+Authentication Service - Handles user authentication and access control
+
+Provides password-based authentication, session management, and access control
+for the tax preparation application.
+"""
+
+import hashlib
+import hmac
+import json
+import logging
+import secrets
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
+from config.app_config import AppConfig
+
+logger = logging.getLogger(__name__)
+
+
+class AuthenticationError(Exception):
+    """Raised when authentication fails"""
+    pass
+
+
+class PasswordPolicyError(Exception):
+    """Raised when password doesn't meet policy requirements"""
+    pass
+
+
+class AuthenticationService:
+    """
+    Service for handling user authentication and session management.
+
+    Features:
+    - Password hashing with salt
+    - Session token management
+    - Password policy enforcement
+    - Account lockout protection
+    """
+
+    def __init__(self, config: AppConfig):
+        """
+        Initialize authentication service.
+
+        Args:
+            config: Application configuration
+        """
+        self.config = config
+        self.auth_file = config.safe_dir / "auth.json"
+        self.sessions_file = config.safe_dir / "sessions.json"
+
+        # Password policy settings
+        self.min_password_length = 8
+        self.require_uppercase = True
+        self.require_lowercase = True
+        self.require_digits = True
+        self.require_special_chars = True
+
+        # Account lockout settings
+        self.max_login_attempts = 5
+        self.lockout_duration_minutes = 15
+
+        # Session settings
+        self.session_timeout_hours = 24
+
+        # Ensure auth directory exists
+        self.config.safe_dir.mkdir(parents=True, exist_ok=True)
+
+    def _load_auth_data(self) -> Dict:
+        """Load authentication data from file"""
+        if not self.auth_file.exists():
+            return {}
+
+        try:
+            with open(self.auth_file, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load auth data: {e}")
+            return {}
+
+    def _save_auth_data(self, data: Dict) -> None:
+        """Save authentication data to file"""
+        try:
+            with open(self.auth_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            # Set restrictive permissions
+            self.auth_file.chmod(0o600)
+        except Exception as e:
+            logger.error(f"Failed to save auth data: {e}")
+            raise
+
+    def _load_sessions(self) -> Dict:
+        """Load session data from file"""
+        if not self.sessions_file.exists():
+            return {}
+
+        try:
+            with open(self.sessions_file, 'r') as f:
+                data = json.load(f)
+                # Convert string timestamps back to datetime
+                for session_id, session in data.items():
+                    session['created_at'] = datetime.fromisoformat(session['created_at'])
+                    session['last_activity'] = datetime.fromisoformat(session['last_activity'])
+                return data
+        except Exception as e:
+            logger.error(f"Failed to load sessions: {e}")
+            return {}
+
+    def _save_sessions(self, sessions: Dict) -> None:
+        """Save session data to file"""
+        try:
+            # Convert datetime objects to strings for JSON serialization
+            data = {}
+            for session_id, session in sessions.items():
+                data[session_id] = {
+                    **session,
+                    'created_at': session['created_at'].isoformat(),
+                    'last_activity': session['last_activity'].isoformat()
+                }
+
+            with open(self.sessions_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            # Set restrictive permissions
+            self.sessions_file.chmod(0o600)
+        except Exception as e:
+            logger.error(f"Failed to save sessions: {e}")
+            raise
+
+    def _hash_password(self, password: str, salt: str) -> str:
+        """
+        Hash password with salt using PBKDF2.
+
+        Args:
+            password: Plain text password
+            salt: Salt string
+
+        Returns:
+            Hex string of hashed password
+        """
+        # Use PBKDF2 with SHA-256, 100,000 iterations
+        key = hashlib.pbkdf2_hmac(
+            'sha256',
+            password.encode('utf-8'),
+            salt.encode('utf-8'),
+            100000
+        )
+        return key.hex()
+
+    def _generate_salt(self) -> str:
+        """Generate a random salt"""
+        return secrets.token_hex(16)
+
+    def _validate_password_policy(self, password: str) -> None:
+        """
+        Validate password against policy requirements.
+
+        Args:
+            password: Password to validate
+
+        Raises:
+            PasswordPolicyError: If password doesn't meet requirements
+        """
+        if len(password) < self.min_password_length:
+            raise PasswordPolicyError(f"Password must be at least {self.min_password_length} characters long")
+
+        if self.require_uppercase and not any(c.isupper() for c in password):
+            raise PasswordPolicyError("Password must contain at least one uppercase letter")
+
+        if self.require_lowercase and not any(c.islower() for c in password):
+            raise PasswordPolicyError("Password must contain at least one lowercase letter")
+
+        if self.require_digits and not any(c.isdigit() for c in password):
+            raise PasswordPolicyError("Password must contain at least one digit")
+
+        if self.require_special_chars and not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+            raise PasswordPolicyError("Password must contain at least one special character")
+
+    def create_master_password(self, password: str) -> None:
+        """
+        Create the master password for the application.
+
+        Args:
+            password: Master password to set
+
+        Raises:
+            PasswordPolicyError: If password doesn't meet policy
+        """
+        self._validate_password_policy(password)
+
+        auth_data = self._load_auth_data()
+
+        # Check if master password already exists
+        if 'master' in auth_data:
+            raise AuthenticationError("Master password already exists")
+
+        salt = self._generate_salt()
+        hashed_password = self._hash_password(password, salt)
+
+        auth_data['master'] = {
+            'password_hash': hashed_password,
+            'salt': salt,
+            'created_at': datetime.now().isoformat(),
+            'login_attempts': 0,
+            'locked_until': None
+        }
+
+        self._save_auth_data(auth_data)
+        logger.info("Master password created successfully")
+
+    def authenticate_master_password(self, password: str) -> str:
+        """
+        Authenticate with master password.
+
+        Args:
+            password: Password to authenticate
+
+        Returns:
+            Session token on success
+
+        Raises:
+            AuthenticationError: If authentication fails
+        """
+        auth_data = self._load_auth_data()
+
+        if 'master' not in auth_data:
+            raise AuthenticationError("Master password not set")
+
+        master_data = auth_data['master']
+
+        # Check if account is locked
+        if master_data.get('locked_until'):
+            locked_until = datetime.fromisoformat(master_data['locked_until'])
+            if datetime.now() < locked_until:
+                raise AuthenticationError(f"Account locked until {locked_until}")
+            else:
+                # Clear lockout
+                master_data['locked_until'] = None
+                master_data['login_attempts'] = 0
+
+        # Verify password
+        hashed_input = self._hash_password(password, master_data['salt'])
+        if not hmac.compare_digest(hashed_input, master_data['password_hash']):
+            # Increment failed attempts
+            master_data['login_attempts'] = master_data.get('login_attempts', 0) + 1
+
+            if master_data['login_attempts'] >= self.max_login_attempts:
+                # Lock account
+                locked_until = datetime.now() + timedelta(minutes=self.lockout_duration_minutes)
+                master_data['locked_until'] = locked_until.isoformat()
+                self._save_auth_data(auth_data)
+                raise AuthenticationError(f"Account locked for {self.lockout_duration_minutes} minutes due to too many failed attempts")
+
+            self._save_auth_data(auth_data)
+            raise AuthenticationError("Invalid password")
+
+        # Successful authentication
+        master_data['login_attempts'] = 0
+        master_data['last_login'] = datetime.now().isoformat()
+        self._save_auth_data(auth_data)
+
+        # Create session
+        session_token = self._create_session('master')
+        logger.info("Master password authentication successful")
+        return session_token
+
+    def _create_session(self, user_id: str) -> str:
+        """
+        Create a new session for authenticated user.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Session token
+        """
+        sessions = self._load_sessions()
+
+        # Clean expired sessions
+        self._clean_expired_sessions(sessions)
+
+        # Generate session token
+        session_token = secrets.token_urlsafe(32)
+        now = datetime.now()
+
+        sessions[session_token] = {
+            'user_id': user_id,
+            'created_at': now,
+            'last_activity': now
+        }
+
+        self._save_sessions(sessions)
+        return session_token
+
+    def _clean_expired_sessions(self, sessions: Dict) -> None:
+        """Remove expired sessions from the sessions dict"""
+        now = datetime.now()
+        expired_tokens = []
+
+        for token, session in sessions.items():
+            if now - session['last_activity'] > timedelta(hours=self.session_timeout_hours):
+                expired_tokens.append(token)
+
+        for token in expired_tokens:
+            del sessions[token]
+
+    def validate_session(self, session_token: str) -> Optional[str]:
+        """
+        Validate session token and return user ID if valid.
+
+        Args:
+            session_token: Session token to validate
+
+        Returns:
+            User ID if session is valid, None otherwise
+        """
+        sessions = self._load_sessions()
+
+        if session_token not in sessions:
+            return None
+
+        session = sessions[session_token]
+        now = datetime.now()
+
+        # Check if session expired
+        if now - session['last_activity'] > timedelta(hours=self.session_timeout_hours):
+            del sessions[session_token]
+            self._save_sessions(sessions)
+            return None
+
+        # Update last activity
+        session['last_activity'] = now
+        self._save_sessions(sessions)
+
+        return session['user_id']
+
+    def logout(self, session_token: str) -> None:
+        """
+        Logout by removing session.
+
+        Args:
+            session_token: Session token to remove
+        """
+        sessions = self._load_sessions()
+
+        if session_token in sessions:
+            del sessions[session_token]
+            self._save_sessions(sessions)
+            logger.info("Session logged out")
+
+    def change_master_password(self, current_password: str, new_password: str) -> None:
+        """
+        Change the master password.
+
+        Args:
+            current_password: Current password for verification
+            new_password: New password to set
+
+        Raises:
+            AuthenticationError: If current password is wrong
+            PasswordPolicyError: If new password doesn't meet policy
+        """
+        # First authenticate with current password
+        self.authenticate_master_password(current_password)
+
+        # Validate new password
+        self._validate_password_policy(new_password)
+
+        auth_data = self._load_auth_data()
+        master_data = auth_data['master']
+
+        # Generate new salt and hash
+        salt = self._generate_salt()
+        hashed_password = self._hash_password(new_password, salt)
+
+        # Update password data
+        master_data['password_hash'] = hashed_password
+        master_data['salt'] = salt
+        master_data['login_attempts'] = 0
+        master_data['locked_until'] = None
+
+        self._save_auth_data(auth_data)
+        logger.info("Master password changed successfully")
+
+    def is_master_password_set(self) -> bool:
+        """Check if master password has been set"""
+        auth_data = self._load_auth_data()
+        return 'master' in auth_data
+
+    def get_password_policy_requirements(self) -> Dict:
+        """Get password policy requirements for UI display"""
+        return {
+            'min_length': self.min_password_length,
+            'require_uppercase': self.require_uppercase,
+            'require_lowercase': self.require_lowercase,
+            'require_digits': self.require_digits,
+            'require_special_chars': self.require_special_chars
+        }
