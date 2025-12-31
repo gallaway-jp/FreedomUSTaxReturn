@@ -18,6 +18,7 @@ import requests
 from config.app_config import AppConfig
 from models.tax_data import TaxData
 from services.audit_trail_service import AuditTrailService
+from services.ptin_ero_service import PTINEROService
 
 logger = logging.getLogger(__name__)
 
@@ -27,16 +28,18 @@ class EFilingService:
     authentication, submission, and status tracking.
     """
 
-    def __init__(self, config: AppConfig, audit_service: Optional[AuditTrailService] = None):
+    def __init__(self, config: AppConfig, audit_service: Optional[AuditTrailService] = None, ptin_ero_service: Optional[PTINEROService] = None):
         """
         Initialize e-filing service.
 
         Args:
             config: Application configuration
             audit_service: Optional audit trail service for logging
+            ptin_ero_service: Optional PTIN/ERO service for professional authentication
         """
         self.config = config
         self.audit_service = audit_service
+        self.ptin_ero_service = ptin_ero_service
         self.acknowledgment_tracker = EFileAcknowledgmentTracker(config)
 
         # IRS e-file endpoints (these would be real URLs in production)
@@ -101,7 +104,7 @@ class EFilingService:
 
     def _add_taxpayer_info(self, taxpayer_element: ET.Element, tax_data: TaxData):
         """Add taxpayer information to XML."""
-        personal_info = tax_data.get('personal_info', {})
+        personal_info = tax_data.data['years'][tax_data.data['metadata']['current_year']]['personal_info']
 
         # Basic taxpayer info
         ET.SubElement(taxpayer_element, "SSN").text = personal_info.get('ssn', '')
@@ -110,11 +113,10 @@ class EFilingService:
 
         # Address
         address = ET.SubElement(taxpayer_element, "Address")
-        address_data = personal_info.get('address', {})
-        ET.SubElement(address, "Street").text = address_data.get('street', '')
-        ET.SubElement(address, "City").text = address_data.get('city', '')
-        ET.SubElement(address, "State").text = address_data.get('state', '')
-        ET.SubElement(address, "ZIP").text = address_data.get('zip', '')
+        ET.SubElement(address, "Street").text = personal_info.get('address', '')
+        ET.SubElement(address, "City").text = personal_info.get('city', '')
+        ET.SubElement(address, "State").text = personal_info.get('state', '')
+        ET.SubElement(address, "ZIP").text = personal_info.get('zip_code', '')
 
     def _add_return_data(self, return_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add tax return data to XML."""
@@ -123,28 +125,29 @@ class EFilingService:
         form1040.set("taxYear", str(tax_year))
 
         # Filing status
-        filing_status = tax_data.get('filing_status', 'single')
+        year_data = tax_data.data['years'][tax_year]
+        filing_status = year_data['filing_status']['status']
         ET.SubElement(form1040, "FilingStatus").text = filing_status
 
         # Income
         income = ET.SubElement(form1040, "Income")
-        self._add_income_data(income, tax_data)
+        self._add_income_data(income, tax_data, tax_year)
 
         # Deductions
         deductions = ET.SubElement(form1040, "Deductions")
-        self._add_deduction_data(deductions, tax_data)
+        self._add_deduction_data(deductions, tax_data, tax_year)
 
         # Credits
         credits = ET.SubElement(form1040, "Credits")
-        self._add_credit_data(credits, tax_data)
+        self._add_credit_data(credits, tax_data, tax_year)
 
         # Payments
         payments = ET.SubElement(form1040, "Payments")
-        self._add_payment_data(payments, tax_data)
+        self._add_payment_data(payments, tax_data, tax_year)
 
-    def _add_income_data(self, income_element: ET.Element, tax_data: TaxData):
+    def _add_income_data(self, income_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add income data to XML."""
-        income_data = tax_data.get('income', {})
+        income_data = tax_data.data['years'][tax_year]['income']
 
         # W-2 wages
         w2_forms = income_data.get('w2_forms', [])
@@ -159,9 +162,9 @@ class EFilingService:
         dividend_income = income_data.get('dividend_income', 0)
         ET.SubElement(income_element, "Dividends").text = str(dividend_income)
 
-    def _add_deduction_data(self, deductions_element: ET.Element, tax_data: TaxData):
+    def _add_deduction_data(self, deductions_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add deduction data to XML."""
-        deductions_data = tax_data.get('deductions', {})
+        deductions_data = tax_data.data['years'][tax_year].get('deductions', {})
 
         # Standard deduction (simplified for now)
         standard_deduction = deductions_data.get('standard_deduction', 0)
@@ -172,9 +175,9 @@ class EFilingService:
         total_itemized = sum(itemized.values())
         ET.SubElement(deductions_element, "ItemizedDeductions").text = str(total_itemized)
 
-    def _add_credit_data(self, credits_element: ET.Element, tax_data: TaxData):
+    def _add_credit_data(self, credits_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add tax credit data to XML."""
-        credits_data = tax_data.get('credits', {})
+        credits_data = tax_data.data['years'][tax_year].get('credits', {})
 
         # Child tax credit
         child_credit = credits_data.get('child_tax_credit', 0)
@@ -184,9 +187,9 @@ class EFilingService:
         education_credits = credits_data.get('education_credits', 0)
         ET.SubElement(credits_element, "EducationCredits").text = str(education_credits)
 
-    def _add_payment_data(self, payments_element: ET.Element, tax_data: TaxData):
+    def _add_payment_data(self, payments_element: ET.Element, tax_data: TaxData, tax_year: int):
         """Add payment/withholding data to XML."""
-        payments_data = tax_data.get('payments', {})
+        payments_data = tax_data.data['years'][tax_year].get('payments', {})
 
         # Federal withholding
         federal_withholding = payments_data.get('federal_withholding', 0)
@@ -308,12 +311,29 @@ class EFilingService:
 
         Args:
             xml_content: XML content to sign
-            signature_data: Signature information (PIN, EFIN, etc.)
+            signature_data: Signature information (PIN, EFIN, PTIN, etc.)
 
         Returns:
             Signed XML content
         """
         try:
+            # Validate PTIN if provided
+            ptin = signature_data.get('ptin')
+            if ptin and self.ptin_ero_service:
+                ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+                if not ptin_record:
+                    raise ValueError(f"Invalid PTIN: {ptin}")
+                if ptin_record.status != 'active':
+                    raise ValueError(f"PTIN is not active: {ptin}")
+                
+                # Log PTIN authentication
+                if self.audit_service:
+                    self.audit_service.log_event(
+                        "ptin_authentication",
+                        f"PTIN authenticated for e-filing: {ptin}",
+                        {"ptin": ptin, "name": f"{ptin_record.first_name} {ptin_record.last_name}"}
+                    )
+
             # Parse XML
             root = ET.fromstring(xml_content)
 
@@ -356,7 +376,22 @@ class EFilingService:
             # Key info
             key_info = ET.SubElement(signature, "KeyInfo")
             key_name = ET.SubElement(key_info, "KeyName")
-            key_name.text = signature_data.get('efin', 'MOCK_EFIN')
+            
+            # Use PTIN as key identifier if available, otherwise EFIN
+            ptin = signature_data.get('ptin')
+            efin = signature_data.get('efin', 'MOCK_EFIN')
+            key_name.text = ptin if ptin else efin
+            
+            # Add PTIN info if available
+            if ptin and self.ptin_ero_service:
+                ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+                if ptin_record:
+                    ptin_info = ET.SubElement(key_info, "PTINInfo")
+                    ptin_info.set("xmlns", "http://www.irs.gov/efile")
+                    name_elem = ET.SubElement(ptin_info, "Name")
+                    name_elem.text = f"{ptin_record.first_name} {ptin_record.last_name}"
+                    issued_elem = ET.SubElement(ptin_info, "IssuedDate")
+                    issued_elem.text = ptin_record.validation_date.isoformat() if ptin_record.validation_date else ""
 
             # Convert back to string
             signed_xml = ET.tostring(root, encoding='unicode', method='xml')
@@ -390,9 +425,20 @@ class EFilingService:
             Submission result
         """
         try:
+            # Validate PTIN if provided
+            ptin = submission_data.get('ptin')
+            if ptin and self.ptin_ero_service:
+                ptin_record = self.ptin_ero_service.get_ptin_record(ptin)
+                if not ptin_record:
+                    raise ValueError(f"Invalid PTIN for submission: {ptin}")
+                if ptin_record.status != 'active':
+                    raise ValueError(f"PTIN is not active for submission: {ptin}")
+
             # Create IRS submission client
             client = IRSSubmissionClient(
                 efin=submission_data.get('efin'),
+                ptin=ptin,
+                ptin_ero_service=self.ptin_ero_service,
                 test_mode=submission_data.get('test_mode', True)
             )
 
@@ -505,15 +551,19 @@ class IRSSubmissionClient:
     Client for communicating with IRS e-file systems.
     """
 
-    def __init__(self, efin: str, test_mode: bool = True):
+    def __init__(self, efin: str, ptin: Optional[str] = None, ptin_ero_service: Optional[PTINEROService] = None, test_mode: bool = True):
         """
         Initialize IRS submission client.
 
         Args:
             efin: Electronic Filing Identification Number
+            ptin: Preparer Tax Identification Number (optional)
+            ptin_ero_service: PTIN/ERO service for validation (optional)
             test_mode: Whether to use test environment
         """
         self.efin = efin
+        self.ptin = ptin
+        self.ptin_ero_service = ptin_ero_service
         self.test_mode = test_mode
 
         # IRS endpoints (mock URLs for now)
@@ -522,7 +572,12 @@ class IRSSubmissionClient:
             'status': 'https://test.irs.gov/efile/status' if test_mode else 'https://irs.gov/efile/status'
         }
 
-        logger.info(f"Initialized IRS Submission Client (EFIN: {efin}, Test Mode: {test_mode})")
+        auth_info = f"EFIN: {efin}"
+        if ptin:
+            auth_info += f", PTIN: {ptin}"
+        auth_info += f", Test Mode: {test_mode}"
+        
+        logger.info(f"Initialized IRS Submission Client ({auth_info})")
 
     def submit_return(self, signed_xml: str, submission_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -544,6 +599,19 @@ class IRSSubmissionClient:
                 'tax_year': submission_data.get('tax_year', 2025),
                 'timestamp': datetime.now().isoformat()
             }
+            
+            # Add PTIN information if available
+            if self.ptin:
+                payload['ptin'] = self.ptin
+                # Include PTIN record details if service is available
+                if self.ptin_ero_service:
+                    ptin_record = self.ptin_ero_service.get_ptin_record(self.ptin)
+                    if ptin_record:
+                        payload['ptin_info'] = {
+                            'name': ptin_record.name,
+                            'issued_date': ptin_record.issued_date.isoformat() if ptin_record.issued_date else None,
+                            'status': ptin_record.status
+                        }
 
             # In production, this would make an actual HTTPS request
             # For now, simulate the submission

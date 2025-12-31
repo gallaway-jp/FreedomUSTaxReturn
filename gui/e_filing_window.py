@@ -119,6 +119,7 @@ class EFilingWindow:
         auth_frame = ttk.Frame(auth_group)
         auth_frame.pack(fill=tk.X)
 
+        # Row 1: EFIN and PIN
         ttk.Label(auth_frame, text="EFIN:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
         self.efin_var = tk.StringVar()
         ttk.Entry(auth_frame, textvariable=self.efin_var, width=15).grid(row=0, column=1, padx=(0, 20))
@@ -130,6 +131,13 @@ class EFilingWindow:
         ttk.Label(auth_frame, text="Test Mode:").grid(row=0, column=4, sticky=tk.W, padx=(0, 5))
         self.test_mode_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(auth_frame, variable=self.test_mode_var).grid(row=0, column=5)
+
+        # Row 2: PTIN (Professional Tax Identification Number)
+        ttk.Label(auth_frame, text="PTIN:").grid(row=1, column=0, sticky=tk.W, pady=(10, 0), padx=(0, 5))
+        self.ptin_var = tk.StringVar()
+        ttk.Entry(auth_frame, textvariable=self.ptin_var, width=15).grid(row=1, column=1, pady=(10, 0), padx=(0, 20))
+
+        ttk.Label(auth_frame, text="(Optional - for professional preparers)").grid(row=1, column=2, columnspan=3, sticky=tk.W, pady=(10, 0))
 
         # Signature section
         sig_group = ttk.LabelFrame(submit_frame, text="Digital Signature", padding=10)
@@ -262,7 +270,8 @@ class EFilingWindow:
         try:
             signature_data = {
                 'efin': self.efin_var.get(),
-                'pin': self.pin_var.get()
+                'pin': self.pin_var.get(),
+                'ptin': self.ptin_var.get().strip() if self.ptin_var.get().strip() else None
             }
 
             self.signed_xml = self.e_filing_service.sign_efile_xml(self.xml_content, signature_data)
@@ -284,6 +293,12 @@ class EFilingWindow:
             messagebox.showwarning("Warning", "Please enter EFIN and PIN!")
             return
 
+        # Check if PTIN is provided and validate it
+        ptin = self.ptin_var.get().strip()
+        if ptin and not ptin.upper().startswith('P'):
+            messagebox.showwarning("Warning", "PTIN should start with 'P' (e.g., P12345678)")
+            return
+
         # Disable submit button during submission
         submit_button = self.notebook.winfo_children()[1].winfo_children()[2].winfo_children()[1]  # Complex path to button
         submit_button.config(state='disabled')
@@ -293,6 +308,7 @@ class EFilingWindow:
                 submission_data = {
                     'efin': self.efin_var.get(),
                     'pin': self.pin_var.get(),
+                    'ptin': ptin if ptin else None,
                     'tax_year': int(self.tax_year_var.get()),
                     'test_mode': self.test_mode_var.get()
                 }
@@ -391,7 +407,7 @@ class EFilingWindow:
                 self.confirmation_var.set(confirmation)
 
 
-def open_e_filing_window(parent: tk.Tk, tax_data: TaxData, config: AppConfig = None):
+def open_e_filing_window(parent: tk.Tk, tax_data: TaxData, config: AppConfig = None, ptin_ero_service = None):
     """
     Open the e-filing window.
 
@@ -399,6 +415,7 @@ def open_e_filing_window(parent: tk.Tk, tax_data: TaxData, config: AppConfig = N
         parent: Parent window
         tax_data: Tax return data
         config: Application configuration
+        ptin_ero_service: PTIN/ERO service instance
     """
     if config is None:
         config = AppConfig.from_env()
@@ -406,5 +423,5 @@ def open_e_filing_window(parent: tk.Tk, tax_data: TaxData, config: AppConfig = N
     # Import here to avoid circular imports
     from services.e_filing_service import EFilingService
 
-    e_filing_service = EFilingService(config)
+    e_filing_service = EFilingService(config, ptin_ero_service=ptin_ero_service)
     EFilingWindow(parent, tax_data, config, e_filing_service)

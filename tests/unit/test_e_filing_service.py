@@ -33,32 +33,20 @@ class TestEFilingService:
     def sample_tax_data(self):
         """Create sample tax data for testing"""
         tax_data = TaxData()
-        tax_data.set('personal_info', {
-            'first_name': 'John',
-            'last_name': 'Doe',
-            'ssn': '123-45-6789',
-            'address': {
-                'street': '123 Main St',
-                'city': 'Anytown',
-                'state': 'CA',
-                'zip': '12345'
-            }
-        })
-        tax_data.set('filing_status', 'single')
-        tax_data.set('income', {
-            'w2_forms': [{'wages': 50000, 'employer_name': 'Test Corp'}],
-            'interest_income': 1000,
-            'dividend_income': 2000
-        })
-        tax_data.set('deductions', {
-            'standard_deduction': 13850
-        })
-        tax_data.set('credits', {
-            'child_tax_credit': 2000
-        })
-        tax_data.set('payments', {
-            'federal_withholding': 8000
-        })
+        tax_data.data['years'][2025]['personal_info']['first_name'] = 'John'
+        tax_data.data['years'][2025]['personal_info']['last_name'] = 'Doe'
+        tax_data.data['years'][2025]['personal_info']['ssn'] = '123-45-6789'
+        tax_data.data['years'][2025]['personal_info']['address'] = '123 Main St'
+        tax_data.data['years'][2025]['personal_info']['city'] = 'Anytown'
+        tax_data.data['years'][2025]['personal_info']['state'] = 'CA'
+        tax_data.data['years'][2025]['personal_info']['zip_code'] = '12345'
+        tax_data.data['years'][2025]['filing_status']['status'] = 'single'
+        tax_data.data['years'][2025]['income']['w2_forms'] = [{'wages': 50000, 'employer_name': 'Test Corp'}]
+        tax_data.data['years'][2025]['income']['interest_income'] = 1000
+        tax_data.data['years'][2025]['income']['dividend_income'] = 2000
+        tax_data.data['years'][2025]['deductions']['standard_deduction'] = 13850
+        tax_data.data['years'][2025]['credits']['child_tax_credit'] = 2000
+        tax_data.data['years'][2025]['payments']['federal_withholding'] = 8000
         return tax_data
 
     def test_initialization(self, e_filing_service):

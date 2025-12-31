@@ -24,6 +24,8 @@ from services.tax_year_service import TaxYearService
 from services.collaboration_service import CollaborationService
 from services.authentication_service import AuthenticationService
 from services.cloud_backup_service import CloudBackupService
+from services.encryption_service import EncryptionService
+from services.ptin_ero_service import PTINEROService
 from gui.two_factor_dialogs import TwoFactorSetupDialog, TwoFactorDisableDialog
 from gui.client_management_dialogs import ClientManagementDialog
 from gui.ptin_ero_dialogs import PTINEROManagementDialog
@@ -63,6 +65,12 @@ class MainWindow:
         # Initialize authentication service
         self.auth_service = AuthenticationService(self.config)
         self.session_token = None
+        
+        # Initialize encryption service
+        self.encryption_service = EncryptionService(self.config.key_file)
+        
+        # Initialize PTIN/ERO service
+        self.ptin_ero_service = PTINEROService(self.config, self.encryption_service)
         
         # Check authentication on startup
         if not self._check_authentication():
@@ -394,7 +402,7 @@ class MainWindow:
         """Open the e-filing window"""
         try:
             from gui.e_filing_window import open_e_filing_window
-            open_e_filing_window(self.root, self.tax_data, self.config)
+            open_e_filing_window(self.root, self.tax_data, self.config, self.ptin_ero_service)
         except Exception as e:
             messagebox.showerror("E-Filing Error", 
                 f"Failed to open e-filing window:\n\n{str(e)}")
@@ -404,7 +412,7 @@ class MainWindow:
         try:
             from gui.e_filing_window import open_e_filing_window
             # Open e-filing window and switch to status tab
-            window = open_e_filing_window(self.root, self.tax_data, self.config)
+            window = open_e_filing_window(self.root, self.tax_data, self.config, self.ptin_ero_service)
             # Note: In a real implementation, we'd switch to the status tab here
         except Exception as e:
             messagebox.showerror("E-File Status Error", 
