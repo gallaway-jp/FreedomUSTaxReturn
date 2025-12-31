@@ -19,6 +19,7 @@ from gui.pages.form_viewer import FormViewerPage
 from gui.pages.receipt_scanner_page import ReceiptScannerPage
 from gui.pages.cryptocurrency_page import CryptocurrencyPage
 from gui.pages.foreign_income_page import ForeignIncomePage
+from gui.pages.estate_trust_page import EstateTrustPage
 from gui.widgets.validation_summary import ValidationSummary
 from gui.theme_manager import ThemeManager
 from services.audit_trail_service import AuditTrailService
@@ -129,6 +130,7 @@ class MainWindow:
                 "receipt_scanner": Mock(),
                 "cryptocurrency": Mock(),
                 "foreign_income": Mock(),
+                "estate_trust": Mock(),
                 "form_viewer": Mock(),
             }
             # Configure dependents button mock to behave like a real button
@@ -155,6 +157,7 @@ class MainWindow:
             from gui.pages.receipt_scanner_page import ReceiptScannerPage
             from gui.pages.cryptocurrency_page import CryptocurrencyPage
             from gui.pages.foreign_income_page import ForeignIncomePage
+            from gui.pages.estate_trust_page import EstateTrustPage
             
             self.page_mapping = {
                 PersonalInfoPage: "personal_info",
@@ -167,6 +170,7 @@ class MainWindow:
                 ReceiptScannerPage: "receipt_scanner",
                 CryptocurrencyPage: "cryptocurrency",
                 ForeignIncomePage: "foreign_income",
+                EstateTrustPage: "estate_trust",
                 FormViewerPage: "form_viewer",
             }
             
@@ -200,6 +204,7 @@ class MainWindow:
         self.root.bind('<Alt-Key-8>', lambda e: self.show_page("receipt_scanner"))
         self.root.bind('<Alt-Key-9>', lambda e: self.show_page("cryptocurrency"))
         self.root.bind('<Alt-Key-0>', lambda e: self.show_page("foreign_income"))
+        self.root.bind('<Alt-Key-equal>', lambda e: self.show_page("estate_trust"))
         self.root.bind('<Alt-Key-minus>', lambda e: self.show_page("form_viewer"))
         
         # Common actions
@@ -820,6 +825,7 @@ class MainWindow:
             "receipt_scanner": 90,
             "cryptocurrency": 92,
             "foreign_income": 94,
+            "estate_trust": 96,
             "form_viewer": 100,
         }
         
@@ -1125,6 +1131,7 @@ class MainWindow:
             ("Receipt Scanner", "receipt_scanner"),
             ("Cryptocurrency", "cryptocurrency"),
             ("Foreign Income & FBAR", "foreign_income"),
+            ("Estate & Trust Returns", "estate_trust"),
             ("View Forms", "form_viewer"),
         ]
         
@@ -1222,6 +1229,7 @@ class MainWindow:
             "receipt_scanner": ReceiptScannerPage,
             "cryptocurrency": CryptocurrencyPage,
             "foreign_income": ForeignIncomePage,
+            "estate_trust": EstateTrustPage,
             "form_viewer": FormViewerPage,
         }
         
