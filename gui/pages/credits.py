@@ -265,3 +265,29 @@ class CreditsPage(ttk.Frame):
             pass
         
         self.main_window.show_page("payments")
+    
+    def refresh_data(self):
+        """Refresh the form with current tax data"""
+        # Reload child tax credit data
+        self.num_children.set(str(len(self.tax_data.get("credits.child_tax_credit.qualifying_children", []))))
+        
+        # Reload EIC data
+        self.claim_eic.set(bool(self.tax_data.get("credits.earned_income_credit.qualifying_children")))
+        
+        # Reload education credits
+        self.claim_edu.set(bool(
+            self.tax_data.get("credits.education_credits.american_opportunity") or 
+            self.tax_data.get("credits.education_credits.lifetime_learning")
+        ))
+        
+        # Reload retirement savings credit
+        self.retire_contrib.set(str(self.tax_data.get("credits.retirement_savings_credit", 0)))
+        
+        # Reload child and dependent care credit
+        self.care_expenses.set(str(self.tax_data.get("credits.child_dependent_care.expenses", 0)))
+        
+        # Reload residential energy credit
+        self.energy_credit.set(str(self.tax_data.get("credits.residential_energy.amount", 0)))
+        
+        # Reload premium tax credit
+        self.premium_credit.set(str(self.tax_data.get("credits.premium_tax_credit.amount", 0)))

@@ -48,6 +48,9 @@ class TaxYearConfig:
     # IRA deductibility limits by filing status
     ira_deductibility_limits: Dict[str, Dict[str, float]]
     
+    # Filing deadlines by entity type
+    filing_deadlines: Dict[str, str] = None
+    
     additional_medicare_rate: float = 0.009
     
     # Child tax credit amounts
@@ -321,6 +324,14 @@ TAX_YEAR_2025 = TaxYearConfig(
         "Qualifying Widow(er)": {
             "magi_limit": 123000,
         },
+    },
+    
+    # Filing deadlines for 2025 tax year (due in 2026)
+    filing_deadlines={
+        "individual": "2026-04-15",  # Individual filers: April 15, 2026
+        "partnership": "2026-03-16",  # Partnerships and S Corporations: March 16, 2026
+        "s_corporation": "2026-03-16",  # S Corporations: March 16, 2026
+        "c_corporation": "2026-04-15",  # C Corporations: April 15, 2026
     },
 )
 

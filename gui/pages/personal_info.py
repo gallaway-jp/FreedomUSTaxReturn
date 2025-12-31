@@ -245,3 +245,19 @@ class PersonalInfoPage(ttk.Frame):
         
         # Navigate to next page
         self.main_window.show_page("filing_status")
+    
+    def refresh_data(self):
+        """Refresh the form with current tax data"""
+        # Load existing personal information data
+        self.first_name.set(self.tax_data.get("personal_info.first_name", ""))
+        self.middle_initial.set(self.tax_data.get("personal_info.middle_initial", ""))
+        self.last_name.set(self.tax_data.get("personal_info.last_name", ""))
+        self.ssn.set(self.tax_data.get("personal_info.ssn", ""))
+        self.dob.set(self.tax_data.get("personal_info.date_of_birth", ""))
+        self.occupation.set(self.tax_data.get("personal_info.occupation", ""))
+        self.address.set(self.tax_data.get("personal_info.address", ""))
+        self.city.set(self.tax_data.get("personal_info.city", ""))
+        self.state.set(self.tax_data.get("personal_info.state", ""))
+        self.zip_code.set(self.tax_data.get("personal_info.zip_code", ""))
+        self.email.set(self.tax_data.get("personal_info.email", ""))
+        self.phone.set(self.tax_data.get("personal_info.phone", ""))

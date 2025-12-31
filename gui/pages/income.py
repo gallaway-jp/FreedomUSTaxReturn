@@ -271,6 +271,17 @@ class IncomePage(ttk.Frame):
         )
         save_btn.pack(side="right")
     
+    def refresh_data(self):
+        """Refresh all income data displays for the current tax year"""
+        self.refresh_w2_list()
+        self.refresh_interest_list()
+        self.refresh_dividend_list()
+        self.refresh_se_list()
+        self.refresh_retirement_list()
+        self.refresh_ss_list()
+        self.refresh_capital_list()
+        self.refresh_rental_list()
+    
     def refresh_w2_list(self):
         """Refresh W-2 list display"""
         # Clear existing widgets

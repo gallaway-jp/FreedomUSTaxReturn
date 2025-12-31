@@ -133,3 +133,9 @@ class FilingStatusPage(ttk.Frame):
         
         # Navigate to next page
         self.main_window.show_page("income")
+    
+    def refresh_data(self):
+        """Refresh the form with current tax data"""
+        # Reload filing status data
+        self.status_var.set(self.tax_data.get("filing_status.status", ""))
+        self.dependent_var.set(self.tax_data.get("filing_status.is_dependent", False))

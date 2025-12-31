@@ -201,3 +201,18 @@ class DeductionsPage(ttk.Frame):
                 return
         
         self.main_window.show_page("credits")
+    
+    def refresh_data(self):
+        """Refresh the form with current tax data"""
+        # Reload deduction method
+        self.method_var.set(self.tax_data.get("deductions.method", "standard"))
+        
+        # Reload itemized deduction fields
+        self.medical.set(str(self.tax_data.get("deductions.medical_expenses", 0)))
+        self.taxes.set(str(self.tax_data.get("deductions.state_local_taxes", 0)))
+        self.mortgage.set(str(self.tax_data.get("deductions.mortgage_interest", 0)))
+        self.charitable.set(str(self.tax_data.get("deductions.charitable_contributions", 0)))
+        
+        # Update the display
+        self.on_method_change()
+        self.calculate_itemized_total()

@@ -473,6 +473,15 @@ class FormViewerPage(ttk.Frame):
             "An unexpected error occurred while exporting. Please check file permissions and try again."
         )
     
+    def refresh_data(self):
+        """Refresh the form viewer with current tax data"""
+        # Clear the current display
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+        
+        # Rebuild the form with new data
+        self.build_form()
+    
     def save_return(self):
         """Save return to file"""
         self.main_window.save_progress()

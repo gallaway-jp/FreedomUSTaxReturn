@@ -162,6 +162,10 @@ class DependentsPage(ttk.Frame):
             self.tax_data.set("dependents", dependents)
             self.refresh_dependents_list()
             messagebox.showinfo("Success", f"Dependent '{name}' has been deleted.")
+    
+    def refresh_data(self):
+        """Refresh the dependents list for the current tax year"""
+        self.refresh_dependents_list()
 
 
 class DependentDialog(tk.Toplevel):

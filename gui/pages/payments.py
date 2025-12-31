@@ -203,6 +203,17 @@ class PaymentsPage(ttk.Frame):
             pass
         
         self.main_window.show_page("form_viewer")
+    
+    def refresh_data(self):
+        """Refresh the form with current tax data"""
+        # Refresh estimated payments list
+        self.refresh_estimated_list()
+        
+        # Reload prior year overpayment
+        self.prior_overpayment.set(str(self.tax_data.get("payments.prior_year_overpayment", 0)))
+        
+        # Recalculate totals
+        self.calculate_total()
 
 
 class EstimatedPaymentDialog(tk.Toplevel):

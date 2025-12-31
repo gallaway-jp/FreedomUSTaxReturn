@@ -121,7 +121,8 @@ class TaxYearService:
                 (0, 0.0), (44625, 0.15), (49250, 0.20)
             ]
             eic_amounts = {"single": 538, "married_joint": 538, "head_household": 538}
-            filing_deadline = date(year, 4, 15)
+            # Filing deadlines are in the year following the tax year
+            filing_deadline = date(year + 1, 4, 15)  # April 15 of next year
 
         elif year == 2024:
             ordinary_brackets = [
@@ -132,9 +133,9 @@ class TaxYearService:
                 (0, 0.0), (44625, 0.15), (49250, 0.20)
             ]
             eic_amounts = {"single": 538, "married_joint": 538, "head_household": 538}
-            filing_deadline = date(year, 4, 15)
+            filing_deadline = date(year + 1, 4, 15)
 
-        elif year == 2023:
+        elif year == 2024:
             ordinary_brackets = [
                 (0, 0.10), (11000, 0.12), (44725, 0.22), (95375, 0.24),
                 (182100, 0.32), (231250, 0.35), (578125, 0.37)
@@ -142,8 +143,8 @@ class TaxYearService:
             capital_gains_brackets = [
                 (0, 0.0), (44625, 0.15), (49250, 0.20)
             ]
-            eic_amounts = {"single": 560, "married_joint": 560, "head_household": 560}
-            filing_deadline = date(year, 4, 15)
+            eic_amounts = {"single": 538, "married_joint": 538, "head_household": 538}
+            filing_deadline = date(year + 1, 4, 15)
 
         elif year == 2022:
             ordinary_brackets = [
@@ -154,7 +155,7 @@ class TaxYearService:
                 (0, 0.0), (41675, 0.15), (45975, 0.20)
             ]
             eic_amounts = {"single": 560, "married_joint": 560, "head_household": 560}
-            filing_deadline = date(year, 4, 15)
+            filing_deadline = date(year + 1, 4, 15)
 
         elif year == 2021:
             ordinary_brackets = [
@@ -165,7 +166,7 @@ class TaxYearService:
                 (0, 0.0), (40425, 0.15), (44550, 0.20)
             ]
             eic_amounts = {"single": 1502, "married_joint": 1502, "head_household": 1502}
-            filing_deadline = date(year, 4, 15)
+            filing_deadline = date(year + 1, 4, 15)
 
         elif year == 2020:
             ordinary_brackets = [
@@ -176,7 +177,7 @@ class TaxYearService:
                 (0, 0.0), (39375, 0.15), (43350, 0.20)
             ]
             eic_amounts = {"single": 538, "married_joint": 538, "head_household": 538}
-            filing_deadline = date(year, 4, 15)
+            filing_deadline = date(year + 1, 4, 15)
 
         else:
             # Default/fallback configuration
@@ -188,7 +189,7 @@ class TaxYearService:
                 (0, 0.0), (44625, 0.15), (49250, 0.20)
             ]
             eic_amounts = {"single": 538, "married_joint": 538, "head_household": 538}
-            filing_deadline = date(year, 4, 15)
+            filing_deadline = date(year + 1, 4, 15)
 
         return TaxYearConfig(
             year=year,

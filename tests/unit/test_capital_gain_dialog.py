@@ -1,6 +1,6 @@
 import pytest
 import tkinter as tk
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from gui.pages.income import CapitalGainDialog
 from models.tax_data import TaxData
 from config.app_config import AppConfig
@@ -12,13 +12,20 @@ class TestCapitalGainDialog:
     @pytest.fixture
     def setup_dialog(self):
         """Set up a CapitalGainDialog instance for testing"""
+        # Skip GUI tests if Tkinter is not properly configured
+        try:
+            test_root = tk.Tk()
+            test_root.destroy()
+        except tk.TclError:
+            pytest.skip("Tkinter not properly configured for GUI tests")
+
         root = tk.Tk()
         config = AppConfig.from_env()
         tax_data = TaxData(config)
         theme_manager = Mock()
         theme_manager.get_color.side_effect = lambda color: {
             "success": "green",
-            "error": "red", 
+            "error": "red",
             "fg": "black"
         }.get(color, "black")
 
@@ -33,13 +40,20 @@ class TestCapitalGainDialog:
     @pytest.fixture
     def setup_dialog_with_data(self):
         """Set up a CapitalGainDialog with existing data for editing"""
+        # Skip GUI tests if Tkinter is not properly configured
+        try:
+            test_root = tk.Tk()
+            test_root.destroy()
+        except tk.TclError:
+            pytest.skip("Tkinter not properly configured for GUI tests")
+
         root = tk.Tk()
         config = AppConfig.from_env()
         tax_data = TaxData(config)
         theme_manager = Mock()
         theme_manager.get_color.side_effect = lambda color: {
             "success": "green",
-            "error": "red", 
+            "error": "red",
             "fg": "black"
         }.get(color, "black")
 
