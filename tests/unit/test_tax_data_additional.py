@@ -60,6 +60,33 @@ class TestTaxDataEdgeCases:
         except IndexError:
             pass  # Expected
     
+    def test_update_in_list_valid_index(self):
+        """Test updating item in list by valid index."""
+        tax_data = TaxData()
+        tax_data.set('income.w2_forms', [
+            {'employer': 'First', 'wages': 50000},
+            {'employer': 'Second', 'wages': 60000}
+        ])
+        
+        tax_data.update_in_list('income.w2_forms', 1, {'employer': 'Updated', 'wages': 70000})
+        
+        w2_forms = tax_data.get('income.w2_forms')
+        assert len(w2_forms) == 2
+        assert w2_forms[1]['employer'] == 'Updated'
+        assert w2_forms[1]['wages'] == 70000
+    
+    def test_update_in_list_invalid_index(self):
+        """Test updating item in list by invalid index does nothing."""
+        tax_data = TaxData()
+        tax_data.set('income.w2_forms', [{'employer': 'First', 'wages': 50000}])
+        
+        # Try to update invalid index
+        tax_data.update_in_list('income.w2_forms', 5, {'employer': 'Updated'})
+        
+        w2_forms = tax_data.get('income.w2_forms')
+        assert len(w2_forms) == 1
+        assert w2_forms[0]['employer'] == 'First'  # Should remain unchanged
+    
     def test_get_section_returns_dict(self):
         """Test get_section returns entire section."""
         tax_data = TaxData()
@@ -118,6 +145,192 @@ class TestTaxDataEdgeCases:
         # Should include Schedule SE if business income > 400
         if tax_data.get('income.business_income'):
             assert 'Schedule SE' in forms or 'Form 1040' in forms
+    
+    def test_get_required_forms_with_other_taxes(self):
+        """Test get_required_forms includes Schedule 2 for other taxes."""
+        tax_data = TaxData()
+        tax_data.set('other_taxes.alternative_minimum_tax', 1000)
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule 2" in forms
+    
+    def test_get_required_forms_with_credits(self):
+        """Test get_required_forms includes Schedule 3 for credits."""
+        tax_data = TaxData()
+        tax_data.set('credits.foreign_tax_credit', 500)
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule 3" in forms
+    
+    def test_get_required_forms_with_itemized_deductions(self):
+        """Test get_required_forms includes Schedule A for itemized deductions."""
+        tax_data = TaxData()
+        tax_data.set('deductions.method', 'itemized')
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule A" in forms
+    
+    def test_get_required_forms_with_high_interest_income(self):
+        """Test get_required_forms includes Schedule B for high interest income."""
+        tax_data = TaxData()
+        tax_data.set('income.interest_income', [
+            {'description': 'Bank Interest', 'amount': 2000}
+        ])
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule B" in forms
+    
+    def test_get_required_forms_with_capital_gains(self):
+        """Test get_required_forms includes Schedule D for capital gains."""
+        tax_data = TaxData()
+        tax_data.set('income.capital_gains', [
+            {'description': 'Stock Sale', 'gain_loss': 5000}
+        ])
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule D" in forms
+    
+    def test_get_required_forms_with_earned_income_credit(self):
+        """Test get_required_forms includes Schedule EIC for earned income credit."""
+        tax_data = TaxData()
+        tax_data.set('credits.earned_income_credit.qualifying_children', [
+            {'name': 'Child1', 'age': 5}
+        ])
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule EIC" in forms
+    
+    def test_get_required_forms_with_child_tax_credit(self):
+        """Test get_required_forms includes Schedule 8812 for child tax credit."""
+        tax_data = TaxData()
+        tax_data.set('credits.child_tax_credit.qualifying_children', [
+            {'name': 'Child1', 'age': 5}
+        ])
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Schedule 8812" in forms
+    
+    def test_get_required_forms_with_education_credits(self):
+        """Test get_required_forms includes Form 8863 for education credits."""
+        tax_data = TaxData()
+        tax_data.set('credits.education_credits.american_opportunity', [
+            {'student': 'Student1', 'amount': 2500}
+        ])
+        
+        forms = tax_data.get_required_forms()
+        
+        assert "Form 8863" in forms
+
+
+class TestTaxDataWashSaleDetection:
+    """Test wash sale detection methods in TaxData."""
+
+    def test_detect_wash_sales_no_sales(self):
+        """Test detect_wash_sales with no capital gains."""
+        tax_data = TaxData()
+
+        wash_sales = tax_data.detect_wash_sales()
+
+        assert wash_sales == []
+
+    def test_detect_wash_sales_no_losses(self):
+        """Test detect_wash_sales with gains but no losses."""
+        tax_data = TaxData()
+        tax_data.set('income.capital_gains', [
+            {'description': 'Stock A', 'date_sold': '01/15/2025', 'gain_loss': 1000}
+        ])
+
+        wash_sales = tax_data.detect_wash_sales()
+
+        assert wash_sales == []
+
+    def test_detect_wash_sales_with_wash_sale(self):
+        """Test detect_wash_sales detects wash sale within 30 days."""
+        tax_data = TaxData()
+        tax_data.set('income.capital_gains', [
+            {'description': 'Stock A', 'date_sold': '01/15/2025', 'date_acquired': '01/01/2025', 'gain_loss': -500},
+            {'description': 'Stock A', 'date_sold': '02/01/2025', 'date_acquired': '01/10/2025', 'gain_loss': 300}
+        ])
+
+        wash_sales = tax_data.detect_wash_sales()
+
+        assert len(wash_sales) == 1
+        assert wash_sales[0]['sale_index'] == 0
+        assert wash_sales[0]['purchase_index'] == 1
+        assert wash_sales[0]['loss_amount'] == 500
+
+    def test_detect_wash_sales_outside_window(self):
+        """Test detect_wash_sales ignores sales outside 30-day window."""
+        tax_data = TaxData()
+        tax_data.set('income.capital_gains', [
+            {'description': 'Stock A', 'date_sold': '01/15/2025', 'date_acquired': '01/01/2025', 'gain_loss': -500},
+            {'description': 'Stock A', 'date_sold': '03/01/2025', 'date_acquired': '02/15/2025', 'gain_loss': 300}
+        ])
+
+        wash_sales = tax_data.detect_wash_sales()
+
+        assert wash_sales == []  # More than 30 days apart
+
+    def test_parse_date_mm_dd_yyyy(self):
+        """Test _parse_date with MM/DD/YYYY format."""
+        tax_data = TaxData()
+
+        result = tax_data._parse_date('01/15/2025')
+
+        assert result is not None
+        assert result.year == 2025
+        assert result.month == 1
+        assert result.day == 15
+
+    def test_parse_date_yyyy_mm_dd(self):
+        """Test _parse_date with YYYY-MM-DD format."""
+        tax_data = TaxData()
+
+        result = tax_data._parse_date('2025-01-15')
+
+        assert result is not None
+        assert result.year == 2025
+        assert result.month == 1
+        assert result.day == 15
+
+    def test_parse_date_invalid(self):
+        """Test _parse_date with invalid date string."""
+        tax_data = TaxData()
+
+        result = tax_data._parse_date('invalid-date')
+
+        assert result is None
+
+    def test_are_similar_securities_identical(self):
+        """Test _are_similar_securities with identical descriptions."""
+        tax_data = TaxData()
+
+        result = tax_data._are_similar_securities('Apple Inc Common Stock', 'Apple Inc Common Stock')
+
+        assert result is True
+
+    def test_are_similar_securities_different_companies(self):
+        """Test _are_similar_securities with different companies."""
+        tax_data = TaxData()
+
+        result = tax_data._are_similar_securities('Apple Inc Common Stock', 'Microsoft Corp Common Stock')
+
+        assert result is False
+
+    def test_are_similar_securities_different_types(self):
+        """Test _are_similar_securities with different security types."""
+        tax_data = TaxData()
+
+        result = tax_data._are_similar_securities('Apple Inc Common Stock', 'Apple Inc Preferred Stock')
+
+        assert result is False
 
 
 class TestTaxDataCalculations:
@@ -361,3 +574,123 @@ class TestTaxDataMetadata:
         assert tax_data.get('personal_info.first_name') == 'Jane'
         assert tax_data.get('personal_info.last_name') == 'Doe'
         assert len(tax_data.get('income.w2_forms', [])) == 1
+
+
+class TestTaxDataMultiYearSupport:
+    """Test multi-year support methods in TaxData."""
+
+    def test_set_current_year_valid(self):
+        """Test setting current year to a supported year."""
+        tax_data = TaxData()
+        original_year = tax_data.get_current_year()
+
+        # Set to a different supported year
+        tax_data.set_current_year(2024)
+
+        assert tax_data.get_current_year() == 2024
+
+    def test_set_current_year_unsupported(self):
+        """Test setting current year to an unsupported year raises error."""
+        tax_data = TaxData()
+
+        with pytest.raises(ValueError, match="Tax year 2019 is not supported"):
+            tax_data.set_current_year(2019)
+
+    def test_get_available_years(self):
+        """Test getting list of available years."""
+        tax_data = TaxData()
+        years = tax_data.get_available_years()
+
+        # Should include the default year
+        assert 2025 in years
+
+    def test_create_new_year_success(self):
+        """Test creating a new year successfully."""
+        tax_data = TaxData()
+
+        result = tax_data.create_new_year(2024, 2025)
+
+        assert result is True
+        assert 2024 in tax_data.data["years"]
+
+    def test_create_new_year_already_exists(self):
+        """Test creating a year that already exists returns False."""
+        tax_data = TaxData()
+
+        # First creation should succeed
+        tax_data.create_new_year(2024, 2025)
+        # Second creation should fail
+        result = tax_data.create_new_year(2024, 2025)
+
+        assert result is False
+
+    def test_create_new_year_invalid_base_year(self):
+        """Test creating a new year with invalid base year returns False."""
+        tax_data = TaxData()
+
+        result = tax_data.create_new_year(2024, 2019)  # 2019 doesn't exist
+
+        assert result is False
+
+    def test_delete_year_success(self):
+        """Test deleting a year successfully."""
+        tax_data = TaxData()
+        tax_data.create_new_year(2024)
+
+        result = tax_data.delete_year(2024)
+
+        assert result is True
+        assert 2024 not in tax_data.data["years"]
+
+    def test_delete_year_current_year_fails(self):
+        """Test deleting the current year fails."""
+        tax_data = TaxData()
+        current_year = tax_data.get_current_year()
+
+        result = tax_data.delete_year(current_year)
+
+        assert result is False
+        assert current_year in tax_data.data["years"]
+
+    def test_delete_year_nonexistent_fails(self):
+        """Test deleting a nonexistent year fails."""
+        tax_data = TaxData()
+
+        result = tax_data.delete_year(2019)
+
+        assert result is False
+
+    def test_copy_personal_info_to_year(self):
+        """Test copying personal info from one year to another."""
+        tax_data = TaxData()
+        tax_data.create_new_year(2024)
+
+        # Set personal info for 2025
+        tax_data.set('personal_info.first_name', 'John', 2025)
+        tax_data.set('personal_info.last_name', 'Doe', 2025)
+
+        # Copy to 2024
+        tax_data.copy_personal_info_to_year(2025, 2024)
+
+        # Switch to 2024 and check
+        tax_data.set_current_year(2024)
+        assert tax_data.get('personal_info.first_name') == 'John'
+        assert tax_data.get('personal_info.last_name') == 'Doe'
+
+    def test_get_year_data_existing(self):
+        """Test getting data for an existing year."""
+        tax_data = TaxData()
+        tax_data.create_new_year(2024)
+
+        year_data = tax_data.get_year_data(2024)
+
+        assert year_data is not None
+        assert isinstance(year_data, dict)
+
+    def test_get_year_data_nonexistent(self):
+        """Test getting data for a nonexistent year returns None."""
+        tax_data = TaxData()
+
+        year_data = tax_data.get_year_data(2019)
+
+        assert year_data is None

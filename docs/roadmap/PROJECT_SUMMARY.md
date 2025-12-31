@@ -10,6 +10,7 @@ A fully functional, completely free Python GUI application for preparing US fede
 
 - **Files Created:** 27 Python files + 5 documentation files
 - **Lines of Code:** ~3,000+ lines
+- **Test Coverage:** 80% (111 tests)
 - **Pages:** 7 main application pages
 - **Forms Supported:** 10+ IRS forms
 - **Documentation:** 5 comprehensive guides

@@ -12,12 +12,19 @@ This dialog provides:
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import logging
-import qrcode
 import io
 from PIL import Image, ImageTk
 from typing import Dict, Any, List, Optional, Callable
 from services.collaboration_service import CollaborationService, CollaborationRole, AccessLevel, SharedReturn
 from models.user import User
+
+# Optional QR code support
+try:
+    import qrcode
+    QR_CODE_AVAILABLE = True
+except ImportError:
+    QR_CODE_AVAILABLE = False
+    qrcode = None
 
 logger = logging.getLogger(__name__)
 
@@ -196,20 +203,28 @@ class SharingDialog(tk.Toplevel):
                 self.return_id, self.current_user.id, self.tax_year
             )
 
-            # QR Code
-            qr_frame = ttk.Frame(parent)
-            qr_frame.pack(pady=10)
+            # QR Code (only if available)
+            if QR_CODE_AVAILABLE:
+                qr_frame = ttk.Frame(parent)
+                qr_frame.pack(pady=10)
 
-            qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(share_link)
-            qr.make(fit=True)
+                qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr.add_data(share_link)
+                qr.make(fit=True)
 
-            qr_image = qr.make_image(fill_color="black", back_color="white")
-            qr_photo = ImageTk.PhotoImage(qr_image)
+                qr_image = qr.make_image(fill_color="black", back_color="white")
+                qr_photo = ImageTk.PhotoImage(qr_image)
 
-            qr_label = ttk.Label(qr_frame, image=qr_photo)
-            qr_label.image = qr_photo  # Keep reference
-            qr_label.pack()
+                qr_label = ttk.Label(qr_frame, image=qr_photo)
+                qr_label.image = qr_photo  # Keep reference
+                qr_label.pack()
+
+                ttk.Label(qr_frame, text="Scan QR code to access",
+                         font=("", 8)).pack(pady=(5, 0))
+            else:
+                # Show message that QR code is not available
+                ttk.Label(parent, text="QR code not available (install qrcode package)",
+                         font=("", 9, "italic"), foreground="gray").pack(pady=(10, 5))
 
             # Link display
             link_frame = ttk.Frame(parent)
