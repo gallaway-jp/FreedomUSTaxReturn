@@ -28,6 +28,7 @@ from services.encryption_service import EncryptionService
 from services.ptin_ero_service import PTINEROService
 from gui.two_factor_dialogs import TwoFactorSetupDialog, TwoFactorDisableDialog
 from gui.client_management_dialogs import ClientManagementDialog
+from gui.client_login_dialog import ClientLoginDialog
 from gui.ptin_ero_dialogs import PTINEROManagementDialog
 from models.tax_data import TaxData
 
@@ -292,6 +293,8 @@ class MainWindow:
         # Client Management submenu
         client_menu = tk.Menu(security_menu, tearoff=0)
         security_menu.add_cascade(label="Client Management", menu=client_menu)
+        client_menu.add_command(label="Client Portal Login...", command=self._open_client_portal)
+        client_menu.add_separator()
         client_menu.add_command(label="Manage Clients...", command=self._open_client_management)
         client_menu.add_command(label="PTIN/ERO Management...", command=self._open_ptin_ero_management)
         
@@ -1647,6 +1650,14 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open client management: {e}")
+    
+    def _open_client_portal(self):
+        """Open client portal login dialog"""
+        try:
+            dialog = ClientLoginDialog(self.root)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open client portal: {e}")
     
     def _open_ptin_ero_management(self):
         """Open PTIN/ERO management dialog"""

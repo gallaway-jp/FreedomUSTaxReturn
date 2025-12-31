@@ -161,9 +161,9 @@
 
 3. **Professional Features**
    - [x] Multi-client management
-   - [ ] PTIN integration
-   - [ ] ERO (Electronic Return Originator) support
-   - [ ] Client portal
+   - [x] PTIN integration
+   - [x] ERO (Electronic Return Originator) support
+   - [x] Client portal
 
 4. **Mobile Support**
    - [ ] Mobile-responsive interface
