@@ -172,6 +172,12 @@
    - [x] Multi-year trend analysis
    - [x] Tax optimization insights
 
+5. **Business Entity Support**
+   - [x] Partnership returns (Form 1065)
+   - [x] S-Corp returns (Form 1120-S)
+   - [x] K-1 generation for partners/shareholders
+   - [x] Business income allocation
+
 5. **Mobile Support**
    - [x] Mobile-responsive interface
    - [x] iOS/Android web app
@@ -225,7 +231,6 @@
 - [ ] Cryptocurrency tax reporting
 - [ ] Foreign income and FBAR
 - [ ] Estate and trust returns
-- [ ] Partnership and S-Corp returns
 - [x] Amended return support (1040-X)
 
 ### Integration:
