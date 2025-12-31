@@ -24,6 +24,7 @@ from services.tax_year_service import TaxYearService
 from services.collaboration_service import CollaborationService
 from services.authentication_service import AuthenticationService
 from services.cloud_backup_service import CloudBackupService
+from gui.two_factor_dialogs import TwoFactorSetupDialog, TwoFactorDisableDialog
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -271,6 +272,12 @@ class MainWindow:
         cloud_menu.add_command(label="Create Backup...", command=self._create_backup)
         cloud_menu.add_command(label="Restore Backup...", command=self._restore_backup)
         cloud_menu.add_command(label="Backup Status...", command=self._show_backup_status)
+        
+        # Two-Factor Authentication submenu
+        tfa_menu = tk.Menu(security_menu, tearoff=0)
+        security_menu.add_cascade(label="Two-Factor Auth", menu=tfa_menu)
+        tfa_menu.add_command(label="Enable 2FA...", command=self._enable_2fa)
+        tfa_menu.add_command(label="Disable 2FA...", command=self._disable_2fa)
         
         security_menu.add_command(label="Change Password", command=self._change_password)
         security_menu.add_separator()
@@ -1573,3 +1580,42 @@ class MainWindow:
             dialog.show()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to show backup status: {e}")
+    
+    def _enable_2fa(self):
+        """Enable Two-Factor Authentication"""
+        try:
+            # Check if 2FA is already enabled
+            if self.auth_service.is_2fa_enabled():
+                messagebox.showinfo("2FA Status", "Two-Factor Authentication is already enabled.")
+                return
+            
+            # Get setup information
+            setup_info = self.auth_service.get_2fa_setup_info(self.session_token)
+            
+            # Show setup dialog
+            dialog = TwoFactorSetupDialog(self.root, self.auth_service, setup_info)
+            result = dialog.show()
+            
+            if result:
+                messagebox.showinfo("Success", "Two-Factor Authentication has been enabled!")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to enable 2FA: {e}")
+    
+    def _disable_2fa(self):
+        """Disable Two-Factor Authentication"""
+        try:
+            # Check if 2FA is enabled
+            if not self.auth_service.is_2fa_enabled():
+                messagebox.showinfo("2FA Status", "Two-Factor Authentication is not currently enabled.")
+                return
+            
+            # Show disable confirmation dialog
+            dialog = TwoFactorDisableDialog(self.root, self.auth_service)
+            result = dialog.show()
+            
+            if result:
+                messagebox.showinfo("Success", "Two-Factor Authentication has been disabled.")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to disable 2FA: {e}")

@@ -192,7 +192,7 @@
 - [x] Implement end-to-end encryption
 - [x] Add password protection
 - [x] Secure cloud backup
-- [ ] Two-factor authentication
+- [x] Two-factor authentication
 - [ ] Multi-client management for tax professionals
 - [ ] Integrate PTIN/ERO authentication
 

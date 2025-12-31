@@ -3,6 +3,7 @@ pypdf>=4.0.0,<5.0.0          # PDF manipulation and form filling
 cryptography>=42.0.0,<43.0.0 # Encryption for sensitive tax data (AES-256)
 qrcode>=7.0.0,<8.0.0         # QR code generation for sharing features
 Pillow>=10.0.0,<11.0.0       # Image processing for QR codes
+pyotp>=2.8.0,<3.0.0          # TOTP (Time-based One-Time Password) for 2FA
 
 # Python standard library (included):
 # - tkinter: GUI framework

@@ -397,3 +397,216 @@ class AuthenticationService:
             'require_digits': self.require_digits,
             'require_special_chars': self.require_special_chars
         }
+
+    # Two-Factor Authentication (2FA) Methods
+
+    def is_2fa_enabled(self) -> bool:
+        """Check if 2FA is enabled for the master account"""
+        auth_data = self._load_auth_data()
+        master_data = auth_data.get('master', {})
+        return master_data.get('2fa_enabled', False)
+
+    def generate_2fa_secret(self) -> str:
+        """
+        Generate a new TOTP secret for 2FA setup.
+
+        Returns:
+            Base32-encoded secret key
+        """
+        try:
+            import pyotp
+        except ImportError:
+            raise AuthenticationError("2FA dependencies not installed. Please install pyotp.")
+
+        return pyotp.random_base32()
+
+    def enable_2fa(self, session_token: str, secret: str, verification_code: str) -> bool:
+        """
+        Enable 2FA for the authenticated user.
+
+        Args:
+            session_token: Valid session token
+            secret: TOTP secret key
+            verification_code: Current TOTP code for verification
+
+        Returns:
+            True if 2FA was successfully enabled
+
+        Raises:
+            AuthenticationError: If session invalid or verification fails
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        try:
+            import pyotp
+        except ImportError:
+            raise AuthenticationError("2FA dependencies not installed. Please install pyotp.")
+
+        # Verify the TOTP code
+        totp = pyotp.TOTP(secret)
+        if not totp.verify(verification_code):
+            raise AuthenticationError("Invalid verification code")
+
+        # Enable 2FA
+        auth_data = self._load_auth_data()
+        if 'master' not in auth_data:
+            raise AuthenticationError("Master password not set")
+
+        master_data = auth_data['master']
+        master_data['2fa_enabled'] = True
+        master_data['2fa_secret'] = secret
+        master_data['2fa_backup_codes'] = self._generate_backup_codes()
+
+        self._save_auth_data(auth_data)
+        logger.info("2FA enabled successfully")
+        return True
+
+    def disable_2fa(self, session_token: str, password: str) -> bool:
+        """
+        Disable 2FA for the authenticated user.
+
+        Args:
+            session_token: Valid session token
+            password: Master password for verification
+
+        Returns:
+            True if 2FA was successfully disabled
+
+        Raises:
+            AuthenticationError: If session invalid or password wrong
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        # Verify password
+        try:
+            self.authenticate_master_password(password)
+        except AuthenticationError:
+            raise AuthenticationError("Invalid password")
+
+        # Disable 2FA
+        auth_data = self._load_auth_data()
+        master_data = auth_data.get('master', {})
+        master_data['2fa_enabled'] = False
+        master_data.pop('2fa_secret', None)
+        master_data.pop('2fa_backup_codes', None)
+
+        self._save_auth_data(auth_data)
+        logger.info("2FA disabled successfully")
+        return True
+
+    def verify_2fa_code(self, code: str) -> bool:
+        """
+        Verify a 2FA code (TOTP or backup code).
+
+        Args:
+            code: TOTP code or backup code to verify
+
+        Returns:
+            True if code is valid
+        """
+        if not self.is_2fa_enabled():
+            return True  # If 2FA not enabled, any code is "valid"
+
+        auth_data = self._load_auth_data()
+        master_data = auth_data.get('master', {})
+
+        # Check if it's a backup code first
+        backup_codes = master_data.get('2fa_backup_codes', [])
+        if code in backup_codes:
+            # Remove used backup code
+            backup_codes.remove(code)
+            master_data['2fa_backup_codes'] = backup_codes
+            self._save_auth_data(auth_data)
+            logger.info("2FA verified with backup code")
+            return True
+
+        # Check TOTP code
+        secret = master_data.get('2fa_secret')
+        if not secret:
+            return False
+
+        try:
+            import pyotp
+            totp = pyotp.TOTP(secret)
+            is_valid = totp.verify(code)
+            if is_valid:
+                logger.info("2FA TOTP code verified successfully")
+            return is_valid
+        except ImportError:
+            logger.error("2FA dependencies not installed")
+            return False
+
+    def get_2fa_setup_info(self, session_token: str) -> Dict:
+        """
+        Get 2FA setup information including QR code URI.
+
+        Args:
+            session_token: Valid session token
+
+        Returns:
+            Dictionary with setup information
+
+        Raises:
+            AuthenticationError: If session invalid
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        try:
+            import pyotp
+        except ImportError:
+            raise AuthenticationError("2FA dependencies not installed. Please install pyotp.")
+
+        secret = self.generate_2fa_secret()
+
+        # Create TOTP URI for QR code
+        totp = pyotp.TOTP(secret)
+        uri = totp.provisioning_uri(name="FreedomUS Tax Return", issuer_name="FreedomUS")
+
+        return {
+            'secret': secret,
+            'uri': uri,
+            'backup_codes': self._generate_backup_codes()
+        }
+
+    def _generate_backup_codes(self) -> list:
+        """Generate backup codes for 2FA recovery"""
+        codes = []
+        for _ in range(10):  # Generate 10 backup codes
+            code = secrets.token_hex(4).upper()  # 8-character hex codes
+            codes.append(code)
+        return codes
+
+    def authenticate_with_2fa(self, password: str, totp_code: Optional[str] = None) -> str:
+        """
+        Authenticate with password and optional 2FA code.
+
+        Args:
+            password: Master password
+            totp_code: TOTP code (required if 2FA enabled)
+
+        Returns:
+            Session token on success
+
+        Raises:
+            AuthenticationError: If authentication fails
+        """
+        # First authenticate with password
+        session_token = self.authenticate_master_password(password)
+
+        # If 2FA is enabled, verify the code
+        if self.is_2fa_enabled():
+            if not totp_code:
+                raise AuthenticationError("2FA code required")
+            if not self.verify_2fa_code(totp_code):
+                raise AuthenticationError("Invalid 2FA code")
+
+        return session_token
