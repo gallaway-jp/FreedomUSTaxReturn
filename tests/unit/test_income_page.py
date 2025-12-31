@@ -44,12 +44,12 @@ class TestIncomePage:
         """Test refreshing self-employment list with businesses"""
         page = setup_page
         # Add some test business data
-        page.tax_data.data['income']['self_employment'] = [
+        page.tax_data.set('income.self_employment', [
             {
                 'business_name': 'Test Business',
                 'net_profit': 50000.0
             }
-        ]
+        ])
         page.refresh_se_list()
         # Should not crash with business data
         assert True
@@ -76,12 +76,12 @@ class TestIncomePage:
         """Test that edit self-employment button creates dialog with index"""
         page = setup_page
         # Add test business data
-        page.tax_data.data['income']['self_employment'] = [
+        page.tax_data.set('income.self_employment', [
             {
                 'business_name': 'Existing Business',
                 'net_profit': 30000.0
             }
-        ]
+        ])
         page.refresh_se_list()
 
         # Mock the dialog
@@ -100,7 +100,7 @@ class TestIncomePage:
         page = setup_page
         
         # Add test capital gains data with potential wash sale
-        page.tax_data.data['income']['capital_gains'] = [
+        page.tax_data.set('income.capital_gains', [
             {
                 'description': 'Apple Inc Common Stock',
                 'date_acquired': '01/15/2025',
@@ -119,7 +119,7 @@ class TestIncomePage:
                 'gain_loss': 0.00,
                 'holding_period': 'Short-term'
             }
-        ]
+        ])
         
         # Test wash sale detection
         wash_sales = page.tax_data.detect_wash_sales()

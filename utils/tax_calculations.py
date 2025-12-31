@@ -499,3 +499,48 @@ def calculate_additional_medicare_tax(wages: float, investment_income: float,
     additional_medicare_tax = excess * config.additional_medicare_rate
     
     return round(additional_medicare_tax, 2)
+
+
+@lru_cache(maxsize=128)
+def calculate_child_dependent_care_credit(expenses: float, agi: float, 
+                                        filing_status: str, tax_year: int = 2025) -> float:
+    """
+    Calculate Child and Dependent Care Credit.
+    
+    Args:
+        expenses: Qualifying child and dependent care expenses
+        agi: Adjusted Gross Income
+        filing_status: Filing status code
+        tax_year: Tax year for calculation
+        
+    Returns:
+        Child and dependent care credit amount
+        
+    Note:
+        Credit is 35% of qualifying expenses up to $3,000 for one qualifying 
+        individual or $6,000 for two or more. Credit phases out for high-income taxpayers.
+    """
+    config = get_tax_year_config(tax_year)
+    
+    # Maximum qualifying expenses based on number of children
+    # For simplicity, assume 2+ children (most common case) - max $6,000
+    max_expenses = 6000.0
+    
+    # Limit expenses to maximum qualifying amount
+    qualifying_expenses = min(expenses, max_expenses)
+    
+    # Base credit rate is 35%
+    credit_rate = 0.35
+    
+    # Check for phase-out
+    phase_out_threshold = config.child_dependent_care_limits.get(filing_status, 
+                                                                config.child_dependent_care_limits["Single"])["threshold"]
+    
+    if agi > phase_out_threshold:
+        # Phase out $1 of credit for every $2 of AGI over threshold
+        phase_out_amount = (agi - phase_out_threshold) / 2
+        credit_rate = max(0, credit_rate - (phase_out_amount / qualifying_expenses))
+    
+    credit = qualifying_expenses * credit_rate
+    
+    return round(credit, 2)

@@ -527,7 +527,10 @@ class TaxPlanningService:
                     else:
                         target[key] = value
 
-            apply_nested_changes(modified_tax_data.data, changes)
+            # Apply changes to the year-specific data
+            current_year = modified_tax_data.get_current_year()
+            year_data = modified_tax_data.data["years"][current_year]
+            apply_nested_changes(year_data, changes)
             # Clear any caching to ensure fresh calculation
             if hasattr(modified_tax_data, '_calculation_cache'):
                 modified_tax_data._calculation_cache = {}

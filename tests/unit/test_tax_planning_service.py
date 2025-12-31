@@ -26,29 +26,20 @@ class TestTaxPlanningService:
         config = AppConfig()
         data = TaxData(config)
 
-        # Set up sample data
-        data.data = {
-            'personal_info': {
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'ssn': '123-45-6789'
-            },
-            'filing_status': {
-                'status': 'Single'
-            },
-            'income': {
-                'w2_forms': [{
-                    'employer_ein': '12-3456789',
-                    'wages': 75000.00,
-                    'federal_withholding': 8500.00
-                }],
-                'business_income': 0,
-                'dividend_income': []
-            },
-            'deductions': {
-                'method': 'standard'
-            }
-        }
+        # Set up sample data using proper methods
+        data.set('personal_info.first_name', 'John')
+        data.set('personal_info.last_name', 'Doe')
+        data.set('personal_info.ssn', '123-45-6789')
+        data.set('filing_status.status', 'Single')
+        data.set('income.w2_forms', [{
+            'employer_ein': '12-3456789',
+            'wages': 75000.00,
+            'federal_withholding': 8500.00
+        }])
+        data.set('income.business_income', 0)
+        data.set('income.dividend_income', [])
+        data.set('deductions.method', 'standard')
+        
         return data
 
     @pytest.fixture
@@ -256,29 +247,20 @@ class TestConvenienceFunctions:
         config = AppConfig()
         data = TaxData(config)
 
-        # Set up sample data
-        data.data = {
-            'personal_info': {
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'ssn': '123-45-6789'
-            },
-            'filing_status': {
-                'status': 'Single'
-            },
-            'income': {
-                'w2_forms': [{
-                    'employer_ein': '12-3456789',
-                    'wages': 75000.00,
-                    'federal_withholding': 8500.00
-                }],
-                'business_income': 0,
-                'dividend_income': []
-            },
-            'deductions': {
-                'method': 'standard'
-            }
-        }
+        # Set up sample data using proper methods
+        data.set('personal_info.first_name', 'John')
+        data.set('personal_info.last_name', 'Doe')
+        data.set('personal_info.ssn', '123-45-6789')
+        data.set('filing_status.status', 'Single')
+        data.set('income.w2_forms', [{
+            'employer_ein': '12-3456789',
+            'wages': 75000.00,
+            'federal_withholding': 8500.00
+        }])
+        data.set('income.business_income', 0)
+        data.set('income.dividend_income', [])
+        data.set('deductions.method', 'standard')
+        
         return data
 
     @pytest.fixture

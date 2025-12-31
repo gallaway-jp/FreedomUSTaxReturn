@@ -19,7 +19,7 @@ class TestForm8949Generation:
         theme_manager = Mock()
 
         # Add comprehensive capital gains data
-        tax_data.data['income']['capital_gains'] = [
+        tax_data.set('income.capital_gains', [
             {
                 'description': 'Apple Inc Common Stock',
                 'transaction_type': 'Sale',
@@ -65,7 +65,7 @@ class TestForm8949Generation:
                 'confirmation_number': 'CONF003',
                 'wash_sale': True
             }
-        ]
+        ])
 
         page = IncomePage(root, tax_data, main_window, theme_manager)
 

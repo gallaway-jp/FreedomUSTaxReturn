@@ -116,8 +116,8 @@
    - [x] Calculation worksheets
    - [x] Supporting document links
 
-## Version 2.1
-**Target: Q1 2027**
+## Version 2.1 ✅
+**Status: Complete**
 
 ### Features:
 
@@ -133,11 +133,11 @@
    - [x] Carryover tracking
    - [x] Year-over-year comparison
 
-3. **Collaboration Features**
-   - [ ] Share return with spouse
-   - [ ] Send to tax preparer
-   - [ ] Comments and notes
-   - [ ] Review mode
+3. **Collaboration Features** ✅
+   - [x] Share return with spouse
+   - [x] Send to tax preparer
+   - [x] Comments and notes
+   - [x] Review mode
 
 ## Version 3.0 (E-File Ready)
 **Target: Q3 2027**

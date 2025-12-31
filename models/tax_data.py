@@ -782,7 +782,7 @@ class TaxData:
         }
         
         # Performance: Direct access to nested data
-        filing_status = self.data.get("filing_status", {}).get("status", "Single")
+        filing_status = self.get("filing_status.status", "Single")
         
         # Child Tax Credit - automatically determine from dependents
         dependents = self.get("dependents", [])
@@ -799,7 +799,7 @@ class TaxData:
                 try:
                     # Parse birth date and check age (simplified)
                     birth_year = int(birth_date.split("/")[-1]) if "/" in birth_date else 2000
-                    current_year = self.data.get("metadata", {}).get("tax_year", 2025)
+                    current_year = self.get_current_year()
                     age = current_year - birth_year
                     if age < 17:
                         qualifying_children.append(dependent)
@@ -821,7 +821,7 @@ class TaxData:
         # Performance: Earned Income Credit with optimized data access
         if qualifying_children:
             # Use centralized W2Calculator
-            w2_forms = self.data.get("income", {}).get("w2_forms", [])
+            w2_forms = self.get("income.w2_forms", [])
             earned_income = W2Calculator.calculate_total_wages(w2_forms)
             
             if earned_income > 0:
@@ -1066,22 +1066,63 @@ class TaxData:
     
     def to_dict(self) -> Dict:
         """Export data as dictionary"""
-        return self.data.copy()
+        # For backward compatibility, return the current year's data in flat format
+        current_year = self.get_current_year()
+        if current_year in self.data.get('years', {}):
+            year_data = self.data['years'][current_year].copy()
+            # Add the global metadata
+            year_data['metadata'] = self.data.get('metadata', {}).copy()
+            return year_data
+        else:
+            # Fallback to old structure if no years data
+            return self.data.copy()
     
     @classmethod
     def from_dict(cls, data: Dict) -> 'TaxData':
         """Create TaxData object from dictionary"""
         instance = cls()
-        instance.data = data.copy()
-        # Ensure metadata exists
-        if "metadata" not in instance.data:
-            instance.data["metadata"] = {
-                "tax_year": datetime.now().year - 1,
-                "created_date": datetime.now().isoformat(),
-                "last_modified": datetime.now().isoformat(),
-                "version": "1.0",
+        
+        # Check if this is old flat format or new multi-year format
+        if 'years' not in data:
+            # Old flat format - migrate to new structure
+            current_year = data.get('metadata', {}).get('current_year', data.get('metadata', {}).get('tax_year', datetime.now().year - 1))
+            if 'metadata' not in data:
+                data['metadata'] = {
+                    'tax_year': current_year,
+                    'created_date': datetime.now().isoformat(),
+                    'last_modified': datetime.now().isoformat(),
+                    'version': '2.0',
+                }
+            
+            # Extract global metadata
+            global_metadata = data.pop('metadata')
+            
+            # Create new structure
+            instance.data = {
+                'years': {
+                    current_year: data
+                },
+                'metadata': global_metadata
             }
         else:
+            # New multi-year format
+            instance.data = data.copy()
+        
+        # Ensure metadata has all required fields
+        if "metadata" not in instance.data:
+            instance.data["metadata"] = {
+                "current_year": datetime.now().year - 1,
+                "supported_years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
+                "created_date": datetime.now().isoformat(),
+                "last_modified": datetime.now().isoformat(),
+                "version": "2.0",
+            }
+        else:
+            # Ensure current_year is set
+            if "current_year" not in instance.data["metadata"]:
+                instance.data["metadata"]["current_year"] = instance.data["metadata"].get("tax_year", datetime.now().year - 1)
+            if "supported_years" not in instance.data["metadata"]:
+                instance.data["metadata"]["supported_years"] = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
             instance.data["metadata"]["last_modified"] = datetime.now().isoformat()
         return instance
     

@@ -99,6 +99,29 @@ class TaxCalculationService:
         self.config: TaxYearConfig = get_tax_year_config(tax_year)
         logger.info(f"Initialized TaxCalculationService for tax year {tax_year}")
     
+    def _get_nested_value(self, data: Dict[str, Any], path: str, default=None) -> Any:
+        """
+        Get a nested value from dictionary using dot notation.
+        
+        Args:
+            data: Dictionary to search
+            path: Dot-separated path (e.g., 'income.w2_forms')
+            default: Default value if path not found
+            
+        Returns:
+            Value at path or default
+        """
+        keys = path.split('.')
+        current = data
+        
+        for key in keys:
+            if isinstance(current, dict) and key in current:
+                current = current[key]
+            else:
+                return default
+                
+        return current
+    
     def calculate_complete_return(self, tax_data: Any) -> TaxResult:
         """
         Calculate complete tax return with all components.
@@ -112,15 +135,30 @@ class TaxCalculationService:
         result = TaxResult()
         
         # Get data accessor (handles both dict and TaxData object)
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
+        from models.tax_data import TaxData
+        if isinstance(tax_data, TaxData):
+            # TaxData object
+            get_value = tax_data.get
+        elif isinstance(tax_data, dict):
+            # Dictionary - could be old flat format or new multi-year format
+            if 'years' in tax_data:
+                # New multi-year format
+                current_year = tax_data.get('metadata', {}).get('current_year', self.tax_year)
+                year_data = tax_data['years'].get(current_year, {})
+                get_value = lambda k, d=None: self._get_nested_value(year_data, k, d)
+            else:
+                # Old flat format
+                get_value = lambda k, d=None: tax_data.get(k, d)
+        else:
+            raise ValueError(f"Unsupported tax_data type: {type(tax_data)}")
         
         # Calculate income components
-        result.total_wages = self._calculate_total_wages(tax_data)
-        result.taxable_interest = self._calculate_taxable_interest(tax_data)
-        result.tax_exempt_interest = self._calculate_tax_exempt_interest(tax_data)
-        result.ordinary_dividends = self._calculate_ordinary_dividends(tax_data)
-        result.qualified_dividends = self._calculate_qualified_dividends(tax_data)
-        result.business_income = self._calculate_business_income(tax_data)
+        result.total_wages = self._calculate_total_wages(get_value)
+        result.taxable_interest = self._calculate_taxable_interest(get_value)
+        result.tax_exempt_interest = self._calculate_tax_exempt_interest(get_value)
+        result.ordinary_dividends = self._calculate_ordinary_dividends(get_value)
+        result.qualified_dividends = self._calculate_qualified_dividends(get_value)
+        result.business_income = self._calculate_business_income(get_value)
         
         # Total income (AGI before adjustments)
         result.total_income = (
@@ -134,7 +172,7 @@ class TaxCalculationService:
         # Calculate deductions
         filing_status = get_value('filing_status.status', 'Single')
         result.standard_deduction = calculate_standard_deduction(filing_status, self.tax_year)
-        result.itemized_deduction = self._calculate_itemized_deductions(tax_data)
+        result.itemized_deduction = self._calculate_itemized_deductions(get_value)
         
         # Use larger deduction
         deduction_method = get_value('deductions.method', 'standard')
@@ -156,7 +194,7 @@ class TaxCalculationService:
         result.total_tax = result.income_tax + result.self_employment_tax
         
         # Calculate payments
-        result.federal_withholding = self._calculate_total_withholding(tax_data)
+        result.federal_withholding = self._calculate_total_withholding(get_value)
         result.estimated_tax_payments = get_value('payments.estimated_tax', 0)
         result.total_payments = result.federal_withholding + result.estimated_tax_payments
         
@@ -173,44 +211,38 @@ class TaxCalculationService:
         
         return result
     
-    def _calculate_total_wages(self, tax_data: Any) -> float:
+    def _calculate_total_wages(self, get_value) -> float:
         """Calculate total wages from all W-2 forms"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         w2_forms = income_section.get('w2_forms', []) if isinstance(income_section, dict) else []
         return sum(w2.get('wages', 0) for w2 in w2_forms)
     
-    def _calculate_taxable_interest(self, tax_data: Any) -> float:
+    def _calculate_taxable_interest(self, get_value) -> float:
         """Calculate total taxable interest income"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         interest_income = income_section.get('interest_income', []) if isinstance(income_section, dict) else []
         return sum(item.get('amount', 0) for item in interest_income if not item.get('tax_exempt', False))
     
-    def _calculate_tax_exempt_interest(self, tax_data: Any) -> float:
+    def _calculate_tax_exempt_interest(self, get_value) -> float:
         """Calculate total tax-exempt interest income"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         interest_income = income_section.get('interest_income', []) if isinstance(income_section, dict) else []
         return sum(item.get('amount', 0) for item in interest_income if item.get('tax_exempt', False))
     
-    def _calculate_ordinary_dividends(self, tax_data: Any) -> float:
+    def _calculate_ordinary_dividends(self, get_value) -> float:
         """Calculate total ordinary dividend income"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         dividend_income = income_section.get('dividend_income', []) if isinstance(income_section, dict) else []
         return sum(item.get('ordinary', 0) for item in dividend_income)
     
-    def _calculate_qualified_dividends(self, tax_data: Any) -> float:
+    def _calculate_qualified_dividends(self, get_value) -> float:
         """Calculate total qualified dividend income"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         dividend_income = income_section.get('dividend_income', []) if isinstance(income_section, dict) else []
         return sum(item.get('qualified', 0) for item in dividend_income)
     
-    def _calculate_business_income(self, tax_data: Any) -> float:
+    def _calculate_business_income(self, get_value) -> float:
         """Calculate total business income (net profit)"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         
         # Check for self-employment businesses (new format)
@@ -226,9 +258,8 @@ class TaxCalculationService:
             return sum(biz.get('net_profit', 0) for biz in business_income)
         return 0.0
     
-    def _calculate_itemized_deductions(self, tax_data: Any) -> float:
+    def _calculate_itemized_deductions(self, get_value) -> float:
         """Calculate total itemized deductions"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         return (
             get_value('deductions.medical_expenses', 0) +
             get_value('deductions.state_local_taxes', 0) +
@@ -236,9 +267,8 @@ class TaxCalculationService:
             get_value('deductions.charitable_contributions', 0)
         )
     
-    def _calculate_total_withholding(self, tax_data: Any) -> float:
+    def _calculate_total_withholding(self, get_value) -> float:
         """Calculate total federal withholding from all sources"""
-        get_value = tax_data.get if hasattr(tax_data, 'get') else lambda k, d=None: tax_data.data.get(k, d)
         income_section = get_value('income', {})
         w2_forms = income_section.get('w2_forms', []) if isinstance(income_section, dict) else []
         return sum(w2.get('federal_withholding', 0) for w2 in w2_forms)

@@ -39,8 +39,9 @@ class TestTaxDataInitialization:
             'payments',
             'metadata'
         ]
+        current_year = tax_data.get_current_year()
         for section in required_sections:
-            assert section in tax_data.data
+            assert section in tax_data.data['years'][current_year]
 
 
 class TestTaxDataGetSet:

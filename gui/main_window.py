@@ -20,6 +20,8 @@ from gui.widgets.validation_summary import ValidationSummary
 from gui.theme_manager import ThemeManager
 from services.audit_trail_service import AuditTrailService
 from gui.audit_trail_window import AuditTrailWindow
+from services.tax_year_service import TaxYearService
+from services.collaboration_service import CollaborationService
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -39,9 +41,13 @@ class MainWindow:
         # Initialize tax data model with config
         self.tax_data = TaxData(self.config)
         
-        # Initialize audit trail service
+        # Initialize services
         self.audit_service = AuditTrailService(self.config)
         self.audit_service.start_session("main_user")
+        
+        self.tax_year_service = TaxYearService(self.config)
+        
+        self.collaboration_service = CollaborationService(self.config)
         
         # Bind window close event for cleanup
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -161,6 +167,8 @@ class MainWindow:
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
+        self.root.bind('<Control-h>', lambda e: self._share_return())
+        self.root.bind('<Control-r>', lambda e: self._open_review_mode())
         
         # Focus shortcuts
         self.root.bind('<Control-f>', lambda e: self._focus_search())
@@ -208,6 +216,16 @@ class MainWindow:
         tools_menu.add_command(label="Tax Planning", command=self._open_tax_planning, accelerator="Ctrl+P")
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
+
+        # Collaboration menu
+        collaboration_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Collaboration", menu=collaboration_menu)
+        
+        # Collaboration menu items
+        collaboration_menu.add_command(label="Share Return", command=self._share_return, accelerator="Ctrl+H")
+        collaboration_menu.add_command(label="Review Mode", command=self._open_review_mode, accelerator="Ctrl+R")
+        collaboration_menu.add_separator()
+        collaboration_menu.add_command(label="Manage Shared Returns", command=self._manage_shared_returns)
 
         # Year menu
         year_menu = tk.Menu(menubar, tearoff=0)
@@ -288,6 +306,102 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror("Audit Trail Error", 
                 f"Failed to open audit trail:\n\n{str(e)}")
+    
+    def _share_return(self):
+        """Open the sharing dialog to share the current tax return"""
+        try:
+            from gui.sharing_dialog import SharingDialog
+            from models.user import User
+            from services.collaboration_service import AccessLevel
+            
+            # Create a mock user for now (in a real app, this would come from authentication)
+            current_user = User(
+                id="current_user_id",
+                name="Current User",
+                email="user@example.com"
+            )
+            
+            # Generate a return ID for sharing
+            return_id = f"return_{self.tax_data.get_current_year()}_{current_user.id}"
+            
+            sharing_dialog = SharingDialog(
+                self.root,
+                self.collaboration_service,
+                current_user,
+                return_id,
+                self.tax_data.get_current_year()
+            )
+            
+        except Exception as e:
+            messagebox.showerror("Sharing Error", 
+                f"Failed to open sharing dialog:\n\n{str(e)}")
+    
+    def _open_review_mode(self):
+        """Open the review mode window for the current tax return"""
+        try:
+            from gui.review_mode_window import ReviewModeWindow
+            from models.user import User
+            from services.collaboration_service import AccessLevel
+            
+            # Create a mock user for now (in a real app, this would come from authentication)
+            current_user = User(
+                id="current_user_id",
+                name="Current User",
+                email="user@example.com"
+            )
+            
+            # Generate a return ID for sharing
+            return_id = f"return_{self.tax_data.get_current_year()}_{current_user.id}"
+            
+            review_window = ReviewModeWindow(
+                self.root,
+                self.collaboration_service,
+                self.tax_data,
+                return_id,
+                self.tax_data.get_current_year(),
+                current_user.id,
+                current_user.name,
+                AccessLevel.FULL_ACCESS  # Owner has full access
+            )
+            
+        except Exception as e:
+            messagebox.showerror("Review Mode Error", 
+                f"Failed to open review mode:\n\n{str(e)}")
+    
+    def _manage_shared_returns(self):
+        """Open dialog to manage shared returns and access"""
+        try:
+            # Create a simple management dialog for shared returns
+            manage_window = tk.Toplevel(self.root)
+            manage_window.title("Manage Shared Returns")
+            manage_window.geometry("600x400")
+            manage_window.resizable(True, True)
+            
+            ttk.Label(manage_window, text="Shared Tax Returns:", 
+                     font=("", 12, "bold")).pack(pady=10)
+            
+            # List of shared returns
+            listbox_frame = ttk.Frame(manage_window)
+            listbox_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+            
+            scrollbar = ttk.Scrollbar(listbox_frame)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            
+            listbox = tk.Listbox(listbox_frame, yscrollcommand=scrollbar.set, height=15)
+            listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            scrollbar.config(command=listbox.yview)
+            
+            # For now, show a placeholder message
+            listbox.insert(tk.END, "No shared returns found.")
+            listbox.insert(tk.END, "Feature coming soon - manage shared returns here.")
+            
+            # Close button
+            ttk.Button(manage_window, text="Close", 
+                      command=manage_window.destroy).pack(pady=(0, 20))
+            
+        except Exception as e:
+            messagebox.showerror("Manage Shared Returns Error", 
+                f"Failed to open shared returns management:\n\n{str(e)}")
     
     def _create_new_year(self):
         """Create a new tax year return"""
@@ -1113,16 +1227,14 @@ class MainWindow:
                 # Add W-2 data to current tax return
                 if 'income' in w2_data and 'w2_forms' in w2_data['income']:
                     # Check if we already have W-2 forms
-                    existing_w2s = self.tax_data.data.get('income', {}).get('w2_forms', [])
+                    existing_w2s = self.tax_data.get('income.w2_forms', [])
                     
                     # Add the new W-2
                     new_w2 = w2_data['income']['w2_forms'][0]
                     existing_w2s.append(new_w2)
                     
                     # Update tax data
-                    if 'income' not in self.tax_data.data:
-                        self.tax_data.data['income'] = {}
-                    self.tax_data.data['income']['w2_forms'] = existing_w2s
+                    self.tax_data.set('income.w2_forms', existing_w2s)
                     
                     messagebox.showinfo(
                         "W-2 Import Complete",

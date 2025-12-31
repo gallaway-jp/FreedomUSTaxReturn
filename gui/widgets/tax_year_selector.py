@@ -74,7 +74,7 @@ class TaxYearSelector(ttk.Frame):
         self.status_label.pack(side=tk.LEFT)
 
         # Status indicator (colored dot)
-        self.status_indicator = tk.Canvas(status_frame, width=12, height=12, bg=self.master.cget('bg'))
+        self.status_indicator = tk.Canvas(status_frame, width=12, height=12, bg='white')
         self.status_indicator.pack(side=tk.LEFT, padx=(5, 0))
         self.status_indicator.create_oval(2, 2, 10, 10, fill="gray", tags="status_dot")
 

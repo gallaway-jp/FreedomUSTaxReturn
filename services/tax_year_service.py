@@ -15,6 +15,7 @@ from datetime import datetime, date
 import json
 import os
 from pathlib import Path
+from config.app_config import AppConfig
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,14 @@ class TaxYearService:
     Handles tax year selection, configuration loading, and carryover tracking.
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[AppConfig] = None):
+        """
+        Initialize the tax year service.
+        
+        Args:
+            config: Application configuration (optional)
+        """
+        self.config = config
         self.current_year = date.today().year
         self.supported_years = list(range(2020, self.current_year + 2))  # Support last 5 years + current + next
         self.year_configs = self._load_tax_year_configs()
