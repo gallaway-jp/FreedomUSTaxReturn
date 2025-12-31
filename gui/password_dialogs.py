@@ -310,5 +310,5 @@ class ChangePasswordDialog(PasswordDialog):
     def _cancel(self):
         """Cancel password change"""
         self.result = False
-        self.dialog.destroy()</content>
-<parameter name="filePath">d:\Development\Python\FreedomUSTaxReturn\gui\password_dialogs.py
+        self.dialog.destroy()
+

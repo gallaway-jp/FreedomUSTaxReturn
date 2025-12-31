@@ -219,30 +219,40 @@ class TestAuditTrailIntegration:
     def test_main_window_audit_integration(self, config):
         """Test main window integration with audit trail"""
         import tkinter as tk
+        from services.authentication_service import AuthenticationService
 
         root = tk.Tk()
         root.withdraw()
 
-        # Create main window with audit service
-        main_window = MainWindow(root, config)
+        # Set up authentication service with a test password
+        auth_service = AuthenticationService(config)
+        test_password = "TestPassword123!"
+        auth_service.create_master_password(test_password)
 
-        # Verify audit service is initialized
-        assert hasattr(main_window, 'audit_service')
-        assert main_window.audit_service is not None
+        # Mock the authentication dialogs to avoid GUI interaction
+        with patch('gui.password_dialogs.AuthenticateDialog') as mock_auth_dialog:
+            mock_auth_dialog.return_value.show.return_value = "test_session_token"
+            
+            # Create main window with audit service
+            main_window = MainWindow(root, config)
 
-        # Verify session started
-        assert main_window.audit_service.current_session is not None
+            # Verify audit service is initialized
+            assert hasattr(main_window, 'audit_service')
+            assert main_window.audit_service is not None
 
-        # Verify the method exists
-        assert hasattr(main_window, '_open_audit_trail')
-        assert callable(getattr(main_window, '_open_audit_trail'))
+            # Verify session started
+            assert main_window.audit_service.current_session is not None
 
-        # Test opening audit trail window
-        with patch('gui.main_window.AuditTrailWindow') as mock_window:
-            main_window._open_audit_trail()
-            mock_window.assert_called_once_with(root, main_window.audit_service)
+            # Verify the method exists
+            assert hasattr(main_window, '_open_audit_trail')
+            assert callable(getattr(main_window, '_open_audit_trail'))
 
-        main_window.root.destroy()
+            # Test opening audit trail window
+            with patch('gui.main_window.AuditTrailWindow') as mock_window:
+                main_window._open_audit_trail()
+                mock_window.assert_called_once_with(root, main_window.audit_service)
+
+            main_window.root.destroy()
 
     def test_audit_log_cleanup_integration(self, audit_service, tmp_path):
         """Test audit log cleanup integration"""

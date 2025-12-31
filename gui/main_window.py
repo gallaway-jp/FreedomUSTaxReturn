@@ -32,6 +32,9 @@ class MainWindow:
         self.root = root
         self.config = config or AppConfig.from_env()
         
+        # Check if we're in a testing environment with mocked tkinter
+        self.is_mocked = isinstance(self.root, Mock)
+        
         self.root.title(self.config.window_title)
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
         
@@ -60,9 +63,6 @@ class MainWindow:
         
         # Bind window close event for cleanup
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
-        
-        # Check if we're in a testing environment with mocked tkinter
-        self.is_mocked = isinstance(self.root, Mock)
         
         if not self.is_mocked:
             # Create menu bar
