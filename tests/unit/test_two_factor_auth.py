@@ -266,7 +266,8 @@ class TestTwoFactorAuthentication:
         for code in codes:
             assert len(code) == 8  # 4 bytes * 2 hex chars
             assert code.isalnum()
-            assert code.isupper()
+            # Note: Hex codes can contain digits only, so we don't check isupper()
+            # The .upper() in implementation ensures any letters are uppercase
 
     @patch('pyotp.TOTP.provisioning_uri')
     def test_2fa_setup_uri_generation(self, mock_provisioning_uri, auth_service, config):

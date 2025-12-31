@@ -610,3 +610,489 @@ class AuthenticationService:
                 raise AuthenticationError("Invalid 2FA code")
 
         return session_token
+
+    # ===== CLIENT MANAGEMENT METHODS =====
+
+    def create_client_account(self, session_token: str, client_name: str, client_email: str,
+                            client_ssn: str, password: str) -> str:
+        """
+        Create a new client account for tax professional management.
+
+        Args:
+            session_token: Valid session token of the tax professional
+            client_name: Full name of the client
+            client_email: Email address of the client
+            client_ssn: Last 4 digits of client's SSN (for identification)
+            password: Password for client account
+
+        Returns:
+            Client ID of the newly created account
+
+        Raises:
+            AuthenticationError: If session is invalid or client already exists
+            PasswordPolicyError: If password doesn't meet requirements
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        # Validate password policy
+        self._validate_password_policy(password)
+
+        auth_data = self._load_auth_data()
+
+        # Initialize clients section if it doesn't exist
+        if 'clients' not in auth_data:
+            auth_data['clients'] = {}
+
+        # Check if client with this email already exists
+        for client_id, client_data in auth_data['clients'].items():
+            if client_data['email'] == client_email:
+                raise AuthenticationError(f"Client with email {client_email} already exists")
+
+        # Generate unique client ID
+        client_id = f"client_{secrets.token_hex(8)}"
+
+        # Hash the password
+        salt = self._generate_salt()
+        hashed_password = self._hash_password(password, salt)
+
+        # Create client account
+        auth_data['clients'][client_id] = {
+            'name': client_name,
+            'email': client_email,
+            'ssn_last4': client_ssn,
+            'password_hash': hashed_password,
+            'salt': salt,
+            'created_at': datetime.now().isoformat(),
+            'created_by': user_id,
+            'login_attempts': 0,
+            'locked_until': None,
+            'last_login': None,
+            'is_active': True,
+            'data_directory': f"client_data_{client_id}"
+        }
+
+        self._save_auth_data(auth_data)
+
+        # Create client data directory
+        client_data_dir = self.config.safe_dir / auth_data['clients'][client_id]['data_directory']
+        client_data_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"Client account created: {client_id} ({client_name})")
+        return client_id
+
+    def authenticate_client(self, client_email: str, password: str, totp_code: Optional[str] = None) -> Tuple[str, str]:
+        """
+        Authenticate a client account.
+
+        Args:
+            client_email: Client's email address
+            password: Client's password
+            totp_code: Optional 2FA code if enabled
+
+        Returns:
+            Tuple of (session_token, client_id)
+
+        Raises:
+            AuthenticationError: If authentication fails
+        """
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or not auth_data['clients']:
+            raise AuthenticationError("No client accounts found")
+
+        # Find client by email
+        client_id = None
+        client_data = None
+        for cid, cdata in auth_data['clients'].items():
+            if cdata['email'] == client_email:
+                client_id = cid
+                client_data = cdata
+                break
+
+        if not client_data:
+            raise AuthenticationError("Client account not found")
+
+        if not client_data.get('is_active', True):
+            raise AuthenticationError("Client account is deactivated")
+
+        # Check if account is locked
+        if client_data.get('locked_until'):
+            locked_until = datetime.fromisoformat(client_data['locked_until'])
+            if datetime.now() < locked_until:
+                raise AuthenticationError(f"Account locked until {locked_until}")
+            else:
+                # Clear lockout
+                client_data['locked_until'] = None
+                client_data['login_attempts'] = 0
+
+        # Verify password
+        hashed_input = self._hash_password(password, client_data['salt'])
+        if not hmac.compare_digest(hashed_input, client_data['password_hash']):
+            # Increment failed attempts
+            client_data['login_attempts'] = client_data.get('login_attempts', 0) + 1
+
+            if client_data['login_attempts'] >= self.max_login_attempts:
+                # Lock account
+                locked_until = datetime.now() + timedelta(minutes=self.lockout_duration_minutes)
+                client_data['locked_until'] = locked_until.isoformat()
+
+            self._save_auth_data(auth_data)
+            raise AuthenticationError("Invalid password")
+
+        # Reset login attempts on successful authentication
+        client_data['login_attempts'] = 0
+        client_data['last_login'] = datetime.now().isoformat()
+
+        # Check if 2FA is enabled for this client
+        if client_data.get('two_factor_enabled', False):
+            if not totp_code:
+                raise AuthenticationError("2FA code required")
+            if not self._verify_client_2fa_code(client_id, totp_code):
+                raise AuthenticationError("Invalid 2FA code")
+
+        self._save_auth_data(auth_data)
+
+        # Create session
+        session_token = self._create_session(client_id)
+        logger.info(f"Client authenticated: {client_id} ({client_data['name']})")
+
+        return session_token, client_id
+
+    def get_client_list(self, session_token: str) -> list:
+        """
+        Get list of all client accounts (for tax professionals).
+
+        Args:
+            session_token: Valid session token
+
+        Returns:
+            List of client information dictionaries
+
+        Raises:
+            AuthenticationError: If session is invalid
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data:
+            return []
+
+        clients = []
+        for client_id, client_data in auth_data['clients'].items():
+            clients.append({
+                'id': client_id,
+                'name': client_data['name'],
+                'email': client_data['email'],
+                'ssn_last4': client_data['ssn_last4'],
+                'created_at': client_data['created_at'],
+                'last_login': client_data.get('last_login'),
+                'is_active': client_data.get('is_active', True),
+                'two_factor_enabled': client_data.get('two_factor_enabled', False)
+            })
+
+        return clients
+
+    def get_client_data_directory(self, client_id: str) -> Path:
+        """
+        Get the data directory path for a specific client.
+
+        Args:
+            client_id: Client identifier
+
+        Returns:
+            Path to client's data directory
+
+        Raises:
+            AuthenticationError: If client doesn't exist
+        """
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        client_data = auth_data['clients'][client_id]
+        return self.config.safe_dir / client_data['data_directory']
+
+    def update_client_info(self, session_token: str, client_id: str,
+                          name: Optional[str] = None, email: Optional[str] = None) -> None:
+        """
+        Update client account information.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to update
+            name: New name (optional)
+            email: New email (optional)
+
+        Raises:
+            AuthenticationError: If session is invalid or client doesn't exist
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        client_data = auth_data['clients'][client_id]
+
+        if name:
+            client_data['name'] = name
+        if email:
+            # Check if email is already used by another client
+            for cid, cdata in auth_data['clients'].items():
+                if cid != client_id and cdata['email'] == email:
+                    raise AuthenticationError(f"Email {email} already in use")
+            client_data['email'] = email
+
+        self._save_auth_data(auth_data)
+        logger.info(f"Client info updated: {client_id}")
+
+    def deactivate_client(self, session_token: str, client_id: str) -> None:
+        """
+        Deactivate a client account.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to deactivate
+
+        Raises:
+            AuthenticationError: If session is invalid or client doesn't exist
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        auth_data['clients'][client_id]['is_active'] = False
+        self._save_auth_data(auth_data)
+        logger.info(f"Client deactivated: {client_id}")
+
+    def activate_client(self, session_token: str, client_id: str) -> None:
+        """
+        Reactivate a client account.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to activate
+
+        Raises:
+            AuthenticationError: If session is invalid or client doesn't exist
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        auth_data['clients'][client_id]['is_active'] = True
+        self._save_auth_data(auth_data)
+        logger.info(f"Client activated: {client_id}")
+
+    def change_client_password(self, session_token: str, client_id: str, new_password: str) -> None:
+        """
+        Change a client's password (admin function).
+
+        Args:
+            session_token: Valid session token
+            client_id: Client whose password to change
+            new_password: New password
+
+        Raises:
+            AuthenticationError: If session is invalid or client doesn't exist
+            PasswordPolicyError: If password doesn't meet requirements
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        # Validate password policy
+        self._validate_password_policy(new_password)
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        client_data = auth_data['clients'][client_id]
+
+        # Hash new password
+        salt = self._generate_salt()
+        hashed_password = self._hash_password(new_password, salt)
+
+        client_data['password_hash'] = hashed_password
+        client_data['salt'] = salt
+        client_data['login_attempts'] = 0  # Reset failed attempts
+        client_data['locked_until'] = None  # Clear any lockout
+
+        self._save_auth_data(auth_data)
+        logger.info(f"Client password changed: {client_id}")
+
+    # ===== CLIENT 2FA METHODS =====
+
+    def enable_client_2fa(self, session_token: str, client_id: str, secret: str, verification_code: str) -> bool:
+        """
+        Enable 2FA for a specific client account.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to enable 2FA for
+            secret: TOTP secret
+            verification_code: Verification code from authenticator
+
+        Returns:
+            True if successful
+
+        Raises:
+            AuthenticationError: If session is invalid or verification fails
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        # Verify the code
+        if not self._verify_client_2fa_setup(secret, verification_code):
+            return False
+
+        # Enable 2FA
+        client_data = auth_data['clients'][client_id]
+        client_data['two_factor_enabled'] = True
+        client_data['two_factor_secret'] = secret
+        client_data['backup_codes'] = self._generate_backup_codes()
+
+        self._save_auth_data(auth_data)
+        logger.info(f"2FA enabled for client: {client_id}")
+        return True
+
+    def disable_client_2fa(self, session_token: str, client_id: str) -> bool:
+        """
+        Disable 2FA for a specific client account.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to disable 2FA for
+
+        Returns:
+            True if successful
+
+        Raises:
+            AuthenticationError: If session is invalid
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        client_data = auth_data['clients'][client_id]
+        client_data['two_factor_enabled'] = False
+        if 'two_factor_secret' in client_data:
+            del client_data['two_factor_secret']
+        if 'backup_codes' in client_data:
+            del client_data['backup_codes']
+
+        self._save_auth_data(auth_data)
+        logger.info(f"2FA disabled for client: {client_id}")
+        return True
+
+    def get_client_2fa_setup_info(self, session_token: str, client_id: str) -> Dict[str, str]:
+        """
+        Get 2FA setup information for a client.
+
+        Args:
+            session_token: Valid session token
+            client_id: Client to get setup info for
+
+        Returns:
+            Dictionary with 'secret' and 'uri' for QR code
+
+        Raises:
+            AuthenticationError: If session is invalid or client not found
+        """
+        # Validate session
+        user_id = self.validate_session(session_token)
+        if not user_id:
+            raise AuthenticationError("Invalid session")
+
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            raise AuthenticationError("Client not found")
+
+        client_data = auth_data['clients'][client_id]
+
+        # Generate new secret
+        secret = self.generate_2fa_secret()
+
+        # Create URI for QR code
+        import pyotp
+        totp = pyotp.TOTP(secret)
+        uri = totp.provisioning_uri(name=client_data['email'], issuer_name="FreedomUSTaxReturn")
+
+        return {
+            'secret': secret,
+            'uri': uri
+        }
+
+    def _verify_client_2fa_code(self, client_id: str, code: str) -> bool:
+        """Verify 2FA code for a client"""
+        auth_data = self._load_auth_data()
+
+        if 'clients' not in auth_data or client_id not in auth_data['clients']:
+            return False
+
+        client_data = auth_data['clients'][client_id]
+
+        if not client_data.get('two_factor_enabled', False):
+            return True  # 2FA not enabled, so any code is "valid"
+
+        secret = client_data.get('two_factor_secret')
+        if not secret:
+            return False
+
+        import pyotp
+        totp = pyotp.TOTP(secret)
+        return totp.verify(code)
+
+    def _verify_client_2fa_setup(self, secret: str, code: str) -> bool:
+        """Verify 2FA setup code"""
+        import pyotp
+        totp = pyotp.TOTP(secret)
+        return totp.verify(code)
+
+    def _generate_backup_codes(self) -> list:
+        """Generate backup codes for 2FA"""
+        codes = []
+        for _ in range(10):
+            codes.append(secrets.token_hex(4).upper())
+        return codes
