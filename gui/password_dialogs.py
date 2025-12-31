@@ -34,7 +34,7 @@ class PasswordDialog:
         # Create dialog window
         self.dialog = tk.Toplevel(parent)
         self.dialog.title(title)
-        self.dialog.geometry("400x300")
+        self.dialog.geometry("500x600")
         self.dialog.resizable(False, False)
         self.dialog.transient(parent)
         self.dialog.grab_set()
@@ -44,6 +44,12 @@ class PasswordDialog:
             parent.winfo_rootx() + 50,
             parent.winfo_rooty() + 50
         ))
+
+        # Ensure dialog is visible and focused
+        self.dialog.lift()
+        self.dialog.focus_force()
+        self.dialog.attributes('-topmost', True)
+        self.dialog.after(100, lambda: self.dialog.attributes('-topmost', False))
 
         self._create_widgets()
 
@@ -67,7 +73,7 @@ class SetMasterPasswordDialog(PasswordDialog):
 
     def _create_widgets(self):
         # Main frame
-        main_frame = ttk.Frame(self.dialog, padding=20)
+        main_frame = ttk.Frame(self.dialog, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Title
@@ -118,10 +124,14 @@ class SetMasterPasswordDialog(PasswordDialog):
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(20, 0))
+        button_frame.pack(fill=tk.X, pady=(20, 0), side=tk.BOTTOM)
 
-        ttk.Button(button_frame, text="Cancel", command=self._cancel).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(button_frame, text="Set Password", command=self._set_password).pack(side=tk.RIGHT)
+        # Create a sub-frame for proper button alignment
+        button_container = ttk.Frame(button_frame)
+        button_container.pack(side=tk.RIGHT)
+
+        ttk.Button(button_container, text="Set Password", command=self._set_password).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(button_container, text="Cancel", command=self._cancel).pack(side=tk.LEFT)
 
     def _set_password(self):
         """Set the master password"""
@@ -161,7 +171,7 @@ class AuthenticateDialog(PasswordDialog):
 
     def _create_widgets(self):
         # Main frame
-        main_frame = ttk.Frame(self.dialog, padding=20)
+        main_frame = ttk.Frame(self.dialog, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Title
@@ -188,10 +198,14 @@ class AuthenticateDialog(PasswordDialog):
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(20, 0))
+        button_frame.pack(fill=tk.X, pady=(20, 0), side=tk.BOTTOM)
 
-        ttk.Button(button_frame, text="Cancel", command=self._cancel).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(button_frame, text="Login", command=self._authenticate).pack(side=tk.RIGHT)
+        # Create a sub-frame for proper button alignment
+        button_container = ttk.Frame(button_frame)
+        button_container.pack(side=tk.RIGHT)
+
+        ttk.Button(button_container, text="Login", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(button_container, text="Cancel", command=self._cancel).pack(side=tk.LEFT)
 
     def _authenticate(self):
         """Authenticate with password"""
