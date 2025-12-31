@@ -23,6 +23,7 @@ from gui.audit_trail_window import AuditTrailWindow
 from services.tax_year_service import TaxYearService
 from services.collaboration_service import CollaborationService
 from services.authentication_service import AuthenticationService
+from services.cloud_backup_service import CloudBackupService
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -52,6 +53,9 @@ class MainWindow:
         self.tax_year_service = TaxYearService(self.config)
         
         self.collaboration_service = CollaborationService(self.config)
+        
+        # Initialize cloud backup service
+        self.cloud_backup_service = CloudBackupService(self.config)
         
         # Initialize authentication service
         self.auth_service = AuthenticationService(self.config)
@@ -260,6 +264,14 @@ class MainWindow:
         menubar.add_cascade(label="Security", menu=security_menu)
         
         # Security menu items
+        # Cloud Backup submenu
+        cloud_menu = tk.Menu(security_menu, tearoff=0)
+        security_menu.add_cascade(label="Cloud Backup", menu=cloud_menu)
+        cloud_menu.add_command(label="Configure...", command=self._configure_cloud_backup)
+        cloud_menu.add_command(label="Create Backup...", command=self._create_backup)
+        cloud_menu.add_command(label="Restore Backup...", command=self._restore_backup)
+        cloud_menu.add_command(label="Backup Status...", command=self._show_backup_status)
+        
         security_menu.add_command(label="Change Password", command=self._change_password)
         security_menu.add_separator()
         security_menu.add_command(label="Logout", command=self._logout)
@@ -1519,3 +1531,45 @@ class MainWindow:
             # Restart application (simplified - in real app might restart process)
             messagebox.showinfo("Logged Out", "You have been logged out. Please restart the application to login again.")
             self.root.quit()
+    
+    def _configure_cloud_backup(self):
+        """Configure cloud backup settings"""
+        try:
+            from gui.cloud_backup_dialogs import CloudConfigDialog
+            dialog = CloudConfigDialog(self.root, self.cloud_backup_service)
+            result = dialog.show()
+            if result:
+                messagebox.showinfo("Success", "Cloud backup configured successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to configure cloud backup: {e}")
+    
+    def _create_backup(self):
+        """Create a new cloud backup"""
+        try:
+            from gui.cloud_backup_dialogs import CreateBackupDialog
+            dialog = CreateBackupDialog(self.root, self.cloud_backup_service, self.config)
+            backup_id = dialog.show()
+            if backup_id:
+                messagebox.showinfo("Success", f"Backup created successfully: {backup_id}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to create backup: {e}")
+    
+    def _restore_backup(self):
+        """Restore from a cloud backup"""
+        try:
+            from gui.cloud_backup_dialogs import RestoreBackupDialog
+            dialog = RestoreBackupDialog(self.root, self.cloud_backup_service)
+            result = dialog.show()
+            if result:
+                messagebox.showinfo("Success", "Backup restored successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to restore backup: {e}")
+    
+    def _show_backup_status(self):
+        """Show cloud backup status and statistics"""
+        try:
+            from gui.cloud_backup_dialogs import BackupStatusDialog
+            dialog = BackupStatusDialog(self.root, self.cloud_backup_service)
+            dialog.show()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to show backup status: {e}")

@@ -25,6 +25,9 @@ class AppConfig:
     - ENCRYPTION_ENABLED: Enable/disable encryption (true/false)
     """
     
+    # Application version
+    version: str = "3.0.0"
+    
     # File storage paths
     safe_dir: Path = Path.home() / "Documents" / "TaxReturns"
     key_file: Path = Path.home() / ".tax_encryption_key"
