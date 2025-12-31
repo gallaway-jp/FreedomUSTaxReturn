@@ -98,23 +98,23 @@
    - [x] Digital signature support
 
 2. **Import Capabilities**
-   - [ ] Import from prior year returns
-   - [ ] Import W-2 data from PDF
-   - [ ] Import 1099 data
-   - [ ] Import from tax software (TXF format)
+   - [x] Import from prior year returns
+   - [x] Import W-2 data from PDF
+   - [x] Import 1099 data
+   - [x] Import from tax software (TXF format)
 
 3. **Tax Planning Tools**
-   - [ ] What-if scenarios
-   - [ ] Tax projection for next year
-   - [ ] Estimated tax calculator
-   - [ ] Withholding calculator
-   - [ ] Retirement contribution optimizer
+   - [x] What-if scenarios
+   - [x] Tax projection for next year
+   - [x] Estimated tax calculator
+   - [x] Withholding calculator
+   - [x] Retirement contribution optimizer
 
 4. **Audit Trail**
-   - [ ] Change history tracking
-   - [ ] Data entry timestamps
-   - [ ] Calculation worksheets
-   - [ ] Supporting document links
+   - [x] Change history tracking
+   - [x] Data entry timestamps
+   - [x] Calculation worksheets
+   - [x] Supporting document links
 
 ## Version 2.1
 **Target: Q1 2027**

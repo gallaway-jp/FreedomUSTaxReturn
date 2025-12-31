@@ -982,6 +982,7 @@ class MainWindow:
         """Import data from TXF (Tax Exchange Format) file"""
         from tkinter import filedialog
         from pathlib import Path
+        from utils.import_utils import TaxDataImporter
         import logging
         logger = logging.getLogger(__name__)
         
@@ -994,12 +995,38 @@ class MainWindow:
         )
         
         if filename:
-            messagebox.showinfo(
-                "TXF Import",
-                "TXF (Tax Exchange Format) import is not yet implemented.\n\n"
-                "This feature will be available in a future version."
-            )
-            logger.info(f"TXF import requested but not implemented: {filename}")
+            try:
+                importer = TaxDataImporter()
+                imported_data = importer.import_from_file(filename)
+                
+                # Ask user what to import
+                import_options = self._show_import_options_dialog(imported_data)
+                
+                if import_options:
+                    # Merge imported data with current tax data
+                    self._merge_imported_data(imported_data, import_options)
+                    
+                    messagebox.showinfo(
+                        "TXF Import Complete",
+                        f"Successfully imported data from TXF file:\n{Path(filename).name}"
+                    )
+                    
+                    # Refresh current page to show imported data
+                    if self.current_page:
+                        page_id = self.get_current_page_id()
+                        self.show_page(page_id)
+                        
+                    self.status_label.config(text=f"TXF imported: {Path(filename).name}")
+                    logger.info(f"TXF file imported: {filename}")
+                else:
+                    messagebox.showinfo("Import Cancelled", "Import was cancelled by user.")
+                    
+            except Exception as e:
+                logger.error(f"TXF import failed: {e}", exc_info=True)
+                messagebox.showerror(
+                    "Import Failed",
+                    f"Failed to import TXF file:\n\n{str(e)}"
+                )
     
     def _show_import_options_dialog(self, imported_data):
         """Show dialog for selecting what data to import"""

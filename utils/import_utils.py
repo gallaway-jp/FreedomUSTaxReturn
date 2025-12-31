@@ -287,6 +287,13 @@ class TaxDataImporter:
         Import tax data from TXF (Tax Exchange Format) file.
 
         TXF is a standard format used by tax software for data exchange.
+        Format example:
+        V042
+        ADavid Jones
+        ^John Smith
+        T1040
+        L1^10000.00
+        L2^5000.00
 
         Args:
             file_path: Path to TXF file
@@ -294,10 +301,249 @@ class TaxDataImporter:
         Returns:
             Tax data dictionary
         """
-        # TXF format parsing would be implemented here
-        # This is a placeholder for future implementation
-        logger.warning("TXF import not yet implemented")
-        return {}
+        tax_data = {
+            'personal_info': {},
+            'income': {},
+            'deductions': {},
+            'credits': {},
+            'payments': {}
+        }
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+
+            current_form = None
+            account_name = ""
+            current_line = ""
+
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Handle line continuation (^)
+                if line.startswith('^'):
+                    current_line += line[1:]
+                    continue
+                else:
+                    # Process previous complete line
+                    if current_line:
+                        current_form = self._process_txf_line(current_line, tax_data, current_form)
+                    current_line = line
+
+            # Process the last line
+            if current_line:
+                current_form = self._process_txf_line(current_line, tax_data, current_form)
+
+            logger.info(f"Successfully imported tax data from TXF: {file_path}")
+            return tax_data
+
+        except Exception as e:
+            logger.error(f"Error importing TXF file {file_path}: {e}")
+            raise ValueError(f"Invalid TXF file format: {str(e)}")
+
+    def _process_txf_line(self, line: str, tax_data: Dict[str, Any], current_form: Optional[str]) -> Optional[str]:
+        """
+        Process a single TXF line and update tax data accordingly.
+
+        Args:
+            line: TXF line to process
+            tax_data: Tax data dictionary to update
+            current_form: Current form being processed
+
+        Returns:
+            Updated current_form value
+        """
+        if not line:
+            return current_form
+
+        code = line[0]
+        value = line[1:] if len(line) > 1 else ""
+
+        if code == 'V':
+            # Version - we can validate this
+            if not value.startswith('04'):
+                logger.warning(f"TXF version {value} may not be fully compatible")
+        elif code == 'A':
+            # Account name (taxpayer name)
+            tax_data['personal_info']['full_name'] = value
+        elif code == 'T':
+            # Form type
+            current_form = value
+        elif code == 'L':
+            # Line item
+            self._process_txf_line_item(value, tax_data, current_form)
+        elif code == 'D':
+            # Date field
+            self._process_txf_date(value, tax_data, current_form)
+        elif code == 'N':
+            # Description field
+            self._process_txf_description(value, tax_data, current_form)
+
+        return current_form
+
+    def _process_txf_line_item(self, value: str, tax_data: Dict[str, Any], form_type: Optional[str]):
+        """
+        Process TXF line item (L code).
+
+        Args:
+            value: Line value in format "line_number^amount"
+            tax_data: Tax data to update
+            form_type: Current form type
+        """
+        if '^' not in value:
+            return
+
+        line_num, amount_str = value.split('^', 1)
+        try:
+            line_number = int(line_num)
+            amount = float(amount_str)
+        except ValueError:
+            return
+
+        # Map TXF line numbers to our data structure based on form type
+        if form_type == '1040':
+            self._map_1040_line(line_number, amount, tax_data)
+        elif form_type == 'W2':
+            self._map_w2_line(line_number, amount, tax_data)
+        elif form_type.startswith('1099'):
+            self._map_1099_line(line_number, amount, tax_data, form_type)
+
+    def _map_1040_line(self, line_number: int, amount: float, tax_data: Dict[str, Any]):
+        """
+        Map Form 1040 line numbers to tax data structure.
+
+        Args:
+            line_number: TXF line number
+            amount: Amount value
+            tax_data: Tax data to update
+        """
+        # Common 1040 line mappings
+        line_mappings = {
+            1: ('income', 'wages', 'total_wages'),
+            2: ('income', 'interest', 'taxable_interest'),
+            3: ('income', 'dividends', 'ordinary_dividends'),
+            4: ('income', 'dividends', 'qualified_dividends'),
+            5: ('income', 'rental', 'rental_income'),
+            6: ('income', 'capital_gains', 'net_capital_gains'),
+            7: ('income', 'other_income', 'other_income'),
+            8: ('income', 'total_income', 'adjusted_gross_income'),
+            9: ('deductions', 'standard_deduction', 'amount'),
+            10: ('deductions', 'itemized', 'total_itemized'),
+            11: ('deductions', 'total_deductions', 'total'),
+            12: ('credits', 'child_tax_credit', 'amount'),
+            13: ('credits', 'earned_income_credit', 'amount'),
+            14: ('credits', 'total_credits', 'total'),
+            15: ('payments', 'federal_withholding', 'total'),
+            16: ('payments', 'estimated_payments', 'total'),
+            17: ('payments', 'total_payments', 'total')
+        }
+
+        if line_number in line_mappings:
+            section, field, subfield = line_mappings[line_number]
+            if section not in tax_data:
+                tax_data[section] = {}
+            if field not in tax_data[section]:
+                tax_data[section][field] = {}
+            tax_data[section][field][subfield] = amount
+
+    def _map_w2_line(self, line_number: int, amount: float, tax_data: Dict[str, Any]):
+        """
+        Map W-2 line numbers to tax data structure.
+
+        Args:
+            line_number: TXF line number
+            amount: Amount value
+            tax_data: Tax data to update
+        """
+        if 'income' not in tax_data:
+            tax_data['income'] = {}
+        if 'w2_forms' not in tax_data['income']:
+            tax_data['income']['w2_forms'] = [{}]
+
+        w2_form = tax_data['income']['w2_forms'][0]
+
+        # W-2 box mappings
+        w2_mappings = {
+            1: 'wages',  # Box 1
+            2: 'federal_withholding',  # Box 2
+            3: 'social_security_wages',  # Box 3
+            4: 'social_security_withheld',  # Box 4
+            5: 'medicare_wages',  # Box 5
+            6: 'medicare_withheld',  # Box 6
+            17: 'state_income_tax',  # Box 17
+            18: 'local_income_tax'  # Box 18
+        }
+
+        if line_number in w2_mappings:
+            w2_form[w2_mappings[line_number]] = amount
+
+    def _map_1099_line(self, line_number: int, amount: float, tax_data: Dict[str, Any], form_type: str):
+        """
+        Map 1099 line numbers to tax data structure.
+
+        Args:
+            line_number: TXF line number
+            amount: Amount value
+            tax_data: Tax data to update
+            form_type: 1099 form type
+        """
+        if 'income' not in tax_data:
+            tax_data['income'] = {}
+
+        if form_type == '1099-DIV':
+            if 'dividend_income' not in tax_data['income']:
+                tax_data['income']['dividend_income'] = [{}]
+            dividend = tax_data['income']['dividend_income'][0]
+
+            if line_number == 1:
+                dividend['ordinary'] = amount
+            elif line_number == 2:
+                dividend['qualified'] = amount
+
+        elif form_type == '1099-INT':
+            if 'interest_income' not in tax_data['income']:
+                tax_data['income']['interest_income'] = [{}]
+            interest = tax_data['income']['interest_income'][0]
+
+            if line_number == 1:
+                interest['amount'] = amount
+
+        elif form_type == '1099-B':
+            if 'capital_gains' not in tax_data['income']:
+                tax_data['income']['capital_gains'] = [{}]
+            gain = tax_data['income']['capital_gains'][0]
+
+            if line_number == 1:
+                gain['sales_price'] = amount
+            elif line_number == 2:
+                gain['cost_basis'] = amount
+
+    def _process_txf_date(self, value: str, tax_data: Dict[str, Any], form_type: Optional[str]):
+        """
+        Process TXF date field (D code).
+
+        Args:
+            value: Date value
+            tax_data: Tax data to update
+            form_type: Current form type
+        """
+        # Date processing - simplified implementation
+        # In a full implementation, you'd parse and validate dates
+        pass
+
+    def _process_txf_description(self, value: str, tax_data: Dict[str, Any], form_type: Optional[str]):
+        """
+        Process TXF description field (N code).
+
+        Args:
+            value: Description value
+            tax_data: Tax data to update
+            form_type: Current form type
+        """
+        # Description processing - could be used for additional context
+        pass
 
 
 def import_w2_from_pdf(file_path: str) -> Dict[str, Any]:

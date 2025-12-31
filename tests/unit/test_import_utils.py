@@ -4,6 +4,7 @@ Unit tests for Import Utilities
 import pytest
 import json
 import tempfile
+import os
 from pathlib import Path
 from unittest.mock import patch
 from utils.import_utils import (
@@ -138,14 +139,37 @@ class TestTaxDataImporter:
         assert div_income['ordinary'] == 1500.00
         assert div_income['qualified'] == 800.00
 
-    def test_import_from_txf_not_implemented(self):
-        """Test that TXF import shows warning"""
+    def test_import_from_txf_basic(self):
+        """Test basic TXF import functionality"""
         importer = TaxDataImporter()
 
-        with patch('utils.import_utils.logger') as mock_logger:
-            result = importer._import_from_txf("dummy.txf")
-            assert result == {}
-            mock_logger.warning.assert_called_with("TXF import not yet implemented")
+        # Create a temporary TXF file
+        txf_content = """V042
+ADavid Jones
+T1040
+L1^50000.00
+L2^1000.00
+L3^2000.00
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txf', delete=False) as f:
+            f.write(txf_content)
+            txf_file = f.name
+
+        try:
+            result = importer._import_from_txf(txf_file)
+
+            # Verify basic structure
+            assert 'personal_info' in result
+            assert 'income' in result
+            assert result['personal_info']['full_name'] == 'David Jones'
+
+            # Verify income data was parsed
+            assert 'wages' in result['income']
+            assert result['income']['wages']['total_wages'] == 50000.00
+
+        finally:
+            os.unlink(txf_file)
 
 
 class TestConvenienceFunctions:
