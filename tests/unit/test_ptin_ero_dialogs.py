@@ -50,11 +50,42 @@ class TestPTINEROManagementDialog:
 
     @pytest.fixture
     def root(self):
-        """Create test root window"""
-        root = tk.Tk()
-        root.withdraw()  # Hide the window
-        yield root
-        root.destroy()
+        """Create mock root window"""
+        # Mock tkinter to avoid GUI requirements in headless environments
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.Toplevel') as mock_toplevel, \
+             patch('tkinter.ttk.Notebook') as mock_notebook, \
+             patch('tkinter.ttk.Treeview') as mock_treeview, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.ttk.Entry') as mock_entry, \
+             patch('tkinter.StringVar') as mock_stringvar, \
+             patch('tkinter.Text') as mock_text:
+
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            mock_toplevel.return_value = mock_root
+
+            # Configure notebook mock
+            mock_notebook_instance = MagicMock()
+            mock_notebook_instance.tabs.return_value = ["PTIN", "ERO", "Validation"]
+            mock_notebook.return_value = mock_notebook_instance
+
+            # Configure treeview mocks
+            mock_ptin_tree = MagicMock()
+            mock_ero_tree = MagicMock()
+            mock_treeview.side_effect = [mock_ptin_tree, mock_ero_tree]
+
+            # Configure other mocks
+            mock_stringvar_instance = MagicMock()
+            mock_stringvar_instance.get.return_value = ""
+            mock_stringvar.return_value = mock_stringvar_instance
+
+            mock_text_instance = MagicMock()
+            mock_text.return_value = mock_text_instance
+
+            yield mock_root
 
     @pytest.fixture
     def dialog(self, root, mock_service):
@@ -64,7 +95,7 @@ class TestPTINEROManagementDialog:
             mock_container.get_ptin_ero_service.return_value = mock_service
             mock_get_container.return_value = mock_container
             dialog = PTINEROManagementDialog(root, test_mode=True)
-            
+
             # Configure mock trees to return expected data
             dialog.ptin_tree.get_children.return_value = ["item1", "item2"]  # 2 PTINs
             dialog.ero_tree.get_children.return_value = ["item1"]  # 1 ERO
@@ -72,7 +103,7 @@ class TestPTINEROManagementDialog:
             dialog.validation_ptin_var.get.return_value = ""
             dialog.validation_ero_var.get.return_value = ""
             # Don't set selection by default - let individual tests configure it
-            
+
             return dialog
 
     def test_initialization(self, dialog, mock_service):
