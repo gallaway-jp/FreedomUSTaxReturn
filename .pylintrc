@@ -1,0 +1,181 @@
+[MASTER]
+# Max number of characters on a single line
+max-line-length=100
+
+# Minimum Python version to target
+py-version=3.13
+
+# Number of processes to use when checking in parallel
+jobs=1
+
+# Limit the number of suggestions
+suggestion-box-size=5
+
+[MESSAGES CONTROL]
+# Disable specific warnings/errors
+disable=
+    C0330,  # Wrong hanging indentation before block
+    C0326,  # Bad whitespace around operator
+    R0903,  # Too few public methods (dataclasses)
+    R0913,  # Too many arguments
+    W0212,  # Access to protected member
+    C0114,  # Missing module docstring
+    C0115,  # Missing class docstring (handled by pydocstyle)
+    C0116,  # Missing function docstring (handled by pydocstyle)
+
+[FORMAT]
+# String format to use for logging
+logging-format-style=new
+
+# Max length of lines in strings
+max-line-length=100
+
+# Number of spaces to be considered a block indent
+indent-string='    '
+
+# Expected format of line ending, good values are LF or CRLF
+expected-line-ending-format=LF
+
+[VARIABLES]
+# Allowed variable names in addition to default ones
+additional-builtins=
+
+# Tells whether we should check for unused import in __init__ files
+init-import=no
+
+[BASIC]
+# Correct the bad comma spacing in inline blocks
+bad-whitespace=yes
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=i,j,k,ex,Run,_,id,x,y,z,e,f,fp,df,ax,pk,tx,rv,ip,fn
+
+# Bad variable names which should always be rejected, separated by a comma
+bad-names=l,O,I
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=8
+
+# Maximum number of attributes for a class
+max-attributes=10
+
+# Maximum number of boolean expressions in an if statement
+max-bool-expr=5
+
+# Maximum number of locals for function / method body
+max-locals=20
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+# Minimum number of public methods for a class
+min-public-methods=1
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of statements in function / method body
+max-statements=60
+
+# Maximum number of branch for function / method body
+max-branches=12
+
+[CLASSES]
+# List of method names used to declare an abstract method
+abstract-methods=abstractmethod
+
+[IMPORTS]
+# Force import order to recognize a module as part of the standard
+# compatibility libraries
+known-stdlib=
+
+# Force import order to recognize a module as part of a third party library
+known-third-party=customtkinter,cryptography,requests,flask,pillow,pytest
+
+# Force import order to recognize a module as part of the local application
+known-first-party=config,services,models,utils,gui,constants
+
+[LOGGING]
+# Format of logging format string
+logging-format-style=new
+
+# Logging modules which allow lazy formatting of the log messages
+logging-modules=logging
+
+[SIMILARITIES]
+# Minimum lines number d duplicate code for consider it a violation
+min-similarity-lines=5
+
+# Ignore comments and docstrings when computing similarities
+ignore-comments=yes
+
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities
+ignore-imports=yes
+
+[SPELLING]
+# Limits inference and checking only to function parameters and returning
+# nodes of the module
+spelling-dict=en_US
+
+# List of comma separated words that should be considered okay to be misspelled
+spelling-ignore-words=
+
+# A path to a file that contains private dictionary; one word per line
+spelling-private-word-hint=
+
+[MISCELLANEOUS]
+# List of note tags to take in consideration, separated by a comma
+notes=FIXME,XXX,TODO
+
+[PARAMETER_DOCUMENTATION]
+# Whether to accept totally missing docstring in public function / method
+accept-no-doc=no
+
+# Whether to require docstring in __init__ or not
+init-return=no
+
+# Whether to require docstring for parameter in callable
+missing-param-doc=no
+
+# Whether to raise an error if the docstring is missing a return statement description
+missing-raises-doc=no
+
+# Whether to raise an error if the docstring is missing a type field
+missing-type-doc=no
+
+[STATEMENTS]
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
+
+[TYPECHECK]
+# List of decorators that produce context managers, such as
+# contextlib.contextmanager. Add to this option to register other decorators that
+# produce valid context managers.
+contextmanager-decorators=contextlib.contextmanager
+
+# List of module names for which member attributes should not be checked
+ignored-modules=
+
+# List of class names to ignore when checking for dictionary access to create
+# instance of these classes
+mixin-class-rgx=.*Mixin
+
+[STRING CONSTANTS]
+# This flag controls whether inconsistent-quotes generates a warning when the
+# character used as a string quote is used inconsistently within a module.
+check-quote-consistency=no
+
+# This flag controls whether the implicit-str-concat should generate a warning
+# on implicit string concatenation of different strings
+check-str-concat-over-line-length=no
+
+[VARIABLES]
+# List of qualified module names which can have objects that can change during
+# runtime and may not be annotated as typing.ClassVar
+typing-modules=typing,types

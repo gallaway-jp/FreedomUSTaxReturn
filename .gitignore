@@ -113,6 +113,15 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# Radon complexity reports
+.radon/
+
+# Bandit reports
+bandit-report.json
+
 # Project specific
 IRSTaxReturnDocumentation/
 output/

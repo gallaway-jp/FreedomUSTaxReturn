@@ -1,0 +1,170 @@
+# Pre-Commit Configuration for Freedom US Tax Return Application
+# Purpose: Automatically validate code quality before commits
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+# General configuration
+default_language_version:
+  python: python3.13
+
+fail_fast: false
+minimum_pre_commit_version: 2.15.0
+
+repos:
+  # 1. Code Formatting (Black)
+  # Enforces consistent code style across the project
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: Black Code Formatter
+        language_version: python3.13
+        args: [--line-length=100]
+        exclude: ^(build|dist|\.venv|venv)/
+
+  # 2. Import Sorting (isort)
+  # Automatically sorts and organizes imports
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort Import Sorter
+        args: [--profile=black, --line-length=100]
+        exclude: ^(build|dist|\.venv|venv)/
+
+  # 3. Linting (Pylint)
+  # Checks for common errors and style violations
+  - repo: https://github.com/pylint-dev/pylint
+    rev: pylint-3.0.2
+    hooks:
+      - id: pylint
+        name: Pylint Linter
+        types: [python]
+        args: [--rcfile=.pylintrc, --exit-zero]  # exit-zero allows commit even with warnings
+        exclude: ^(build|dist|\.venv|venv|tests)/
+
+  # 4. Type Checking (mypy)
+  # Static type checking for Python
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.0
+    hooks:
+      - id: mypy
+        name: mypy Type Checker
+        types: [python]
+        args: [--ignore-missing-imports, --show-error-codes]
+        additional_dependencies: [types-all]
+        exclude: ^(build|dist|\.venv|venv|tests)/
+
+  # 5. Security Vulnerability Scanner (Bandit)
+  # Scans code for common security issues
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        name: Bandit Security Scanner
+        types: [python]
+        args: [-r, --exit-code=0]  # exit-code=0 allows commit even with findings
+        exclude: ^(tests|build|dist|\.venv|venv)/
+
+  # 6. Trailing Whitespace
+  # Removes trailing whitespace from files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        exclude: ^(\.venv|venv|build|dist)/
+
+  # 7. End-of-File Fixer
+  # Ensures files end with a newline
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer
+        name: Fix End of File
+        exclude: ^(\.venv|venv|build|dist)/
+
+  # 8. Check YAML
+  # Validates YAML file syntax
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        name: Check YAML
+        args: [--unsafe]
+
+  # 9. Check JSON
+  # Validates JSON file syntax
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-json
+        name: Check JSON
+
+  # 10. Check TOML
+  # Validates TOML file syntax
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-toml
+        name: Check TOML
+
+  # 11. Detect Private Keys
+  # Prevents accidental commit of private keys and credentials
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: detect-private-key
+        name: Detect Private Keys
+
+  # 12. Python Syntax Checker
+  # Checks Python files for syntax errors
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-ast
+        name: Check Python Syntax
+
+  # 13. Docstring Coverage (pydocstyle)
+  # Ensures docstrings are present on public functions
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        name: pydocstyle Docstring Checker
+        types: [python]
+        args: [--convention=google]
+        exclude: ^(build|dist|\.venv|venv|tests)/
+
+  # 14. Complexity Checker (radon)
+  # Warns about overly complex functions
+  - repo: https://github.com/fredrikaverpil/radon
+    rev: 6.0.1
+    hooks:
+      - id: radon-cc
+        name: radon Complexity Checker
+        language: python
+        types: [python]
+        args: [-c, -a, --exit-zero]  # exit-zero allows commit even with high complexity
+        exclude: ^(build|dist|\.venv|venv|tests)/
+
+---
+
+# Hook Execution Rules
+# exit-zero: Allows commits even if hook reports issues (warnings)
+# language_version: Ensures Python 3.13 compatibility
+# exclude: Skips validation of build/dist/venv directories
+
+# Installation Instructions:
+# 1. pip install pre-commit
+# 2. pre-commit install  (installs hook in .git/hooks/pre-commit)
+# 3. git commit (hooks run automatically)
+#
+# Manual execution:
+# pre-commit run --all-files
+
+# Bypass hooks (use cautiously):
+# SKIP=<hook_id> git commit
+
+# Update hooks:
+# pre-commit autoupdate
