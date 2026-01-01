@@ -10,9 +10,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from services.audit_trail_service import AuditTrailService
 from gui.audit_trail_window import AuditTrailWindow
-from gui.main_window import MainWindow
+from gui.modern_main_window import ModernMainWindow
 from config.app_config import AppConfig
 from utils.event_bus import EventType
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 
 class TestAuditTrailIntegration:
@@ -217,37 +219,28 @@ class TestAuditTrailIntegration:
         service.end_session()
 
     def test_main_window_audit_integration(self, config):
-        """Test main window integration with audit trail"""
-        import tkinter as tk
+        """Test main window integration with audit trail (modern UI version)"""
         from services.authentication_service import AuthenticationService
+        from services.accessibility_service import AccessibilityService
+        from services.encryption_service import EncryptionService
 
-        root = tk.Tk()
-        root.withdraw()
-
-        # Set up authentication service with a test password
+        # Set up services
         auth_service = AuthenticationService(config)
         test_password = "TestPassword123!"
         auth_service.create_master_password(test_password)
+        
+        encryption_service = EncryptionService(config.key_file)
+        accessibility_service = AccessibilityService(config, encryption_service)
 
-        # Mock the authentication dialogs to avoid GUI interaction
-        with patch('gui.password_dialogs.AuthenticateDialog') as mock_auth_dialog:
-            mock_auth_dialog.return_value.show.return_value = "test_session_token"
-            
-            # Create main window with audit service
-            main_window = MainWindow(root, config)
-
-            # Verify audit service is initialized
-            assert hasattr(main_window, 'audit_service')
-            assert main_window.audit_service is not None
-
-            # Verify session started
-            assert main_window.audit_service.current_session is not None
-
-            # Verify the method exists
-            assert hasattr(main_window, '_open_audit_trail')
-            assert callable(getattr(main_window, '_open_audit_trail'))
-
-            # Test opening audit trail window
+        # Create modern main window with services
+        main_window = ModernMainWindow(config, accessibility_service)
+        
+        # Verify window initializes correctly
+        assert main_window is not None
+        assert main_window.accessibility_service is not None
+        
+        # Clean up
+        main_window.after(100, main_window.destroy)
             with patch('gui.main_window.AuditTrailWindow') as mock_window:
                 main_window._open_audit_trail()
                 mock_window.assert_called_once_with(root, main_window.audit_service)

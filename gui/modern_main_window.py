@@ -13,6 +13,7 @@ from config.app_config import AppConfig
 from models.tax_data import TaxData
 from services.tax_interview_service import TaxInterviewService
 from services.form_recommendation_service import FormRecommendationService
+from services.accessibility_service import AccessibilityService
 from gui.modern_ui_components import (
     ModernFrame, ModernLabel, ModernButton, ModernProgressBar,
     show_info_message, show_error_message, show_confirmation
@@ -38,16 +39,18 @@ class ModernMainWindow(ctk.CTk):
     - Modern UI design
     """
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: AppConfig, accessibility_service: Optional[AccessibilityService] = None):
         """
         Initialize the modern main window.
 
         Args:
             config: Application configuration
+            accessibility_service: Optional accessibility service for feature support
         """
         super().__init__()
 
         self.config = config
+        self.accessibility_service = accessibility_service
         self.tax_data: Optional[TaxData] = None
         self.interview_completed = False
         self.form_recommendations = []
@@ -69,9 +72,6 @@ class ModernMainWindow(ctk.CTk):
         self.payments_page: Optional[ModernPaymentsPage] = None
         self.foreign_income_page: Optional[ModernForeignIncomePage] = None
         self.form_viewer_page: Optional[ModernFormViewerPage] = None
-
-        # Form pages
-        self.income_page: Optional[ModernIncomePage] = None
 
         self._setup_window()
         self._setup_ui()

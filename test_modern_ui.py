@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Test script for CustomTkinter UI components
+Test script for CustomTkinter UI components and modern main window
 
-Tests the modern UI components and tax interview functionality.
+Tests the modern UI components, tax interview functionality, and integration
+with accessibility and encryption services.
 """
 
 import sys
@@ -26,6 +27,8 @@ from gui.modern_ui_components import (
     ModernComboBox, ModernRadioGroup, validate_ssn, validate_zip_code
 )
 from services.tax_interview_service import TaxInterviewService
+from services.accessibility_service import AccessibilityService
+from services.encryption_service import EncryptionService
 
 
 def test_ui_components():
@@ -114,18 +117,26 @@ def test_tax_interview_service():
 
 
 def test_main_window():
-    """Test the main window (brief test)"""
-    print("\n--- Testing Main Window ---")
+    """Test the main window with accessibility service"""
+    print("\n--- Testing Main Window with Accessibility ---")
 
     try:
-        config = AppConfig()
+        config = AppConfig.from_env()
+        
+        # Initialize accessibility service
+        encryption_service = EncryptionService(config.key_file)
+        accessibility_service = AccessibilityService(config, encryption_service)
 
-        # Create main window
-        app = ModernMainWindow(config)
+        # Create main window with accessibility service
+        app = ModernMainWindow(config, accessibility_service)
 
         # Test that it initializes
-        print("✓ Main window initialized successfully")
-
+        print("✓ Main window initialized successfully with accessibility service")
+        
+        # Verify accessibility service is accessible
+        if app.accessibility_service:
+            print(f"✓ Accessibility service integrated (compliance level: {app.accessibility_service.profile.level})")
+        
         # Close after a short delay (don't actually run the full app)
         app.after(500, app.destroy)
         app.mainloop()
@@ -134,12 +145,41 @@ def test_main_window():
 
     except Exception as e:
         print(f"✗ Main window test failed: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def test_modern_main_window_basic():
+    """Test basic main window initialization"""
+    print("\n--- Testing Basic Main Window Initialization ---")
+    
+    try:
+        config = AppConfig.from_env()
+        
+        # Test without accessibility service first
+        app = ModernMainWindow(config)
+        print("✓ Main window can initialize without accessibility service")
+        
+        # Verify basic components
+        if app.sidebar_frame and app.content_frame:
+            print("✓ Main window UI components created successfully")
+        
+        # Clean up
+        app.after(100, app.destroy)
+        app.mainloop()
+        
+        print("✓ Basic initialization test completed")
+        
+    except Exception as e:
+        print(f"✗ Basic initialization test failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def main():
     """Run all tests"""
-    print("Testing CustomTkinter UI Implementation")
-    print("=" * 50)
+    print("Testing CustomTkinter UI Implementation with Accessibility Integration")
+    print("=" * 70)
 
     # Test imports
     test_ui_components()
@@ -147,13 +187,16 @@ def main():
     # Test services
     test_tax_interview_service()
 
-    # Test main window
+    # Test basic main window
+    test_modern_main_window_basic()
+    
+    # Test main window with accessibility
     test_main_window()
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 70)
     print("All tests completed!")
     print("\nTo run the full application:")
-    print("python -m gui.modern_main_window")
+    print("python main.py")
 
 
 if __name__ == "__main__":

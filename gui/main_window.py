@@ -1,13 +1,62 @@
 """
-Main application window with navigation
+DEPRECATED: Legacy Tkinter Main Window
+
+This file has been deprecated and replaced by gui/modern_main_window.py
+which uses CustomTkinter for a modern, accessible user interface.
+
+MIGRATION GUIDE
+===============
+
+If you are importing from this module:
+    from gui.main_window import MainWindow
+
+Update your import to:
+    from gui.modern_main_window import ModernMainWindow
+    
+And update your initialization from:
+    root = tk.Tk()
+    app = MainWindow(root)
+    root.mainloop()
+    
+To:
+    from config.app_config import AppConfig
+    from services.accessibility_service import AccessibilityService
+    from services.encryption_service import EncryptionService
+    
+    config = AppConfig.from_env()
+    encryption_service = EncryptionService(config.key_file)
+    accessibility_service = AccessibilityService(config, encryption_service)
+    app = ModernMainWindow(config, accessibility_service)
+    app.mainloop()
+
+BACKWARD COMPATIBILITY
+======================
+
+For temporary backward compatibility during migration, use:
+    from gui.main_window_legacy import MainWindow
+    
+However, this compatibility layer is deprecated and will be removed
+in a future version. Please migrate your code to use ModernMainWindow.
+
+REASONS FOR MIGRATION
+=====================
+
+1. Modern UI: CustomTkinter provides a native, themeable interface
+2. Accessibility: Built-in support for WCAG 2.1 AA and Section 508
+3. User Experience: Guided tax interview simplifies form discovery
+4. Maintainability: Single, modern codebase instead of legacy code
+5. Performance: Better resource usage and responsiveness
+
+For questions or issues with migration, please refer to:
+- gui/modern_main_window.py - The new main window implementation
+- MODERN_UI_README.md - Modern UI documentation and examples
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox
-from pathlib import Path
-from typing import List, Dict
-from unittest.mock import Mock
-from config.app_config import AppConfig
+# Re-export the legacy wrapper for backward compatibility
+# This import will show a deprecation warning
+from gui.main_window_legacy import MainWindow
+
+__all__ = ['MainWindow']
 from gui.pages.personal_info import PersonalInfoPage
 from gui.pages.filing_status import FilingStatusPage
 from gui.pages.income import IncomePage
