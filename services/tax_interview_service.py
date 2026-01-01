@@ -423,9 +423,12 @@ class TaxInterviewService:
         Returns:
             Dict containing answer summary
         """
+        total_estimated_time = sum(rec.estimated_time for rec in self.recommendations)
+
         return {
             "total_questions_answered": len(self.answers),
             "total_recommendations": len(self.recommendations),
+            "estimated_total_time": total_estimated_time,
             "progress_percentage": self.get_progress_percentage(),
             "answers": {qid: answer.answer for qid, answer in self.answers.items()},
             "recommendations": [
