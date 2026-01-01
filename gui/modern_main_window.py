@@ -22,6 +22,7 @@ from gui.pages.modern_income_page import ModernIncomePage
 from gui.pages.modern_deductions_page import ModernDeductionsPage
 from gui.pages.modern_credits_page import ModernCreditsPage
 from gui.pages.modern_payments_page import ModernPaymentsPage
+from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
 
 
 class ModernMainWindow(ctk.CTk):
@@ -65,6 +66,7 @@ class ModernMainWindow(ctk.CTk):
         self.deductions_page: Optional[ModernDeductionsPage] = None
         self.credits_page: Optional[ModernCreditsPage] = None
         self.payments_page: Optional[ModernPaymentsPage] = None
+        self.foreign_income_page: Optional[ModernForeignIncomePage] = None
 
         # Form pages
         self.income_page: Optional[ModernIncomePage] = None
@@ -403,6 +405,8 @@ class ModernMainWindow(ctk.CTk):
             self._show_credits_page()
         elif 'payment' in form_name.lower() or form_name in ['1040-ES', 'Estimated Tax']:
             self._show_payments_page()
+        elif 'foreign' in form_name.lower() or form_name in ['FBAR', '8938', '1116']:
+            self._show_foreign_income_page()
         else:
             show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
 
@@ -490,6 +494,30 @@ class ModernMainWindow(ctk.CTk):
         # Update progress
         self._update_progress()
 
+    def _show_foreign_income_page(self):
+        """Show the foreign income page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize foreign income page if not already done
+        if self.foreign_income_page is None:
+            self.foreign_income_page = ModernForeignIncomePage(
+                self.content_frame,
+                self.tax_data,
+                self.config,
+                on_complete_callback=self._handle_foreign_income_complete
+            )
+
+        # Show the foreign income page
+        self.foreign_income_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Foreign Income & FBAR - Report foreign accounts and income")
+
+        # Update progress
+        self._update_progress()
+
     def _handle_income_complete(self, tax_data, action="continue"):
         """Handle completion of income page"""
         if action == "continue":
@@ -518,6 +546,14 @@ class ModernMainWindow(ctk.CTk):
             show_info_message("Navigation", "Payments completed. Form viewer will be implemented next.")
         elif action == "back":
             self._show_credits_page()
+
+    def _handle_foreign_income_complete(self, action="complete"):
+        """Handle completion of foreign income page"""
+        if action == "complete":
+            show_info_message("Foreign Income Complete", "Foreign income and FBAR information has been saved.")
+        elif action == "previous":
+            # Could navigate back to previous page if needed
+            show_info_message("Navigation", "Back navigation from foreign income page.")
 
     def _start_form_entry(self):
         """Start the form entry process"""
