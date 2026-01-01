@@ -143,6 +143,101 @@
 <!-- Hidden file input for document scanning -->
 <input type="file" id="document-scanner" accept="image/*,.pdf" style="display: none;" onchange="handleDocumentScan(this)">
 
+<!-- Tax Tips Modal -->
+<div class="modal fade" id="taxTipsModal" tabindex="-1" aria-labelledby="taxTipsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="taxTipsModalLabel">
+                    <i class="fas fa-lightbulb"></i> Tax Tips & Updates
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">
+                            <i class="fas fa-calendar-check"></i> Important Deadlines
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <strong>Individual Returns:</strong> April 15, 2026
+                            </li>
+                            <li class="mb-2">
+                                <strong>Extension Deadline:</strong> October 15, 2026
+                            </li>
+                            <li class="mb-2">
+                                <strong>Estimated Payments:</strong> Quarterly
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">
+                            <i class="fas fa-dollar-sign"></i> Tax Saving Tips
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <strong>Maximize Deductions:</strong> Track all eligible expenses
+                            </li>
+                            <li class="mb-2">
+                                <strong>Retirement Contributions:</strong> Increase savings with tax benefits
+                            </li>
+                            <li class="mb-2">
+                                <strong>Education Credits:</strong> Don't miss education savings opportunities
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Common Mistakes to Avoid
+                        </h6>
+                        <div class="alert alert-warning">
+                            <ul class="mb-0">
+                                <li>Forgetting to report all income sources</li>
+                                <li>Missing important deductions or credits</li>
+                                <li>Not keeping proper documentation</li>
+                                <li>Filing past the deadline without an extension</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-info">
+                            <i class="fas fa-info-circle"></i> 2026 Tax Law Changes
+                        </h6>
+                        <div class="alert alert-info">
+                            <p class="mb-1"><strong>Standard Deduction:</strong> Increased for 2026 tax year</p>
+                            <p class="mb-1"><strong>Earned Income Credit:</strong> Expanded eligibility for families</p>
+                            <p class="mb-0"><strong>Child Tax Credit:</strong> Enhanced benefits for qualifying children</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="https://www.irs.gov" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i> Visit IRS Website
+                    </a>
+                    <a href="https://www.irs.gov/publications" target="_blank" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-book"></i> IRS Publications
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Calculate days remaining until tax deadline
 function updateDeadline() {
@@ -154,13 +249,67 @@ function updateDeadline() {
 }
 
 function loadExistingReturn() {
-    // TODO: Implement file picker for loading existing returns
-    alert('Load existing return feature coming soon!');
+    // Create file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.style.display = 'none';
+
+    fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const taxData = JSON.parse(e.target.result);
+
+                    // Validate that it's a tax return file
+                    if (!taxData.personal_info && !taxData.income && !taxData.deductions) {
+                        alert('This does not appear to be a valid tax return file.');
+                        return;
+                    }
+
+                    // Load the data into session
+                    fetch('/api/load-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taxData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Tax return loaded successfully! You can now continue working on it.');
+                            // Refresh the page to show loaded data
+                            window.location.reload();
+                        } else {
+                            alert('Error loading tax return: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error loading tax return file.');
+                    });
+
+                } catch (error) {
+                    alert('Invalid JSON file. Please select a valid tax return file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    // Trigger file picker
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
 }
 
 function showTaxTips() {
-    // TODO: Show tax tips modal
-    alert('Tax tips and updates feature coming soon!');
+    // Show tax tips modal
+    const modal = new bootstrap.Modal(document.getElementById('taxTipsModal'));
+    modal.show();
 }
 
 function scanDocument() {

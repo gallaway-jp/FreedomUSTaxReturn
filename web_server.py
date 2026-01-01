@@ -348,6 +348,37 @@ class TaxWebServer:
                     'error': str(e)
                 }), 500
 
+        @self.app.route('/api/load-data', methods=['POST'])
+        def api_load_data():
+            """API endpoint for loading tax data directly from client"""
+            try:
+                data = request.get_json()
+
+                # Validate the data structure
+                if not isinstance(data, dict):
+                    return jsonify({
+                        'success': False,
+                        'error': 'Invalid data format'
+                    }), 400
+
+                # Create TaxData object to validate
+                tax_data = TaxData.from_dict(data)
+
+                # Store in session
+                session['tax_data'] = data
+                session['current_step'] = 1  # Mark as having data loaded
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Tax data loaded successfully'
+                })
+            except Exception as e:
+                self.error_tracker.log_error(e, "Load data failed")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
     def _get_tax_data(self):
         """Get tax data from session"""
         data = session.get('tax_data', TaxData().to_dict())
