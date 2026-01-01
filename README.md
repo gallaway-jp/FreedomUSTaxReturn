@@ -77,6 +77,28 @@ python main.py
 - Estimated tax payments
 - Prior year overpayment applied
 
+## Testing
+
+### Integration Tests
+
+To run integration tests that verify GUI components can be imported without blocking the terminal:
+
+```bash
+python test_integration.py
+```
+
+Or use the batch file:
+```bash
+run_integration_tests.bat
+```
+
+### Unit Tests
+
+Run unit tests with pytest:
+```bash
+python -m pytest tests/
+```
+
 ## Project Structure
 
 ```

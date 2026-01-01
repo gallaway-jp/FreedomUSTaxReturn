@@ -51,6 +51,7 @@ from gui.receipt_scanning_window import ReceiptScanningWindow
 from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 from gui.e_filing_window import EFilingWindow
 from gui.amended_return_dialog import AmendedReturnDialog
+from gui.audit_trail_window import AuditTrailWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -304,6 +305,14 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🔑 Change Password",
             command=self._change_password,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="📋 Audit Trail",
+            command=self._show_audit_trail,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -1080,6 +1089,25 @@ class ModernMainWindow(ctk.CTk):
                 
         except Exception as e:
             show_error_message("Amended Return Error", f"Failed to create amended return: {str(e)}")
+
+    def _show_audit_trail(self):
+        """Show audit trail window"""
+        try:
+            from services.audit_trail_service import AuditTrailService
+            
+            # Create audit trail service
+            audit_service = AuditTrailService(self.config)
+            
+            # Create and show audit trail window
+            audit_window = AuditTrailWindow(
+                self,
+                audit_service,
+                self.session_token
+            )
+            audit_window.show()
+            
+        except Exception as e:
+            show_error_message("Audit Trail Error", f"Failed to open audit trail: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
