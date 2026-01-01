@@ -43,6 +43,10 @@ class EFilingWindow:
         self.signed_xml = ""
         self.submission_result = None
 
+        # State e-filing variables
+        self.state_xml_content = ""
+        self.state_submission_result = None
+
         self._create_ui()
         self._load_initial_data()
 
@@ -54,6 +58,7 @@ class EFilingWindow:
 
         # Create tabs
         self._create_prepare_tab()
+        self._create_state_efile_tab()
         self._create_direct_deposit_tab()
         self._create_submit_tab()
         self._create_status_tab()
@@ -107,6 +112,82 @@ class EFilingWindow:
         # Validation status
         self.validation_label = ttk.Label(xml_group, text="")
         self.validation_label.pack(anchor=tk.W, pady=(5, 0))
+
+    def _create_state_efile_tab(self):
+        """Create the state e-filing tab."""
+        state_frame = ttk.Frame(self.notebook)
+        self.notebook.add(state_frame, text="State E-Filing")
+
+        # State selection section
+        state_group = ttk.LabelFrame(state_frame, text="State Selection", padding=10)
+        state_group.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Label(state_group, text="Select State:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        self.state_var = tk.StringVar()
+        state_combo = ttk.Combobox(state_group, textvariable=self.state_var,
+                                  values=list(self.e_filing_service.state_endpoints.keys()),
+                                  state='readonly', width=20)
+        state_combo.grid(row=0, column=1, padx=(0, 20))
+        if self.e_filing_service.state_endpoints:
+            state_combo.current(0)
+
+        # State taxpayer information
+        taxpayer_group = ttk.LabelFrame(state_frame, text="State Taxpayer Information", padding=10)
+        taxpayer_group.pack(fill=tk.X, pady=(0, 10))
+
+        # State-specific info fields
+        ttk.Label(taxpayer_group, text="State of Residence:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        self.state_residence_var = tk.StringVar()
+        ttk.Entry(taxpayer_group, textvariable=self.state_residence_var, width=25).grid(row=0, column=1, padx=(0, 20))
+
+        ttk.Label(taxpayer_group, text="State Filing Status:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
+        self.state_filing_status_var = tk.StringVar()
+        state_status_combo = ttk.Combobox(taxpayer_group, textvariable=self.state_filing_status_var,
+                                         values=['single', 'married_filing_jointly', 'married_filing_separately', 'head_of_household'],
+                                         state='readonly', width=25)
+        state_status_combo.grid(row=0, column=3)
+        state_status_combo.current(0)
+
+        # State tax year
+        ttk.Label(taxpayer_group, text="State Tax Year:").grid(row=1, column=0, sticky=tk.W, pady=(10, 0), padx=(0, 5))
+        self.state_tax_year_var = tk.StringVar(value="2025")
+        ttk.Entry(taxpayer_group, textvariable=self.state_tax_year_var, width=10).grid(row=1, column=1, pady=(10, 0))
+
+        # Generate State XML button
+        ttk.Button(state_frame, text="Generate State E-File XML",
+                  command=self._generate_state_xml).pack(pady=(10, 0))
+
+        # State XML preview
+        state_xml_group = ttk.LabelFrame(state_frame, text="State XML Preview", padding=10)
+        state_xml_group.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+
+        self.state_xml_text = scrolledtext.ScrolledText(state_xml_group, height=12, wrap=tk.WORD)
+        self.state_xml_text.pack(fill=tk.BOTH, expand=True)
+
+        # State validation and submission section
+        action_group = ttk.LabelFrame(state_frame, text="State E-File Actions", padding=10)
+        action_group.pack(fill=tk.X, pady=(10, 0))
+
+        # Buttons frame
+        buttons_frame = ttk.Frame(action_group)
+        buttons_frame.pack(fill=tk.X)
+
+        ttk.Button(buttons_frame, text="Validate State E-File",
+                  command=self._validate_state_efile).grid(row=0, column=0, padx=(0, 10))
+
+        ttk.Button(buttons_frame, text="Submit State E-File",
+                  command=self._submit_state_efile).grid(row=0, column=1, padx=(0, 10))
+
+        ttk.Button(buttons_frame, text="Check State Status",
+                  command=self._check_state_status).grid(row=0, column=2)
+
+        # State status display
+        self.state_status_label = ttk.Label(action_group, text="")
+        self.state_status_label.pack(anchor=tk.W, pady=(10, 0))
+
+        # State submission results
+        self.state_result_text = scrolledtext.ScrolledText(action_group, height=6, wrap=tk.WORD)
+        self.state_result_text.pack(fill=tk.X, pady=(5, 0))
 
     def _create_direct_deposit_tab(self):
         """Create the direct deposit setup tab."""
@@ -609,7 +690,139 @@ class EFilingWindow:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save direct deposit information: {str(e)}")
+    def _generate_state_xml(self):
+        """Generate state e-file XML."""
+        try:
+            state_code = self.state_var.get()
+            if not state_code:
+                messagebox.showwarning("Warning", "Please select a state!")
+                return
 
+            # Update tax data with state-specific information
+            state_residence = self.state_residence_var.get()
+            if state_residence:
+                self.tax_data.data['personal_info']['address']['state'] = state_residence
+
+            # Generate state XML
+            xml_content = self.e_filing_service.generate_state_efile_xml(
+                self.tax_data, state_code, int(self.state_tax_year_var.get())
+            )
+
+            # Display XML
+            self.state_xml_text.delete(1.0, tk.END)
+            self.state_xml_text.insert(tk.END, xml_content)
+
+            self.state_status_label.config(text="State XML generated successfully", foreground="green")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate state XML: {str(e)}")
+            self.state_status_label.config(text=f"Error: {str(e)}", foreground="red")
+
+    def _validate_state_efile(self):
+        """Validate state e-file readiness."""
+        try:
+            state_code = self.state_var.get()
+            if not state_code:
+                messagebox.showwarning("Warning", "Please select a state!")
+                return
+
+            # Validate readiness
+            result = self.e_filing_service.validate_state_efile_readiness(self.tax_data, state_code)
+
+            if result['ready']:
+                self.state_status_label.config(text="State e-file is ready for submission", foreground="green")
+                messagebox.showinfo("Validation Passed", "Your state tax return is ready for e-filing!")
+            else:
+                issues_text = "\n".join(result['issues'])
+                self.state_status_label.config(text="Validation failed - see issues below", foreground="red")
+                self.state_result_text.delete(1.0, tk.END)
+                self.state_result_text.insert(tk.END, f"Validation Issues:\n{issues_text}")
+                messagebox.showwarning("Validation Failed", f"Please fix the following issues:\n\n{issues_text}")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Validation failed: {str(e)}")
+
+    def _submit_state_efile(self):
+        """Submit state e-file."""
+        try:
+            state_code = self.state_var.get()
+            if not state_code:
+                messagebox.showwarning("Warning", "Please select a state!")
+                return
+
+            # Confirm submission
+            if not messagebox.askyesno("Confirm Submission",
+                                     f"Are you sure you want to submit your {state_code} state tax return electronically?\n\n"
+                                     "This action cannot be undone."):
+                return
+
+            # Submit e-file
+            result = self.e_filing_service.submit_state_efile(self.tax_data, state_code)
+
+            if result['success']:
+                self.state_status_label.config(text=f"State e-file submitted successfully - Confirmation: {result['confirmation_number']}",
+                                             foreground="green")
+                self.state_result_text.delete(1.0, tk.END)
+                self.state_result_text.insert(tk.END, f"Submission Result:\n"
+                                                    f"Confirmation Number: {result['confirmation_number']}\n"
+                                                    f"Status: {result['status']}\n"
+                                                    f"Timestamp: {result['timestamp']}\n"
+                                                    f"State: {result['state']}")
+                messagebox.showinfo("Submission Successful",
+                                  f"Your {state_code} state tax return has been submitted successfully!\n\n"
+                                  f"Confirmation Number: {result['confirmation_number']}")
+            else:
+                self.state_status_label.config(text="State e-file submission failed", foreground="red")
+                messagebox.showerror("Submission Failed", f"State e-file submission failed: {result.get('error', 'Unknown error')}")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Submission failed: {str(e)}")
+            self.state_status_label.config(text=f"Error: {str(e)}", foreground="red")
+
+    def _check_state_status(self):
+        """Check state e-file submission status."""
+        try:
+            state_code = self.state_var.get()
+            if not state_code:
+                messagebox.showwarning("Warning", "Please select a state!")
+                return
+
+            # For now, we'll check the most recent submission for this state
+            # In a real implementation, you'd have a way to select specific submissions
+            confirmation_number = None
+
+            # Try to find a recent state submission (this is a simplified approach)
+            try:
+                acknowledgments = self.e_filing_service._load_acknowledgments()
+                for ack_num, ack_data in acknowledgments.items():
+                    if (ack_data.get('submission_type') == 'state_e_file' and
+                        ack_data.get('state_code') == state_code):
+                        confirmation_number = ack_num
+                        break
+            except:
+                pass
+
+            if not confirmation_number:
+                messagebox.showinfo("No Submissions", f"No state e-file submissions found for {state_code}")
+                return
+
+            # Check status
+            status = self.e_filing_service.check_state_efile_status(confirmation_number)
+
+            if status:
+                self.state_result_text.delete(1.0, tk.END)
+                self.state_result_text.insert(tk.END, f"Status Check Result:\n"
+                                                    f"Confirmation Number: {confirmation_number}\n"
+                                                    f"Status: {status.get('status', 'Unknown')}\n"
+                                                    f"Timestamp: {status.get('timestamp', 'Unknown')}\n"
+                                                    f"State: {status.get('state_code', state_code)}")
+                self.state_status_label.config(text=f"Status: {status.get('status', 'Unknown')}", foreground="blue")
+            else:
+                self.state_status_label.config(text="Submission not found", foreground="orange")
+                messagebox.showwarning("Not Found", f"Submission {confirmation_number} not found in records")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Status check failed: {str(e)}")
 
 def open_e_filing_window(parent: tk.Tk, tax_data: TaxData, config: AppConfig = None, ptin_ero_service = None):
     """
