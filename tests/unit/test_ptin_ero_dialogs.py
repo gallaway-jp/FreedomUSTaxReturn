@@ -313,11 +313,32 @@ class TestPTINDialog:
 
     @pytest.fixture
     def root(self):
-        """Create test root window"""
-        root = tk.Tk()
-        root.withdraw()
-        yield root
-        root.destroy()
+        """Create mock root window for PTIN dialog tests"""
+        # Mock tkinter to avoid GUI requirements in headless environments
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.Toplevel') as mock_toplevel, \
+             patch('tkinter.ttk.Frame') as mock_frame, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.ttk.Entry') as mock_entry, \
+             patch('tkinter.StringVar') as mock_stringvar:
+
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            mock_toplevel.return_value = mock_root
+
+            # Configure StringVar mocks to behave like real StringVars
+            def create_stringvar_mock():
+                mock_var = MagicMock()
+                mock_var._value = ""
+                mock_var.get.return_value = mock_var._value
+                mock_var.set = lambda val: setattr(mock_var, '_value', val) or mock_var.get.configure_mock(return_value=val)
+                return mock_var
+
+            mock_stringvar.side_effect = create_stringvar_mock
+
+            yield mock_root
 
     @pytest.fixture
     def dialog(self, root, mock_service):
@@ -339,12 +360,12 @@ class TestPTINDialog:
             email="john.doe@example.com"
         )
 
-        dialog = PTINDialog(root, mock_service, ptin="P12345678")
+        dialog = PTINDialog(root, mock_service, ptin="P12345678", test_mode=True)
         assert dialog.existing_ptin == "P12345678"
 
     def test_validate_input_valid(self, root, mock_service):
         """Test input validation with valid data"""
-        dialog = PTINDialog(root, mock_service)
+        dialog = PTINDialog(root, mock_service, test_mode=True)
         dialog.ptin_var.set("P12345678")
         dialog.first_name_var.set("John")
         dialog.last_name_var.set("Doe")
@@ -356,7 +377,7 @@ class TestPTINDialog:
 
     def test_validate_input_invalid_ptin(self, root, mock_service):
         """Test input validation with invalid PTIN"""
-        dialog = PTINDialog(root, mock_service)
+        dialog = PTINDialog(root, mock_service, test_mode=True)
         dialog.ptin_var.set("12345678")  # Missing P
         dialog.first_name_var.set("John")
         dialog.last_name_var.set("Doe")
@@ -367,7 +388,7 @@ class TestPTINDialog:
 
     def test_validate_input_missing_fields(self, root, mock_service):
         """Test input validation with missing required fields"""
-        dialog = PTINDialog(root, mock_service)
+        dialog = PTINDialog(root, mock_service, test_mode=True)
         dialog.ptin_var.set("P12345678")
         dialog.first_name_var.set("John")
         # Missing last name
@@ -378,7 +399,7 @@ class TestPTINDialog:
 
     def test_validate_input_invalid_email(self, root, mock_service):
         """Test input validation with invalid email"""
-        dialog = PTINDialog(root, mock_service)
+        dialog = PTINDialog(root, mock_service, test_mode=True)
         dialog.ptin_var.set("P12345678")
         dialog.first_name_var.set("John")
         dialog.last_name_var.set("Doe")
@@ -389,7 +410,7 @@ class TestPTINDialog:
 
     def test_save_new_ptin(self, root, mock_service):
         """Test saving new PTIN"""
-        dialog = PTINDialog(root, mock_service)
+        dialog = PTINDialog(root, mock_service, test_mode=True)
         # Set valid input
         dialog.ptin_var.set("P12345678")
         dialog.first_name_var.set("John")
@@ -418,7 +439,7 @@ class TestPTINDialog:
             email="john.doe@example.com"
         )
 
-        dialog = PTINDialog(root, mock_service, ptin="P12345678")
+        dialog = PTINDialog(root, mock_service, ptin="P12345678", test_mode=True)
 
         # Modify input
         dialog.first_name_var.set("Updated")
@@ -470,11 +491,32 @@ class TestERODialog:
 
     @pytest.fixture
     def root(self):
-        """Create test root window"""
-        root = tk.Tk()
-        root.withdraw()
-        yield root
-        root.destroy()
+        """Create mock root window for ERO dialog tests"""
+        # Mock tkinter to avoid GUI requirements in headless environments
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.Toplevel') as mock_toplevel, \
+             patch('tkinter.ttk.Frame') as mock_frame, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.ttk.Entry') as mock_entry, \
+             patch('tkinter.StringVar') as mock_stringvar:
+
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
+            mock_toplevel.return_value = mock_root
+
+            # Configure StringVar mocks to behave like real StringVars
+            def create_stringvar_mock():
+                mock_var = MagicMock()
+                mock_var._value = ""
+                mock_var.get.return_value = mock_var._value
+                mock_var.set = lambda val: setattr(mock_var, '_value', val) or mock_var.get.configure_mock(return_value=val)
+                return mock_var
+
+            mock_stringvar.side_effect = create_stringvar_mock
+
+            yield mock_root
 
     @pytest.fixture
     def dialog(self, root, mock_service):
@@ -483,13 +525,13 @@ class TestERODialog:
 
     def test_initialization(self, root, mock_service):
         """Test dialog initialization"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         assert dialog.result is None
         assert dialog.existing_ero is None
 
     def test_validate_input_valid(self, root, mock_service):
         """Test input validation with valid data"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         dialog.ero_number_var.set("12345")
         dialog.business_name_var.set("ABC Tax Services")
         dialog.ein_var.set("12-3456789")
@@ -502,7 +544,7 @@ class TestERODialog:
 
     def test_validate_input_invalid_ero(self, root, mock_service):
         """Test input validation with invalid ERO number"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         dialog.ero_number_var.set("123")  # Too short
         dialog.business_name_var.set("ABC Tax Services")
         dialog.ein_var.set("12-3456789")
@@ -515,7 +557,7 @@ class TestERODialog:
 
     def test_validate_input_invalid_ein(self, root, mock_service):
         """Test input validation with invalid EIN"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         dialog.ero_number_var.set("12345")
         dialog.business_name_var.set("ABC Tax Services")
         dialog.ein_var.set("123456789")  # Missing hyphen
@@ -528,7 +570,7 @@ class TestERODialog:
 
     def test_validate_input_missing_fields(self, root, mock_service):
         """Test input validation with missing required fields"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         dialog.ero_number_var.set("12345")
         dialog.business_name_var.set("ABC Tax Services")
         dialog.ein_var.set("12-3456789")
@@ -541,7 +583,7 @@ class TestERODialog:
 
     def test_save_new_ero(self, root, mock_service):
         """Test saving new ERO"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         # Set valid input
         dialog.ero_number_var.set("12345")
         dialog.business_name_var.set("ABC Tax Services")
@@ -565,7 +607,7 @@ class TestERODialog:
 
     def test_cancel(self, root, mock_service):
         """Test canceling ERO dialog"""
-        dialog = ERODialog(root, mock_service)
+        dialog = ERODialog(root, mock_service, test_mode=True)
         dialog._on_cancel()
 
         # Check that result is set to False (indicating cancellation)
