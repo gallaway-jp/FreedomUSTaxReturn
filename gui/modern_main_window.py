@@ -44,6 +44,7 @@ from gui.pages.modern_form_viewer_page import ModernFormViewerPage
 from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
+from gui.estate_trust_window import EstateTrustWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -333,6 +334,14 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="₿ Cryptocurrency Tax",
             command=self._show_cryptocurrency_tax,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🏛️ Estate & Trust Returns",
+            command=self._show_estate_trust,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -894,6 +903,20 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Cryptocurrency Tax Error", f"Failed to open cryptocurrency tax window: {str(e)}")
+
+    def _show_estate_trust(self):
+        """Show estate and trust tax returns window"""
+        try:
+            # Create and show estate/trust tax window
+            estate_window = EstateTrustWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            estate_window.show()
+            
+        except Exception as e:
+            show_error_message("Estate & Trust Error", f"Failed to open estate & trust window: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
