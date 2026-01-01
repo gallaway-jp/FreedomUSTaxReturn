@@ -14,6 +14,12 @@ from utils.tax_calculations import (
     calculate_income_tax,
     calculate_self_employment_tax
 )
+from services.exceptions import (
+    InvalidInputException,
+    DataValidationException,
+    ServiceExecutionException
+)
+from services.error_logger import get_error_logger
 
 logger = logging.getLogger(__name__)
 
@@ -131,85 +137,134 @@ class TaxCalculationService:
             
         Returns:
             TaxResult with complete calculation breakdown
+            
+        Raises:
+            InvalidInputException: If tax_data is None or invalid type
+            DataValidationException: If calculated values are invalid
+            ServiceExecutionException: If calculation fails unexpectedly
         """
-        result = TaxResult()
+        error_logger = get_error_logger()
         
-        # Get data accessor (handles both dict and TaxData object)
-        from models.tax_data import TaxData
-        if isinstance(tax_data, TaxData):
-            # TaxData object
-            get_value = tax_data.get
-        elif isinstance(tax_data, dict):
-            # Dictionary - could be old flat format or new multi-year format
-            if 'years' in tax_data:
-                # New multi-year format
-                current_year = tax_data.get('metadata', {}).get('current_year', self.tax_year)
-                year_data = tax_data['years'].get(current_year, {})
-                get_value = lambda k, d=None: self._get_nested_value(year_data, k, d)
+        try:
+            if tax_data is None:
+                raise InvalidInputException(
+                    field_name="tax_data",
+                    details={"reason": "Tax data cannot be None"}
+                )
+            
+            result = TaxResult()
+            
+            # Get data accessor (handles both dict and TaxData object)
+            from models.tax_data import TaxData
+            if isinstance(tax_data, TaxData):
+                # TaxData object
+                get_value = tax_data.get
+            elif isinstance(tax_data, dict):
+                # Dictionary - could be old flat format or new multi-year format
+                if 'years' in tax_data:
+                    # New multi-year format
+                    current_year = tax_data.get('metadata', {}).get('current_year', self.tax_year)
+                    year_data = tax_data['years'].get(current_year, {})
+                    get_value = lambda k, d=None: self._get_nested_value(year_data, k, d)
+                else:
+                    # Old flat format
+                    get_value = lambda k, d=None: tax_data.get(k, d)
             else:
-                # Old flat format
-                get_value = lambda k, d=None: tax_data.get(k, d)
-        else:
-            raise ValueError(f"Unsupported tax_data type: {type(tax_data)}")
-        
-        # Calculate income components
-        result.total_wages = self._calculate_total_wages(get_value)
-        result.taxable_interest = self._calculate_taxable_interest(get_value)
-        result.tax_exempt_interest = self._calculate_tax_exempt_interest(get_value)
-        result.ordinary_dividends = self._calculate_ordinary_dividends(get_value)
-        result.qualified_dividends = self._calculate_qualified_dividends(get_value)
-        result.business_income = self._calculate_business_income(get_value)
-        
-        # Total income (AGI before adjustments)
-        result.total_income = (
-            result.total_wages +
-            result.taxable_interest +
-            result.ordinary_dividends +
-            result.business_income
-        )
-        result.adjusted_gross_income = result.total_income  # Simplified (no adjustments yet)
-        
-        # Calculate deductions
-        filing_status = get_value('filing_status.status', 'Single')
-        result.standard_deduction = calculate_standard_deduction(filing_status, self.tax_year)
-        result.itemized_deduction = self._calculate_itemized_deductions(get_value)
-        
-        # Use larger deduction
-        deduction_method = get_value('deductions.method', 'standard')
-        if deduction_method == 'itemized':
-            result.deduction_used = result.itemized_deduction
-        else:
-            result.deduction_used = result.standard_deduction
-        
-        # Taxable income
-        result.taxable_income = max(0, result.adjusted_gross_income - result.deduction_used)
-        
-        # Calculate taxes
-        result.income_tax = calculate_income_tax(result.taxable_income, filing_status, self.tax_year)
-        
-        # Self-employment tax (if applicable)
-        if result.business_income > 0:
-            result.self_employment_tax = calculate_self_employment_tax(result.business_income)
-        
-        result.total_tax = result.income_tax + result.self_employment_tax
-        
-        # Calculate payments
-        result.federal_withholding = self._calculate_total_withholding(get_value)
-        result.estimated_tax_payments = get_value('payments.estimated_tax', 0)
-        result.total_payments = result.federal_withholding + result.estimated_tax_payments
-        
-        # Determine refund or amount owed
-        if result.total_payments > result.total_tax:
-            result.refund_amount = result.total_payments - result.total_tax
-            result.amount_owed = 0
-        else:
-            result.refund_amount = 0
-            result.amount_owed = result.total_tax - result.total_payments
-        
-        logger.info(f"Completed tax calculation: AGI=${result.adjusted_gross_income:,.2f}, "
-                   f"Tax=${result.total_tax:,.2f}, Refund=${result.refund_amount:,.2f}")
-        
-        return result
+                raise InvalidInputException(
+                    field_name="tax_data",
+                    details={"unsupported_type": type(tax_data).__name__}
+                )
+            
+            # Calculate income components
+            result.total_wages = self._calculate_total_wages(get_value)
+            result.taxable_interest = self._calculate_taxable_interest(get_value)
+            result.tax_exempt_interest = self._calculate_tax_exempt_interest(get_value)
+            result.ordinary_dividends = self._calculate_ordinary_dividends(get_value)
+            result.qualified_dividends = self._calculate_qualified_dividends(get_value)
+            result.business_income = self._calculate_business_income(get_value)
+            
+            # Total income (AGI before adjustments)
+            result.total_income = (
+                result.total_wages +
+                result.taxable_interest +
+                result.ordinary_dividends +
+                result.business_income
+            )
+            result.adjusted_gross_income = result.total_income  # Simplified (no adjustments yet)
+            
+            # Validate totals
+            if result.total_income < 0:
+                raise DataValidationException(
+                    message="Total income cannot be negative",
+                    details={"total_income": result.total_income}
+                )
+            
+            # Calculate deductions
+            filing_status = get_value('filing_status.status', 'Single')
+            result.standard_deduction = calculate_standard_deduction(filing_status, self.tax_year)
+            result.itemized_deduction = self._calculate_itemized_deductions(get_value)
+            
+            # Use larger deduction
+            deduction_method = get_value('deductions.method', 'standard')
+            if deduction_method == 'itemized':
+                result.deduction_used = result.itemized_deduction
+            else:
+                result.deduction_used = result.standard_deduction
+            
+            # Taxable income
+            result.taxable_income = max(0, result.adjusted_gross_income - result.deduction_used)
+            
+            # Calculate taxes
+            result.income_tax = calculate_income_tax(result.taxable_income, filing_status, self.tax_year)
+            
+            # Self-employment tax (if applicable)
+            if result.business_income > 0:
+                result.self_employment_tax = calculate_self_employment_tax(result.business_income)
+            
+            result.total_tax = result.income_tax + result.self_employment_tax
+            
+            # Validate tax calculations
+            if result.total_tax < 0:
+                raise DataValidationException(
+                    message="Total tax cannot be negative",
+                    details={"total_tax": result.total_tax}
+                )
+            
+            # Calculate payments
+            result.federal_withholding = self._calculate_total_withholding(get_value)
+            result.estimated_tax_payments = get_value('payments.estimated_tax', 0)
+            result.total_payments = result.federal_withholding + result.estimated_tax_payments
+            
+            # Determine refund or amount owed
+            if result.total_payments > result.total_tax:
+                result.refund_amount = result.total_payments - result.total_tax
+                result.amount_owed = 0
+            else:
+                result.refund_amount = 0
+                result.amount_owed = result.total_tax - result.total_payments
+            
+            logger.info(f"Completed tax calculation: AGI=${result.adjusted_gross_income:,.2f}, "
+                       f"Tax=${result.total_tax:,.2f}, Refund=${result.refund_amount:,.2f}")
+            
+            return result
+        except (InvalidInputException, DataValidationException) as e:
+            error_logger.log_exception(
+                e,
+                context="tax_calculation_service.calculate_complete_return",
+                extra_details={"tax_year": self.tax_year}
+            )
+            raise
+        except Exception as e:
+            error_logger.log_exception(
+                e,
+                context="tax_calculation_service.calculate_complete_return",
+                extra_details={"tax_year": self.tax_year}
+            )
+            raise ServiceExecutionException(
+                service_name="TaxCalculationService",
+                operation="calculate_complete_return",
+                details={"error": str(e)}
+            ) from e
     
     def _calculate_total_wages(self, get_value) -> float:
         """Calculate total wages from all W-2 forms"""

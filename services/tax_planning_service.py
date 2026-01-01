@@ -13,6 +13,13 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime, date
+
+from services.exceptions import (
+    InvalidInputException,
+    DataValidationException,
+    ServiceExecutionException
+)
+from services.error_logger import get_error_logger
 from config.tax_year_config import get_tax_year_config, TaxYearConfig
 from services.tax_calculation_service import TaxCalculationService, TaxResult
 from utils.tax_calculations import calculate_income_tax, calculate_standard_deduction

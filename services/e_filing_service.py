@@ -18,6 +18,14 @@ import requests
 from config.app_config import AppConfig
 from models.tax_data import TaxData
 from services.audit_trail_service import AuditTrailService
+from services.exceptions import (
+    InvalidInputException,
+    DataValidationException,
+    FileProcessingException,
+    ServiceUnavailableException,
+    ServiceExecutionException
+)
+from services.error_logger import get_error_logger
 from services.ptin_ero_service import PTINEROService
 from services.irs_mef_validator import IRSMeFValidator
 

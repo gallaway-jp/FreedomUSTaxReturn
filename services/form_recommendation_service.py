@@ -10,6 +10,13 @@ from dataclasses import dataclass
 from enum import Enum
 import re
 
+from services.exceptions import (
+    InvalidInputException,
+    DataValidationException,
+    ServiceExecutionException
+)
+from services.error_logger import get_error_logger
+
 
 class RecommendationPriority(Enum):
     """Priority levels for form recommendations"""
@@ -132,21 +139,76 @@ class FormRecommendationService:
         return recommendations
 
     def _create_analysis_context(self, tax_data: 'TaxData') -> RecommendationContext:
-        """Create context information for analysis"""
-        # Calculate totals
-        total_income = self._calculate_total_income(tax_data)
-        total_deductions = self._calculate_total_deductions(tax_data)
-        total_credits = self._calculate_total_credits(tax_data)
-
-        return RecommendationContext(
-            tax_year=tax_data.tax_year,
-            filing_status=tax_data.filing_status,
-            has_dependents=len(tax_data.dependents) > 0,
-            has_spouse=tax_data.filing_status in ['MFJ', 'MFS'],
-            total_income=total_income,
-            total_deductions=total_deductions,
-            total_credits=total_credits
-        )
+        """
+        Create context information for analysis.
+        
+        Args:
+            tax_data: Tax data to analyze
+            
+        Returns:
+            RecommendationContext with calculated totals
+            
+        Raises:
+            InvalidInputException: If tax_data is None or missing required attributes
+            DataValidationException: If calculated values are invalid
+        """
+        error_logger = get_error_logger()
+        
+        try:
+            if tax_data is None:
+                raise InvalidInputException(
+                    field_name="tax_data",
+                    details={"reason": "Tax data cannot be None"}
+                )
+            
+            # Validate required attributes
+            required_attrs = ['tax_year', 'filing_status', 'dependents', 'income', 'deductions', 'credits']
+            missing_attrs = [attr for attr in required_attrs if not hasattr(tax_data, attr)]
+            if missing_attrs:
+                raise InvalidInputException(
+                    field_name="tax_data",
+                    details={"missing_attributes": missing_attrs}
+                )
+            
+            # Calculate totals
+            total_income = self._calculate_total_income(tax_data)
+            total_deductions = self._calculate_total_deductions(tax_data)
+            total_credits = self._calculate_total_credits(tax_data)
+            
+            # Validate calculated values
+            if total_income < 0:
+                raise DataValidationException(
+                    message="Total income cannot be negative",
+                    details={"total_income": total_income}
+                )
+            
+            return RecommendationContext(
+                tax_year=tax_data.tax_year,
+                filing_status=tax_data.filing_status,
+                has_dependents=len(tax_data.dependents) > 0,
+                has_spouse=tax_data.filing_status in ['MFJ', 'MFS'],
+                total_income=total_income,
+                total_deductions=total_deductions,
+                total_credits=total_credits
+            )
+        except (InvalidInputException, DataValidationException) as e:
+            error_logger.log_exception(
+                e,
+                context="form_recommendation_service._create_analysis_context",
+                extra_details={"tax_year": getattr(tax_data, 'tax_year', None)}
+            )
+            raise
+        except Exception as e:
+            error_logger.log_exception(
+                e,
+                context="form_recommendation_service._create_analysis_context",
+                extra_details={"tax_year": getattr(tax_data, 'tax_year', None)}
+            )
+            raise ServiceExecutionException(
+                service_name="FormRecommendationService",
+                operation="create_analysis_context",
+                details={"error": str(e)}
+            ) from e
 
     def _calculate_total_income(self, tax_data: 'TaxData') -> float:
         """Calculate total income from all sources"""
@@ -509,18 +571,55 @@ class FormRecommendationService:
 
         Returns:
             Summary statistics
+            
+        Raises:
+            InvalidInputException: If recommendations is None or not a list
+            DataValidationException: If recommendation data is invalid
         """
-        total_time = sum(rec.estimated_time for rec in recommendations)
-        critical_count = sum(1 for rec in rec if rec.priority == RecommendationPriority.CRITICAL)
-        high_count = sum(1 for rec in rec if rec.priority == RecommendationPriority.HIGH)
+        error_logger = get_error_logger()
+        
+        try:
+            if recommendations is None:
+                raise InvalidInputException(
+                    field_name="recommendations",
+                    details={"reason": "Recommendations cannot be None"}
+                )
+            
+            if not isinstance(recommendations, list):
+                raise InvalidInputException(
+                    field_name="recommendations",
+                    details={"reason": "Recommendations must be a list"}
+                )
+            
+            total_time = sum(rec.estimated_time for rec in recommendations)
+            critical_count = sum(1 for rec in recommendations if rec.priority == RecommendationPriority.CRITICAL)
+            high_count = sum(1 for rec in recommendations if rec.priority == RecommendationPriority.HIGH)
 
-        return {
-            "total_recommendations": len(recommendations),
-            "critical_forms": critical_count,
-            "high_priority_forms": high_count,
-            "estimated_total_time": total_time,
-            "forms_by_type": {
-                form_type.value: sum(1 for rec in recommendations if rec.form_type == form_type)
-                for form_type in FormType
+            return {
+                "total_recommendations": len(recommendations),
+                "critical_forms": critical_count,
+                "high_priority_forms": high_count,
+                "estimated_total_time": total_time,
+                "forms_by_type": {
+                    form_type.value: sum(1 for rec in recommendations if rec.form_type == form_type)
+                    for form_type in FormType
+                }
             }
-        }
+        except InvalidInputException as e:
+            error_logger.log_exception(
+                e,
+                context="form_recommendation_service.get_recommendation_summary",
+                extra_details={"recommendation_count": len(recommendations) if isinstance(recommendations, list) else 0}
+            )
+            raise
+        except Exception as e:
+            error_logger.log_exception(
+                e,
+                context="form_recommendation_service.get_recommendation_summary",
+                extra_details={"recommendation_count": len(recommendations) if isinstance(recommendations, list) else 0}
+            )
+            raise ServiceExecutionException(
+                service_name="FormRecommendationService",
+                operation="get_recommendation_summary",
+                details={"error": str(e)}
+            ) from e
