@@ -15,7 +15,7 @@ from decimal import Decimal
 import cv2
 import numpy as np
 from PIL import Image
-import pytesseract
+import easyocr
 
 from config.app_config import AppConfig
 from utils.error_tracker import get_error_tracker
@@ -103,9 +103,13 @@ class ReceiptScanningService:
         self.config = config
         self.error_tracker = get_error_tracker()
 
-        # Configure Tesseract path if needed
-        if hasattr(config, 'tesseract_path') and config.tesseract_path:
-            pytesseract.pytesseract.tesseract_cmd = config.tesseract_path
+        # Initialize EasyOCR reader (English language)
+        # EasyOCR comes with pre-trained models and requires no external dependencies
+        try:
+            self.reader = easyocr.Reader(['en'], gpu=False)  # Use CPU for better compatibility
+        except Exception as e:
+            self.error_tracker.track_error(e, "Failed to initialize EasyOCR reader")
+            self.reader = None
 
         # Tax-relevant keywords for categorization
         self.category_keywords = {
@@ -263,7 +267,7 @@ class ReceiptScanningService:
 
     def _extract_text(self, image: np.ndarray) -> str:
         """
-        Extract text from image using OCR.
+        Extract text from image using EasyOCR.
 
         Args:
             image: Preprocessed image
@@ -271,21 +275,30 @@ class ReceiptScanningService:
         Returns:
             Extracted text
         """
+        if self.reader is None:
+            logger.error("OCR reader not initialized")
+            return ""
+
         try:
-            # Convert to PIL Image for pytesseract
-            if isinstance(image, np.ndarray):
-                pil_image = Image.fromarray(image)
+            # EasyOCR expects RGB format, convert if necessary
+            if len(image.shape) == 2:  # Grayscale
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
             else:
-                # For testing or other cases
-                pil_image = image
+                rgb_image = image
 
-            # Configure OCR settings for receipt scanning
-            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,$/- '
+            # Extract text using EasyOCR
+            # Returns list of tuples: [(bbox, text, confidence), ...]
+            results = self.reader.readtext(rgb_image, detail=1)
 
-            # Extract text
-            text = pytesseract.image_to_string(pil_image, config=custom_config)
+            # Combine all detected text with reasonable confidence
+            text_lines = []
+            for (bbox, text, confidence) in results:
+                if confidence > 0.3:  # Lower threshold for receipts as they often have varied quality
+                    text_lines.append(text)
 
-            return text
+            # Join lines with newlines to preserve structure
+            return '\n'.join(text_lines)
+
         except Exception as e:
             logger.error(f"OCR text extraction failed: {e}")
             return ""

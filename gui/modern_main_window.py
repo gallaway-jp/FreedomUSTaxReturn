@@ -132,6 +132,14 @@ class ModernMainWindow(ctk.CTk):
         ctk.set_appearance_mode("system")  # Modes: "System" (standard), "Dark", "Light"
         ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
+        # Apply accessibility to main window
+        if self.accessibility_service:
+            self.accessibility_service.make_accessible(
+                self,
+                label="Freedom US Tax Return - Modern Edition",
+                role="application"
+            )
+
         # Center window
         self.update_idletasks()
         width = self.winfo_width()
@@ -191,7 +199,8 @@ class ModernMainWindow(ctk.CTk):
             text="🚀 Start Tax Interview",
             command=self._start_interview,
             button_type="primary",
-            height=40
+            height=40,
+            accessibility_service=self.accessibility_service
         )
         self.interview_button.pack(fill="x", padx=5, pady=(5, 10))
 
@@ -228,7 +237,8 @@ class ModernMainWindow(ctk.CTk):
             text="📋 State Tax Returns",
             command=self._open_state_tax_window,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         # Separator
@@ -248,7 +258,8 @@ class ModernMainWindow(ctk.CTk):
             text="📊 View Summary",
             command=self._show_summary,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -256,7 +267,8 @@ class ModernMainWindow(ctk.CTk):
             text="🌙 Toggle Theme",
             command=self._toggle_theme,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         # Separator
@@ -312,7 +324,8 @@ class ModernMainWindow(ctk.CTk):
             text="🔑 Change Password",
             command=self._change_password,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -320,7 +333,8 @@ class ModernMainWindow(ctk.CTk):
             text="📋 Audit Trail",
             command=self._show_audit_trail,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -328,7 +342,8 @@ class ModernMainWindow(ctk.CTk):
             text="⚙️ Settings",
             command=self._show_settings,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         # Separator
@@ -348,7 +363,8 @@ class ModernMainWindow(ctk.CTk):
             text="📈 Tax Analytics",
             command=self._show_tax_analytics,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -356,7 +372,8 @@ class ModernMainWindow(ctk.CTk):
             text="🔮 Tax Projections",
             command=self._show_tax_projections,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -364,7 +381,8 @@ class ModernMainWindow(ctk.CTk):
             text="🤖 AI Deduction Finder",
             command=self._show_ai_deduction_finder,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -372,7 +390,8 @@ class ModernMainWindow(ctk.CTk):
             text="₿ Cryptocurrency Tax",
             command=self._show_cryptocurrency_tax,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -380,7 +399,8 @@ class ModernMainWindow(ctk.CTk):
             text="🏛️ Estate & Trust Returns",
             command=self._show_estate_trust,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -388,7 +408,8 @@ class ModernMainWindow(ctk.CTk):
             text="🤝 Partnership & S-Corp Returns",
             command=self._show_partnership_s_corp,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -396,7 +417,8 @@ class ModernMainWindow(ctk.CTk):
             text="📊 Tax Planning Tools",
             command=self._show_tax_planning,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -404,7 +426,8 @@ class ModernMainWindow(ctk.CTk):
             text="📄 Receipt Scanning",
             command=self._show_receipt_scanning,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -432,7 +455,8 @@ class ModernMainWindow(ctk.CTk):
             text="🚀 IRS E-Filing",
             command=self._show_e_filing,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         # Separator
@@ -452,7 +476,8 @@ class ModernMainWindow(ctk.CTk):
             text="ℹ️ About",
             command=self._show_about,
             button_type="secondary",
-            height=32
+            height=32,
+            accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
@@ -585,7 +610,8 @@ class ModernMainWindow(ctk.CTk):
                 command=lambda r=rec: self._navigate_to_form(r),
                 button_type="secondary",
                 height=35,
-                anchor="w"
+                anchor="w",
+                accessibility_service=self.accessibility_service
             ).pack(fill="x", pady=(0, 2))
 
         # Update status
@@ -897,8 +923,26 @@ class ModernMainWindow(ctk.CTk):
         self._show_form_viewer_page()
 
     def _show_settings(self):
-        """Show settings dialog"""
-        show_info_message("Settings", "Settings dialog will be implemented in the next phase.")
+        """Show settings dialog with accessibility options"""
+        try:
+            from gui.accessibility_dialogs import AccessibilitySettingsDialog
+            from gui.theme_manager import ThemeManager
+            
+            # Create theme manager if not already available
+            theme_manager = ThemeManager()
+            
+            # Create and show accessibility settings dialog
+            dialog = AccessibilitySettingsDialog(
+                self, 
+                self.accessibility_service, 
+                theme_manager
+            )
+            
+            # The dialog handles its own lifecycle
+            # Settings are automatically saved and applied
+            
+        except Exception as e:
+            show_error_message("Settings Error", f"Failed to open settings: {str(e)}")
 
     def _check_authentication(self) -> bool:
         """Check if user is authenticated, prompt for login if needed"""
@@ -928,10 +972,33 @@ class ModernMainWindow(ctk.CTk):
         return True
 
     def _bind_keyboard_shortcuts(self):
-        """Bind keyboard shortcuts for common actions"""
-        # Most keyboard shortcuts will be implemented with actual features in future releases
-        # For now, we keep only essential shortcuts for implemented features
+        """Bind keyboard shortcuts for common actions and accessibility"""
+        # Theme toggle
         self.bind('<Control-t>', lambda e: self._toggle_theme())
+
+        # Accessibility shortcuts
+        if self.accessibility_service:
+            # High contrast toggle
+            self.bind('<Control-h>', lambda e: self._toggle_high_contrast())
+
+            # Screen reader mode toggle
+            self.bind('<Control-r>', lambda e: self._toggle_screen_reader())
+
+            # Font size increase
+            self.bind('<Control-plus>', lambda e: self._increase_font_size())
+            self.bind('<Control-equal>', lambda e: self._increase_font_size())
+
+            # Font size decrease
+            self.bind('<Control-minus>', lambda e: self._decrease_font_size())
+
+        # Navigation shortcuts
+        self.bind('<Control-i>', lambda e: self._start_interview())  # Start interview
+        self.bind('<Control-s>', lambda e: self._show_settings())    # Settings
+        self.bind('<Control-a>', lambda e: self._show_tax_analytics())  # Analytics
+
+        # Focus management for accessibility
+        self.bind('<Tab>', self._handle_tab_navigation)
+        self.bind('<Shift-Tab>', self._handle_shift_tab_navigation)
 
     # File menu - Simplified to show demo mode message
     # Additional file operations will be implemented in future releases
@@ -942,6 +1009,128 @@ class ModernMainWindow(ctk.CTk):
         new_mode = "Light" if current_mode == "Dark" else "Dark"
         ctk.set_appearance_mode(new_mode)
         show_info_message("Theme Changed", f"Theme changed to {new_mode} mode.")
+
+    def _toggle_high_contrast(self):
+        """Toggle high contrast mode for accessibility"""
+        if self.accessibility_service:
+            current_contrast = self.accessibility_service.get_high_contrast_mode()
+            new_contrast = not current_contrast
+            self.accessibility_service.set_high_contrast_mode(new_contrast)
+            mode_text = "enabled" if new_contrast else "disabled"
+            show_info_message("High Contrast Mode", f"High contrast mode {mode_text}.")
+            # Refresh UI to apply changes
+            self._refresh_ui_for_accessibility()
+
+    def _toggle_screen_reader(self):
+        """Toggle screen reader mode for accessibility"""
+        if self.accessibility_service:
+            current_reader = self.accessibility_service.get_screen_reader_mode()
+            new_reader = not current_reader
+            self.accessibility_service.set_screen_reader_mode(new_reader)
+            mode_text = "enabled" if new_reader else "disabled"
+            show_info_message("Screen Reader Mode", f"Screen reader mode {mode_text}.")
+            # Announce change to screen reader
+            if self.accessibility_service:
+                self.accessibility_service.announce(f"Screen reader mode {mode_text}")
+
+    def _increase_font_size(self):
+        """Increase font size for accessibility"""
+        if self.accessibility_service:
+            current_size = self.accessibility_service.get_font_size()
+            new_size = min(current_size + 2, 24)  # Max 24pt
+            self.accessibility_service.set_font_size(new_size)
+            show_info_message("Font Size", f"Font size increased to {new_size}pt.")
+            # Refresh UI to apply changes
+            self._refresh_ui_for_accessibility()
+
+    def _decrease_font_size(self):
+        """Decrease font size for accessibility"""
+        if self.accessibility_service:
+            current_size = self.accessibility_service.get_font_size()
+            new_size = max(current_size - 2, 10)  # Min 10pt
+            self.accessibility_service.set_font_size(new_size)
+            show_info_message("Font Size", f"Font size decreased to {new_size}pt.")
+            # Refresh UI to apply changes
+            self._refresh_ui_for_accessibility()
+
+    def _handle_tab_navigation(self, event):
+        """Handle Tab key navigation for accessibility"""
+        # Focus next widget in tab order
+        current_focus = self.focus_get()
+        if current_focus:
+            # Find next focusable widget
+            widgets = self.winfo_children()
+            try:
+                current_index = widgets.index(current_focus)
+                next_index = (current_index + 1) % len(widgets)
+                widgets[next_index].focus_set()
+            except (ValueError, IndexError):
+                # If current widget not found, focus first widget
+                if widgets:
+                    widgets[0].focus_set()
+        else:
+            # No current focus, focus first widget
+            widgets = self.winfo_children()
+            if widgets:
+                widgets[0].focus_set()
+        return "break"  # Prevent default tab behavior
+
+    def _handle_shift_tab_navigation(self, event):
+        """Handle Shift+Tab key navigation for accessibility"""
+        # Focus previous widget in tab order
+        current_focus = self.focus_get()
+        if current_focus:
+            widgets = self.winfo_children()
+            try:
+                current_index = widgets.index(current_focus)
+                prev_index = (current_index - 1) % len(widgets)
+                widgets[prev_index].focus_set()
+            except (ValueError, IndexError):
+                # If current widget not found, focus last widget
+                if widgets:
+                    widgets[-1].focus_set()
+        else:
+            # No current focus, focus last widget
+            widgets = self.winfo_children()
+            if widgets:
+                widgets[-1].focus_set()
+        return "break"  # Prevent default tab behavior
+
+    def _refresh_ui_for_accessibility(self):
+        """Refresh UI components to apply accessibility changes"""
+        # Reapply themes and fonts to all components
+        if hasattr(self, 'sidebar_frame') and self.sidebar_frame:
+            self.sidebar_frame.configure(font=("Arial", self.accessibility_service.get_font_size() if self.accessibility_service else 12))
+
+        if hasattr(self, 'content_frame') and self.content_frame:
+            self.content_frame.configure(font=("Arial", self.accessibility_service.get_font_size() if self.accessibility_service else 12))
+
+        # Update all child widgets recursively
+        self._update_widget_fonts(self)
+
+    def _update_widget_fonts(self, widget):
+        """Recursively update font sizes for all widgets"""
+        if self.accessibility_service:
+            font_size = self.accessibility_service.get_font_size()
+            try:
+                # Update font for widgets that support it
+                if hasattr(widget, 'configure'):
+                    current_font = widget.cget('font') if 'font' in widget.configure() else None
+                    if current_font:
+                        # Parse current font and update size
+                        if isinstance(current_font, str):
+                            # Simple font string, replace size
+                            widget.configure(font=("Arial", font_size))
+                        elif isinstance(current_font, tuple):
+                            # Font tuple, update size
+                            new_font = (current_font[0], font_size, *current_font[2:])
+                            widget.configure(font=new_font)
+            except:
+                pass  # Skip widgets that don't support font configuration
+
+        # Recursively update children
+        for child in widget.winfo_children():
+            self._update_widget_fonts(child)
 
     def _show_tax_analytics(self):
         """Show tax analytics window"""

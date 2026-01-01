@@ -75,7 +75,7 @@ class AppConfig:
             window_width=int(os.getenv("WINDOW_WIDTH", cls.window_width)),
             window_height=int(os.getenv("WINDOW_HEIGHT", cls.window_height)),
             theme=os.getenv("APP_THEME", cls.theme),
-            encryption_enabled=os.getenv("ENCRYPTION_ENABLED", "true").lower() == "true",
+            encryption_enabled=os.getenv("ENCRYPTION_ENABLED", "true").lower() == "true"
         )
     
     def ensure_directories(self) -> None:

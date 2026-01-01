@@ -7,6 +7,11 @@ Pillow>=10.0.0,<11.0.0       # Image processing for QR codes
 pyotp>=2.8.0,<3.0.0          # TOTP (Time-based One-Time Password) for 2FA
 matplotlib>=3.8.0,<4.0.0     # Data visualization for tax analytics
 
+# OCR and Document Processing
+easyocr>=1.7.0,<2.0.0         # OCR text extraction from images (no external dependencies)
+opencv-python>=4.8.0,<5.0.0   # Image processing and computer vision
+numpy>=1.24.0,<2.0.0         # Numerical computing for image processing
+
 # Modern UI Framework
 customtkinter>=5.2.0,<6.0.0   # Modern, customizable Tkinter UI framework
 

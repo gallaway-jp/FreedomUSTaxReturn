@@ -29,9 +29,9 @@ class ModernFrame(ctk.CTkFrame):
 
 
 class ModernLabel(ctk.CTkLabel):
-    """Modern label with consistent styling"""
+    """Modern label with consistent styling and accessibility support"""
 
-    def __init__(self, master, text: str = "", required: bool = False, **kwargs):
+    def __init__(self, master, text: str = "", required: bool = False, accessibility_service=None, **kwargs):
         # Add asterisk for required fields
         display_text = f"{text} *" if required else text
 
@@ -40,13 +40,21 @@ class ModernLabel(ctk.CTkLabel):
         if required:
             self.configure(text_color="red")
 
+        # Apply accessibility features if service is provided
+        if accessibility_service:
+            accessibility_service.make_accessible(
+                self,
+                label=text,
+                role="label"
+            )
+
 
 class ModernEntry(ctk.CTkEntry):
-    """Modern entry field with validation and help text"""
+    """Modern entry field with validation, help text, and accessibility support"""
 
     def __init__(self, master, label_text: str = "", help_text: str = "",
                  validator: Optional[Callable] = None, required: bool = False,
-                 **kwargs):
+                 accessibility_service=None, **kwargs):
         self.frame = ctk.CTkFrame(master)
         self.frame.pack(fill="x", pady=2)
 
@@ -56,13 +64,22 @@ class ModernEntry(ctk.CTkEntry):
                 self.frame,
                 text=label_text,
                 required=required,
-                font=ctk.CTkFont(size=12)
+                font=ctk.CTkFont(size=12),
+                accessibility_service=accessibility_service
             )
             self.label.pack(anchor="w", padx=5, pady=(5, 0))
 
         # Entry field
         super().__init__(self.frame, **kwargs)
         self.pack(fill="x", padx=5, pady=(0, 5))
+
+        # Apply accessibility features if service is provided
+        if accessibility_service:
+            accessibility_service.make_accessible(
+                self,
+                label=label_text,
+                role="textbox"
+            )
 
         # Help text
         if help_text:
@@ -73,6 +90,7 @@ class ModernEntry(ctk.CTkEntry):
                 text_color="gray60"
             )
             self.help_label.pack(anchor="w", padx=5, pady=(0, 5))
+            self.original_help = help_text
 
         self.validator = validator
         self.bind("<FocusOut>", self._validate)
@@ -131,10 +149,10 @@ class ModernComboBox(ctk.CTkComboBox):
 
 
 class ModernButton(ctk.CTkButton):
-    """Modern button with consistent styling"""
+    """Modern button with consistent styling and accessibility support"""
 
     def __init__(self, master, text: str, command: Optional[Callable] = None,
-                 button_type: str = "primary", **kwargs):
+                 button_type: str = "primary", accessibility_service=None, **kwargs):
         # Set colors based on type
         if button_type == "primary":
             fg_color = "#1f538d"
@@ -160,6 +178,14 @@ class ModernButton(ctk.CTkButton):
             hover_color=hover_color,
             **kwargs
         )
+
+        # Apply accessibility features if service is provided
+        if accessibility_service:
+            accessibility_service.make_accessible(
+                self,
+                label=text,
+                role="button"
+            )
 
 
 class ModernCheckBox(ctk.CTkCheckBox):

@@ -16,6 +16,7 @@ This application is designed for the **2026 tax year** (returns filed in 2027).
   - Deductions (Standard or Itemized)
   - Credits
   - Payments
+- **Receipt Scanning & OCR**: Automatically extract tax-relevant data from receipt images
 - **Form Viewer**: View calculated forms and your tax return summary
 - **Form List**: Automatically determines which forms you need based on your entries
 - **Save/Load**: Save your progress and continue later
@@ -28,19 +29,26 @@ This application is designed for the **2026 tax year** (returns filed in 2027).
 
 ## Installation
 
-No additional packages required! Just run:
-
+1. Install Python dependencies (includes OCR functionality):
 ```bash
-python main.py
+pip install -r requirements.txt
+```
+
+2. The application is ready to use! OCR functionality is included with EasyOCR.
+
+3. Verify installation:
+```bash
+python test_ocr.py
 ```
 
 ## Usage
 
 1. Run `python main.py` to start the application
 2. Fill out each section in order
-3. Click "Save and Continue" to move between sections
-4. Review your tax return in the "View Forms" section
-5. Save your progress at any time
+3. For receipt scanning: Go to Analytics → Receipt Scanning
+4. Click "Save and Continue" to move between sections
+5. Review your tax return in the "View Forms" section
+6. Save your progress at any time
 
 ## Features by Section
 
@@ -77,6 +85,14 @@ python main.py
 - Estimated tax payments
 - Prior year overpayment applied
 
+### Receipt Scanning & OCR
+- Upload receipt images for automatic text extraction
+- Intelligent categorization (medical, business, charitable, etc.)
+- Tax-relevant data parsing (vendor, amount, date, tax)
+- Manual correction and validation
+- Batch processing support
+- Mobile camera integration via web interface
+
 ## Testing
 
 ### Integration Tests
@@ -106,6 +122,8 @@ FreedomUSTaxReturn/
 ├── main.py                 # Application entry point
 ├── gui/
 │   ├── main_window.py      # Main application window
+│   ├── modern_main_window.py # Modern interface with navigation
+│   ├── receipt_scanning_window.py # OCR receipt scanning interface
 │   ├── pages/              # Individual page components
 │   │   ├── personal_info.py
 │   │   ├── filing_status.py
@@ -117,8 +135,16 @@ FreedomUSTaxReturn/
 │   └── widgets/            # Reusable UI components
 │       ├── form_field.py
 │       └── section_header.py
+├── services/
+│   ├── ocr_service.py      # OCR processing and document classification (EasyOCR)
+│   ├── receipt_scanning_service.py # Receipt scanning with OCR
+│   └── ...                 # Other services
+├── config/
+│   └── app_config.py       # Application configuration
 ├── models/
 │   └── tax_data.py         # Tax data model and calculations
+├── test_ocr.py             # OCR functionality test script
+├── OCR_SETUP.md           # Detailed OCR setup guide
 └── IRSTaxReturnDocumentation/  # IRS forms and instructions (PDFs)
 ```
 
