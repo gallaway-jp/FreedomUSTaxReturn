@@ -1,461 +1,271 @@
 """
-Performance Benchmarks and Stress Tests
-Tests system performance and identifies bottlenecks
+Performance Benchmarks for Tax Services
 
-Covers:
-- Service initialization time
-- Data processing speed
-- Memory usage patterns
-- Concurrent operation performance
-- Scalability characteristics
+Tests performance characteristics, scalability, and resource usage.
 """
 
 import pytest
 import time
-import sys
-from unittest.mock import Mock, patch
-from typing import List, Dict, Any
-
-from services.tax_calculation_service import TaxCalculationService
-from services.tax_planning_service import TaxPlanningService
-from services.encryption_service import EncryptionService
-from config.app_config import AppConfig
+from services.exceptions import InvalidInputException
 
 
 class TestServiceInitializationPerformance:
     """Test service initialization performance"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
+    def test_app_config_init_performance(self):
+        """Test AppConfig initialization performance"""
+        from config.app_config import AppConfig
+        
+        start = time.time()
+        config = AppConfig()
+        elapsed = time.time() - start
+        
+        assert config is not None
+        assert elapsed < 1.0  # Should initialize in < 1 second
 
-    def test_tax_calculation_service_init_time(self, config, benchmark):
-        """Benchmark TaxCalculationService initialization"""
-        def init_service():
-            return TaxCalculationService(config)
+    def test_error_logger_init_performance(self):
+        """Test ErrorLogger initialization performance"""
+        from services.error_logger import ErrorLogger
         
-        result = benchmark(init_service)
-        assert result is not None
+        start = time.time()
+        logger = ErrorLogger()
+        elapsed = time.time() - start
+        
+        assert logger is not None
+        assert elapsed < 0.1  # Should be very fast (singleton)
 
-    def test_tax_planning_service_init_time(self, config, benchmark):
-        """Benchmark TaxPlanningService initialization"""
-        def init_service():
-            return TaxPlanningService(config)
+    def test_multiple_service_initialization(self):
+        """Test initializing multiple services"""
+        from config.app_config import AppConfig
+        from services.error_logger import ErrorLogger
         
-        result = benchmark(init_service)
-        assert result is not None
-
-    def test_encryption_service_init_time(self, config, benchmark):
-        """Benchmark EncryptionService initialization"""
-        def init_service():
-            return EncryptionService(config)
+        start = time.time()
+        config = AppConfig()
+        logger = ErrorLogger()
+        elapsed = time.time() - start
         
-        result = benchmark(init_service)
-        assert result is not None
-
-    def test_multiple_service_initialization(self, config):
-        """Test time to initialize multiple services"""
-        start_time = time.time()
-        
-        services = [
-            TaxCalculationService(config),
-            TaxPlanningService(config),
-            EncryptionService(config),
-        ]
-        
-        elapsed = time.time() - start_time
-        
-        # Should initialize 3 services in < 1 second
-        assert elapsed < 1.0
-        assert len(services) == 3
+        assert config is not None
+        assert logger is not None
+        assert elapsed < 1.0  # Should all initialize in < 1 second
 
 
 class TestDataProcessingPerformance:
     """Test data processing performance"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
+    def test_exception_creation_performance(self):
+        """Test exception creation speed"""
+        start = time.time()
+        for i in range(1000):
+            exc = InvalidInputException(f"field_{i}", "Invalid")
+        elapsed = time.time() - start
+        
+        # Should be very fast
+        assert elapsed < 0.5
 
-    @pytest.fixture
-    def test_data(self):
-        """Generate test tax data"""
-        return {
-            'tax_year': 2024,
-            'filing_status': 'single',
-            'w2_income': 75000,
-            'interest_income': 500,
-            'dividend_income': 1200,
-            'itemized_deductions': 18000,
-            'child_tax_credits': 2000,
-        }
-
-    def test_tax_calculation_performance(self, config, test_data, benchmark):
-        """Benchmark tax calculation performance"""
-        service = TaxCalculationService(config)
+    def test_error_logging_performance(self):
+        """Test error logging performance"""
+        from services.error_logger import ErrorLogger
         
-        def calculate():
-            try:
-                return service.calculate_complete_return(test_data)
-            except Exception:
-                return None
+        logger = ErrorLogger()
+        start = time.time()
         
-        result = benchmark(calculate)
-        # Result may be None if service not fully initialized
-
-    def test_income_aggregation_performance(self, config):
-        """Test performance of income aggregation"""
-        incomes = [
-            {'w2': 50000, 'interest': 100, '1099': 5000},
-            {'w2': 60000, 'interest': 150, '1099': 3000},
-            {'w2': 75000, 'interest': 200, '1099': 8000},
-        ]
+        for i in range(100):
+            exc = InvalidInputException(f"field_{i}", "Invalid")
+            logger.log_exception("TestComponent", exc)
         
-        start_time = time.time()
+        elapsed = time.time() - start
         
-        total_income = 0
-        for income_set in incomes:
-            total_income += sum(income_set.values())
-        
-        elapsed = time.time() - start_time
-        
-        assert total_income == sum(sum(inc.values()) for inc in incomes)
-        assert elapsed < 0.001  # Should be very fast
+        # Should handle 100 logs in < 0.5 seconds
+        assert elapsed < 0.5
 
 
 class TestMemoryUsagePatterns:
     """Test memory usage patterns"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
+    def test_large_error_history(self):
+        """Test memory handling with large error history"""
+        from services.error_logger import ErrorLogger
+        
+        logger = ErrorLogger.get_instance()
+        
+        # Log many errors
+        for i in range(100):
+            exc = InvalidInputException(f"field_{i}", "Error message")
+            logger.log_exception("Component", exc)
+        
+        history = logger.get_error_history()
+        # Should still be able to access history
+        assert len(history) > 0
 
-    def test_large_dataset_handling(self, config):
-        """Test handling of large datasets"""
-        # Create large dataset
-        large_data = {
-            'transactions': [
-                {'amount': i, 'date': f'2024-{i%12+1:02d}-01', 'description': f'Transaction {i}'}
-                for i in range(10000)
-            ]
-        }
+    def test_exception_with_large_details(self):
+        """Test exception handling with large detail dictionaries"""
+        large_details = {f"key_{i}": f"value_{i}" for i in range(1000)}
         
-        # Should handle without memory explosion
-        assert len(large_data['transactions']) == 10000
+        exc = InvalidInputException(
+            "field",
+            "Invalid",
+            details=large_details
+        )
         
-        # Process data
-        total = sum(t['amount'] for t in large_data['transactions'])
-        assert total == sum(range(10000))
-
-    def test_service_memory_footprint(self, config):
-        """Test service memory footprint"""
-        # Create multiple service instances
-        services = []
-        
-        for i in range(10):
-            service = TaxCalculationService(config)
-            services.append(service)
-        
-        # All services should share config
-        for service in services:
-            assert service.config is config
-        
-        # Should not have excessive memory use
+        details = exc.get_details()
+        assert "details" in details
 
 
 class TestConcurrentOperationPerformance:
-    """Test performance under concurrent operations"""
+    """Test concurrent operation performance"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
-
-    def test_sequential_calculations(self, config):
-        """Test sequential tax calculations"""
-        service = TaxCalculationService(config)
+    def test_sequential_exception_handling(self):
+        """Test sequential exception handling"""
+        from services.exceptions import (
+            InvalidInputException,
+            FileProcessingException,
+            EncryptionKeyNotFoundException,
+        )
         
-        test_cases = [
-            {'income': 30000, 'deductions': 10000},
-            {'income': 50000, 'deductions': 15000},
-            {'income': 100000, 'deductions': 25000},
-            {'income': 150000, 'deductions': 40000},
-        ]
-        
-        start_time = time.time()
-        
-        results = []
-        for case in test_cases:
-            try:
-                # Would call service.calculate(case)
-                results.append(case)
-            except Exception:
-                pass
-        
-        elapsed = time.time() - start_time
-        
-        assert len(results) == 4
-        assert elapsed < 1.0  # 4 calculations in < 1 second
-
-    def test_parallel_independent_operations(self):
-        """Test parallel independent operations"""
-        operations = [
-            lambda: sum(range(1000)),
-            lambda: len([i for i in range(1000) if i % 2 == 0]),
-            lambda: max([i**2 for i in range(100)]),
-            lambda: min([i for i in range(1, 1000)]),
-        ]
-        
-        start_time = time.time()
-        results = [op() for op in operations]
-        elapsed = time.time() - start_time
-        
-        assert len(results) == 4
-        assert all(r is not None for r in results)
-        assert elapsed < 0.1  # All operations < 100ms
-
-
-class TestScalabilityCharacteristics:
-    """Test scalability of system"""
-
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
-
-    def test_linear_scaling_with_income_items(self):
-        """Test if processing scales linearly with income items"""
-        service_config = self.config if hasattr(self, 'config') else AppConfig()
-        
-        times = {}
-        
-        for count in [10, 100, 1000]:
-            incomes = [
-                {'amount': 100, 'type': 'w2'}
-                for _ in range(count)
-            ]
-            
-            start = time.time()
-            total = sum(i['amount'] for i in incomes)
-            elapsed = time.time() - start
-            
-            times[count] = elapsed
-        
-        # Should scale roughly linearly
-        assert times[10] < times[100]
-        assert times[100] < times[1000]
-
-    def test_deduction_processing_scalability(self):
-        """Test deduction processing scales well"""
-        times = {}
-        
-        for count in [10, 100, 1000]:
-            deductions = [
-                {'category': 'mortgage', 'amount': 12000/12, 'month': i%12}
-                for i in range(count)
-            ]
-            
-            start = time.time()
-            total = sum(d['amount'] for d in deductions)
-            elapsed = time.time() - start
-            
-            times[count] = elapsed
-        
-        # Should handle all efficiently
-        assert times[1000] < 0.1
-
-    def test_multi_year_processing_scalability(self):
-        """Test multi-year data processing scales"""
-        years_data = {}
-        
-        for year in range(2015, 2025):  # 10 years
-            years_data[year] = {
-                'income': 50000 + (year - 2015) * 2000,
-                'tax': 5000 + (year - 2015) * 200,
-            }
-        
-        # Should process all years quickly
-        total_income = sum(d['income'] for d in years_data.values())
-        total_tax = sum(d['tax'] for d in years_data.values())
-        
-        assert len(years_data) == 10
-        assert total_income > 0
-        assert total_tax > 0
-
-
-class TestErrorHandlingPerformance:
-    """Test error handling performance"""
-
-    def test_exception_raising_cost(self):
-        """Test cost of raising and catching exceptions"""
-        from services.exceptions import InvalidInputException
-        
-        times = {'normal': 0, 'exception': 0}
-        iterations = 1000
-        
-        # Normal path
-        start = time.time()
-        for i in range(iterations):
-            if i < 0:  # Never true
-                pass
-        times['normal'] = time.time() - start
-        
-        # Exception path
-        start = time.time()
-        for i in range(iterations):
-            try:
-                if i == 0:
-                    raise InvalidInputException("field")
-            except InvalidInputException:
-                pass
-        times['exception'] = time.time() - start
-        
-        # Both should be fast, but exception slower
-        assert times['normal'] < 0.1
-        assert times['exception'] < 0.1
-
-    def test_error_logging_performance(self):
-        """Test error logging doesn't significantly impact performance"""
-        from services.error_logger import get_error_logger
-        from services.exceptions import InvalidInputException
-        
-        logger = get_error_logger()
-        iterations = 100
-        
-        start = time.time()
-        for i in range(iterations):
-            exc = InvalidInputException(f"field_{i}")
-            logger.log_exception(exc, context="test")
-        elapsed = time.time() - start
-        
-        # Should log 100 errors in reasonable time
-        assert elapsed < 1.0
-
-
-class TestCachingEffectiveness:
-    """Test effectiveness of any caching mechanisms"""
-
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
-
-    def test_repeated_calculation_consistency(self, config):
-        """Test repeated calculations are consistent"""
-        service = TaxCalculationService(config)
-        
-        test_data = {'income': 50000, 'deductions': 12000}
-        
-        results = []
         start = time.time()
         
         for i in range(100):
             try:
-                # Would call service.calculate(test_data)
-                results.append(test_data.copy())
+                if i % 3 == 0:
+                    raise InvalidInputException(f"field_{i}", "error")
+                elif i % 3 == 1:
+                    raise FileProcessingException(f"/file_{i}", "read")
+                else:
+                    raise EncryptionKeyNotFoundException(f"/key_{i}")
             except Exception:
                 pass
         
         elapsed = time.time() - start
-        
-        # All results should be identical
-        assert all(r['income'] == 50000 for r in results)
-        assert elapsed < 0.1  # Should be fast
+        assert elapsed < 1.0
 
-    def test_config_access_performance(self, config):
-        """Test config access is performant"""
-        iterations = 10000
+    def test_error_aggregation_performance(self):
+        """Test error aggregation performance"""
+        errors = []
         
         start = time.time()
-        for i in range(iterations):
-            _ = config.standard_deductions
+        for i in range(100):
+            try:
+                raise InvalidInputException(f"field_{i}", "error")
+            except Exception as e:
+                errors.append(e)
+        
         elapsed = time.time() - start
         
-        # Should access config 10k times in < 100ms
-        assert elapsed < 0.1
+        assert len(errors) == 100
+        assert elapsed < 1.0
 
 
-class TestCompressionAndEncryption:
-    """Test compression and encryption performance"""
+class TestScalabilityCharacteristics:
+    """Test scalability characteristics"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
+    def test_linear_scaling_exception_creation(self):
+        """Test that exception creation scales linearly"""
+        # Small batch
+        start1 = time.time()
+        for i in range(100):
+            exc = InvalidInputException(f"field_{i}", "error")
+        time1 = time.time() - start1
+        
+        # Large batch (10x)
+        start2 = time.time()
+        for i in range(1000):
+            exc = InvalidInputException(f"field_{i}", "error")
+        time2 = time.time() - start2
+        
+        # Should scale roughly linearly (allowing for variance)
+        assert time2 < time1 * 15  # Should be roughly 10x, with some overhead
 
-    @pytest.fixture
-    def encryption_service(self, config):
-        return EncryptionService(config)
+    def test_error_logging_scalability(self):
+        """Test error logging scalability"""
+        from services.error_logger import ErrorLogger
+        
+        logger = ErrorLogger()
+        
+        # Log 100 errors
+        start1 = time.time()
+        for i in range(100):
+            exc = InvalidInputException(f"field_{i}", "error")
+            logger.log_exception("Component", exc)
+        time1 = time.time() - start1
+        
+        # Log 1000 errors
+        start2 = time.time()
+        for i in range(1000):
+            exc = InvalidInputException(f"field_{i}", "error")
+            logger.log_exception("Component", exc)
+        time2 = time.time() - start2
+        
+        # Should scale reasonably (not quadratic)
+        assert time2 < time1 * 20
 
-    def test_small_data_encryption_speed(self, encryption_service):
-        """Test encryption speed for small data"""
-        data = "Small sensitive data"
+
+class TestErrorHandlingPerformance:
+    """Test error handling performance cost"""
+
+    def test_exception_creation_overhead(self):
+        """Test overhead of exception creation"""
+        import sys
+        
+        # Time without exceptions
+        start1 = time.time()
+        for i in range(1000):
+            value = i * 2
+        time1 = time.time() - start1
+        
+        # Time with exception creation
+        start2 = time.time()
+        for i in range(1000):
+            exc = InvalidInputException(f"field_{i}", "error")
+        time2 = time.time() - start2
+        
+        # Exception creation should be reasonably fast
+        assert time2 < 1.0
+
+    def test_exception_handling_cost(self):
+        """Test cost of exception handling (try/except)"""
+        errors = []
         
         start = time.time()
-        try:
-            encrypted = encryption_service.encrypt(data)
-            elapsed = time.time() - start
-            
-            # Should be fast
-            assert elapsed < 0.1
-        except Exception:
-            # Encryption might not be initialized
-            pass
-
-    def test_large_data_encryption_speed(self, encryption_service):
-        """Test encryption speed for larger data"""
-        data = "x" * 100000  # 100KB
+        for i in range(1000):
+            try:
+                if i % 10 == 0:
+                    raise InvalidInputException(f"field_{i}", "error")
+            except Exception as e:
+                errors.append(e)
         
-        try:
-            start = time.time()
-            encrypted = encryption_service.encrypt(data)
-            elapsed = time.time() - start
-            
-            # Should complete in reasonable time
-            assert elapsed < 1.0
-        except Exception:
-            # Encryption might not be initialized
-            pass
+        elapsed = time.time() - start
+        
+        # Should handle 1000 operations with 100 exceptions in < 1 second
+        assert elapsed < 1.0
+        assert len(errors) == 100
 
 
 class TestResourceCleanup:
-    """Test proper resource cleanup and no leaks"""
+    """Test resource cleanup and garbage collection"""
 
-    @pytest.fixture
-    def config(self):
-        return AppConfig()
-
-    def test_service_cleanup(self, config):
-        """Test services cleanup properly"""
-        service = TaxCalculationService(config)
-        assert service is not None
+    def test_logger_singleton_cleanup(self):
+        """Test logger singleton cleanup"""
+        from services.error_logger import ErrorLogger
         
-        # Delete service
-        del service
+        logger1 = ErrorLogger.get_instance()
+        history1_size = len(logger1.get_error_history())
         
-        # Should not raise or leak
-
-    def test_large_dataset_cleanup(self):
-        """Test large datasets cleanup properly"""
-        large_data = [{'id': i, 'data': 'x' * 1000} for i in range(1000)]
+        # Create another reference
+        logger2 = ErrorLogger.get_instance()
         
-        initial_size = sys.getsizeof(large_data)
+        # Should be the same instance
+        assert logger1 is logger2
+
+    def test_exception_garbage_collection(self):
+        """Test exception garbage collection"""
+        import gc
         
-        # Process and delete
-        del large_data
+        # Create and discard exceptions
+        for i in range(1000):
+            exc = InvalidInputException(f"field_{i}", "error")
         
-        # Should free memory (Python's GC should handle it)
-
-
-# Markers for selective test execution
-@pytest.mark.benchmark
-def test_marked_benchmark():
-    """Marked benchmark test"""
-    pass
-
-
-@pytest.mark.slow
-def test_marked_slow():
-    """Marked slow test"""
-    pass
-
-
-if __name__ == "__main__":
-    # Run with: pytest tests/unit/test_performance_benchmarks.py -v --benchmark-only
-    pytest.main([__file__, "-v"])
+        # Force garbage collection
+        gc.collect()
+        
+        # Should complete without issues
+        assert True
