@@ -18,6 +18,7 @@ from gui.modern_ui_components import (
     show_info_message, show_error_message, show_confirmation
 )
 from gui.tax_interview_wizard import TaxInterviewWizard
+from gui.pages.modern_income_page import ModernIncomePage
 
 
 class ModernMainWindow(ctk.CTk):
@@ -55,6 +56,9 @@ class ModernMainWindow(ctk.CTk):
         self.content_frame: Optional[ModernFrame] = None
         self.progress_bar: Optional[ModernProgressBar] = None
         self.status_label: Optional[ModernLabel] = None
+
+        # Form pages
+        self.income_page: Optional[ModernIncomePage] = None
 
         self._setup_window()
         self._setup_ui()
@@ -380,11 +384,38 @@ class ModernMainWindow(ctk.CTk):
     def _navigate_to_form(self, recommendation: Dict[str, Any]):
         """Navigate to a specific form"""
         form_name = recommendation.get('form', '')
-        show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
+
+        # Route to specific form pages
+        if 'income' in form_name.lower() or form_name in ['1040', 'W-2', '1099-INT', '1099-DIV', 'Schedule C', '1099-R', 'SSA-1099', 'Schedule D', 'Schedule E']:
+            self._show_income_page()
+        else:
+            show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
+
+    def _show_income_page(self):
+        """Show the income page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize income page if not already done
+        if self.income_page is None:
+            self.income_page = ModernIncomePage(self.content_frame, self.config)
+            if self.tax_data:
+                self.income_page.load_data(self.tax_data)
+
+        # Show the income page
+        self.income_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Income Information - Enter all sources of income")
+
+        # Update progress
+        self._update_progress()
 
     def _start_form_entry(self):
         """Start the form entry process"""
-        show_info_message("Form Entry", "Form entry interface will be implemented in the next development phase.")
+        # Start with income page as it's typically the first major section
+        self._show_income_page()
 
     def _save_progress(self):
         """Save current progress"""
