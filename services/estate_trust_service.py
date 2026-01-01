@@ -438,6 +438,92 @@ class EstateTrustService:
 
         return tax
 
+    def add_beneficiary(self, tax_data: TaxData, beneficiary: TrustBeneficiary) -> bool:
+        """
+        Add a trust beneficiary to the tax data.
+
+        Args:
+            tax_data: Tax data model
+            beneficiary: Beneficiary to add
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            beneficiaries = self.get_beneficiaries(tax_data)
+            
+            # Check for duplicate SSN
+            if any(b.ssn == beneficiary.ssn for b in beneficiaries):
+                logger.warning(f"Duplicate beneficiary SSN: {beneficiary.ssn}")
+                return False
+            
+            beneficiaries.append(beneficiary)
+            beneficiary_dicts = [b.to_dict() for b in beneficiaries]
+            tax_data.set("estate_trust.beneficiaries", beneficiary_dicts)
+            
+            logger.info(f"Added beneficiary: {beneficiary.name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to add beneficiary: {e}")
+            self.error_tracker.log_error("estate_add_beneficiary", str(e))
+            return False
+
+    def get_beneficiaries(self, tax_data: TaxData) -> List[TrustBeneficiary]:
+        """
+        Get all beneficiaries from tax data.
+
+        Args:
+            tax_data: Tax data model
+
+        Returns:
+            List[TrustBeneficiary]: List of beneficiaries
+        """
+        try:
+            beneficiary_dicts = tax_data.get("estate_trust.beneficiaries", [])
+            return [TrustBeneficiary.from_dict(b) for b in beneficiary_dicts]
+        except Exception as e:
+            logger.error(f"Failed to load beneficiaries: {e}")
+            return []
+
+    def calculate_beneficiary_distribution(self, beneficiary: TrustBeneficiary, trust_income: Decimal) -> Decimal:
+        """
+        Calculate income distribution to a specific beneficiary.
+
+        Args:
+            beneficiary: Beneficiary to calculate for
+            trust_income: Total trust income to distribute
+
+        Returns:
+            Decimal: Amount distributed to beneficiary
+        """
+        return trust_income * (beneficiary.share_percentage / Decimal('100'))
+
+    def validate_beneficiary_data(self, beneficiary: TrustBeneficiary) -> List[str]:
+        """
+        Validate beneficiary data.
+
+        Args:
+            beneficiary: Beneficiary to validate
+
+        Returns:
+            List of validation error messages
+        """
+        errors = []
+        
+        if not beneficiary.name.strip():
+            errors.append("Beneficiary name is required")
+        
+        if not beneficiary.ssn.strip():
+            errors.append("Beneficiary SSN is required")
+        
+        if not beneficiary.address.strip():
+            errors.append("Beneficiary address is required")
+        
+        if beneficiary.share_percentage < 0 or beneficiary.share_percentage > 100:
+            errors.append("Share percentage must be between 0 and 100")
+        
+        return errors
+
     def validate_estate_trust_data(self, return_data: EstateTrustReturn) -> List[str]:
         """
         Validate estate/trust return data.

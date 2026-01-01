@@ -114,16 +114,16 @@ class ReceiptScanningService:
             'miscellaneous': []  # Default category
         }
 
-        # Common vendor patterns
+        # Common vendor patterns (order matters - more specific patterns first)
         self.vendor_patterns = {
+            'walgreens': re.compile(r'walgreens', re.IGNORECASE),
             'walmart': re.compile(r'walmart|wal-mart', re.IGNORECASE),
             'target': re.compile(r'target', re.IGNORECASE),
             'costco': re.compile(r'costco', re.IGNORECASE),
             'amazon': re.compile(r'amazon', re.IGNORECASE),
             'home_depot': re.compile(r'home\s+depot|home\s+depot', re.IGNORECASE),
             'lowes': re.compile(r'lowes|lowe\'s', re.IGNORECASE),
-            'cvs': re.compile(r'cvs|pharmacy', re.IGNORECASE),
-            'walgreens': re.compile(r'walgreens', re.IGNORECASE),
+            'cvs': re.compile(r'\bcvs\b', re.IGNORECASE),
             'shell': re.compile(r'shell|fuel', re.IGNORECASE),
             'chevron': re.compile(r'chevron|texaco', re.IGNORECASE),
         }
@@ -229,7 +229,7 @@ class ReceiptScanningService:
             image: Preprocessed image
 
         Returns:
-            Quality score between 0-100
+            Quality score between 0-1
         """
         try:
             # Calculate image sharpness using Laplacian variance
@@ -248,10 +248,11 @@ class ReceiptScanningService:
 
             quality_score = (sharpness_score * 0.4 + brightness_score * 0.3 + contrast_score * 0.3)
 
-            return max(0, min(100, quality_score))
+            # Return as 0-1 scale
+            return min(1.0, max(0.0, quality_score / 100.0))
 
         except Exception:
-            return 50.0  # Default medium quality
+            return 0.5  # Default medium quality
 
     def _extract_text(self, image: np.ndarray) -> str:
         """
@@ -263,16 +264,24 @@ class ReceiptScanningService:
         Returns:
             Extracted text
         """
-        # Convert to PIL Image for pytesseract
-        pil_image = Image.fromarray(image)
+        try:
+            # Convert to PIL Image for pytesseract
+            if isinstance(image, np.ndarray):
+                pil_image = Image.fromarray(image)
+            else:
+                # For testing or other cases
+                pil_image = image
 
-        # Configure OCR settings for receipt scanning
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,$/- '
+            # Configure OCR settings for receipt scanning
+            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,$/- '
 
-        # Extract text
-        text = pytesseract.image_to_string(pil_image, config=custom_config)
+            # Extract text
+            text = pytesseract.image_to_string(pil_image, config=custom_config)
 
-        return text
+            return text
+        except Exception as e:
+            logger.error(f"OCR text extraction failed: {e}")
+            return ""
 
     def _parse_receipt_data(self, raw_text: str) -> ReceiptData:
         """
@@ -332,15 +341,18 @@ class ReceiptScanningService:
         # Look for vendor patterns
         for line in lines[:5]:  # Check first few lines
             line = line.strip()
-            if len(line) > 3 and not any(char.isdigit() for char in line):
+            if len(line) > 3:
                 # Check against known vendor patterns
                 for vendor, pattern in self.vendor_patterns.items():
                     if pattern.search(line):
                         return vendor.title()
 
                 # Return the line if it looks like a vendor name
-                if len(line) <= 50 and not line.startswith('$'):
-                    return line.title()
+                if len(line) <= 100 and not line.startswith('$') and not line.startswith('Total'):
+                    # Extract vendor name (remove numbers/symbols that appear with store numbers)
+                    vendor_name = re.sub(r'\s*#\d+.*$', '', line)
+                    if vendor_name.strip():
+                        return vendor_name.title()
 
         return "Unknown Vendor"
 
@@ -494,37 +506,79 @@ class ReceiptScanningService:
         # Combine vendor and text for analysis
         combined_text = f"{vendor} {text}".lower()
 
-        # Check each category
+        # Count keyword matches for each category
+        category_scores = {}
         for category, keywords in self.category_keywords.items():
-            if any(keyword in combined_text for keyword in keywords):
-                return category
+            if category == 'miscellaneous':
+                continue
+            
+            matches = sum(1 for keyword in keywords if keyword in combined_text)
+            if matches > 0:
+                category_scores[category] = matches
+
+        # Return the category with the most matches
+        if category_scores:
+            return max(category_scores, key=category_scores.get)
 
         return "miscellaneous"
 
-    def _calculate_confidence_score(self, text: str, total_amount: Decimal, vendor_name: str) -> float:
+    def _calculate_confidence_score(self, text: str = None, total_amount: Decimal = None, vendor_name: str = None,
+                                   has_vendor: bool = None, has_amount: bool = None, has_date: bool = None,
+                                   has_items: bool = None, ocr_confidence: float = None) -> float:
         """
         Calculate confidence score for the extracted data.
 
+        Can be called in two ways:
+        1. Original: _calculate_confidence_score(text, total_amount, vendor_name)
+        2. New: _calculate_confidence_score(has_vendor, has_amount, has_date, has_items, ocr_confidence)
+
         Args:
-            text: Raw OCR text
-            total_amount: Extracted total amount
-            vendor_name: Extracted vendor name
+            text: Raw OCR text (optional)
+            total_amount: Extracted total amount (optional)
+            vendor_name: Extracted vendor name (optional)
+            has_vendor: Whether vendor was found (optional)
+            has_amount: Whether amount was found (optional)
+            has_date: Whether date was found (optional)
+            has_items: Whether items were found (optional)
+            ocr_confidence: OCR confidence score (optional)
 
         Returns:
-            Confidence score (0-100)
+            Confidence score (0-100 or 0-1 depending on usage)
         """
+        # New API: using boolean flags
+        if has_vendor is not None:
+            score = 0.0
+            
+            if has_vendor:
+                score += 25
+            if has_amount:
+                score += 25
+            if has_date:
+                score += 25
+            if has_items:
+                score += 25
+            
+            # Apply OCR confidence multiplier
+            if ocr_confidence is not None:
+                score = score * ocr_confidence / 100.0 if ocr_confidence > 1 else score * ocr_confidence
+            
+            # Return as 0-1 scale
+            return min(1.0, score / 100.0)
+        
+        # Old API: using text and extracted fields
         score = 0.0
 
         # Text length (more text = higher confidence)
-        if len(text) > 100:
-            score += 30
-        elif len(text) > 50:
-            score += 20
-        elif len(text) > 20:
-            score += 10
+        if text:
+            if len(text) > 100:
+                score += 30
+            elif len(text) > 50:
+                score += 20
+            elif len(text) > 20:
+                score += 10
 
         # Amount found
-        if total_amount > 0:
+        if total_amount and total_amount > 0:
             score += 25
 
         # Vendor identified
@@ -532,12 +586,119 @@ class ReceiptScanningService:
             score += 20
 
         # Date found
-        if re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', text):
+        if text and re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', text):
             score += 15
 
         # Multiple dollar amounts (suggests detailed receipt)
-        dollar_count = len(re.findall(r'\$?\d+\.\d{2}', text))
-        if dollar_count > 3:
-            score += 10
+        if text:
+            dollar_count = len(re.findall(r'\$?\d+\.\d{2}', text))
+            if dollar_count > 3:
+                score += 10
 
         return min(100.0, score)
+
+    def _detect_category(self, text: str) -> str:
+        """
+        Detect expense category from receipt text.
+
+        Args:
+            text: Receipt text content
+
+        Returns:
+            Category name
+        """
+        return self._categorize_receipt("", text)
+
+    def _extract_vendor_name(self, text: str) -> str:
+        """
+        Extract vendor name from receipt text.
+
+        Args:
+            text: Receipt text content
+
+        Returns:
+            Vendor name
+        """
+        return self._extract_vendor(text)
+
+    def _extract_line_items(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Extract line items from receipt text.
+
+        Args:
+            text: Receipt text content
+
+        Returns:
+            List of item dictionaries
+        """
+        return self._extract_items(text)
+
+    def _parse_currency(self, amount_str: str) -> Decimal:
+        """
+        Parse currency string to Decimal.
+
+        Args:
+            amount_str: Currency amount as string (e.g., "$12.34" or "12.34")
+
+        Returns:
+            Decimal amount
+        """
+        try:
+            # Remove currency symbols and whitespace
+            cleaned = re.sub(r'[$,\s]', '', str(amount_str))
+            return Decimal(cleaned)
+        except (ValueError, TypeError):
+            return Decimal('0.00')
+
+    def _deduplicate_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Remove duplicate items from receipt items list.
+
+        Args:
+            items: List of item dictionaries
+
+        Returns:
+            List with duplicates removed
+        """
+        seen = set()
+        unique_items = []
+        
+        for item in items:
+            # Create a hashable key from item description and price
+            item_key = (item.get('description', ''), str(item.get('price', '')))
+            if item_key not in seen:
+                seen.add(item_key)
+                unique_items.append(item)
+        
+        return unique_items
+
+    def validate_receipt_data(self, receipt_data: ReceiptData) -> List[str]:
+        """
+        Validate extracted receipt data.
+
+        Args:
+            receipt_data: Receipt data to validate
+
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        errors = []
+        
+        # Validate vendor name
+        if not receipt_data.vendor_name or not str(receipt_data.vendor_name).strip():
+            errors.append("Vendor name is required")
+        
+        # Validate total amount
+        if receipt_data.total_amount is None or receipt_data.total_amount <= 0:
+            errors.append("Total amount must be greater than zero")
+        
+        # Validate category
+        valid_categories = list(self.category_keywords.keys()) + ['miscellaneous']
+        if receipt_data.category not in valid_categories:
+            errors.append(f"Invalid category: {receipt_data.category}")
+        
+        # Validate confidence score
+        if not (0 <= receipt_data.confidence_score <= 100):
+            errors.append("Confidence score must be between 0 and 100")
+        
+        return errors

@@ -13,6 +13,7 @@ from datetime import datetime, date
 from enum import Enum
 
 from config.app_config import AppConfig
+from utils.error_tracker import get_error_tracker
 
 
 class EntityType(Enum):
@@ -164,6 +165,10 @@ class BusinessDeductions:
             self.advertising + self.pension_plans + self.employee_benefits + self.utilities +
             self.supplies + self.other_expenses
         )
+
+    def calculate_total_deductions(self) -> Decimal:
+        """Calculate total deductions (alias for total_deductions)"""
+        return self.total_deductions()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage"""
@@ -318,6 +323,7 @@ class PartnershipSCorpService:
     def __init__(self, config: AppConfig):
         self.config = config
         self.logger = logging.getLogger(__name__)
+        self.error_tracker = get_error_tracker()
 
     def create_partnership_s_corp_return(
         self,
@@ -671,6 +677,147 @@ class PartnershipSCorpService:
         }
 
         return form_data
+
+    def add_partner_shareholder(self, tax_data: Any, partner: PartnerShareholder) -> bool:
+        """
+        Add a partner or shareholder to the entity.
+
+        Args:
+            tax_data: Tax data model
+            partner: Partner/shareholder to add
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            partners = self.get_partners_shareholders(tax_data)
+            
+            # Check for duplicate SSN/EIN
+            if any(p.ssn_ein == partner.ssn_ein for p in partners):
+                self.logger.warning(f"Duplicate partner SSN/EIN: {partner.ssn_ein}")
+                return False
+            
+            partners.append(partner)
+            partner_dicts = [p.to_dict() for p in partners]
+            
+            # Save to tax_data
+            tax_data.set("partnership_s_corp.partners", partner_dicts)
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to add partner/shareholder: {e}")
+            self.error_tracker.log_error("partnership_add_partner", str(e))
+            return False
+
+    def get_partners_shareholders(self, tax_data: Any) -> List[PartnerShareholder]:
+        """
+        Get all partners/shareholders from tax data.
+
+        Args:
+            tax_data: Tax data model
+
+        Returns:
+            List[PartnerShareholder]: List of partners/shareholders
+        """
+        try:
+            partner_dicts = tax_data.get("partnership_s_corp.partners", [])
+            return [PartnerShareholder.from_dict(p) for p in partner_dicts]
+        except Exception as e:
+            self.logger.error(f"Failed to load partners/shareholders: {e}")
+            return []
+
+    def calculate_taxable_income(self, income: Decimal, deductions: Decimal) -> Decimal:
+        """
+        Calculate taxable income for the entity.
+
+        Args:
+            income: Total income
+            deductions: Total deductions
+
+        Returns:
+            Decimal: Taxable income
+        """
+        return income - deductions
+
+    def calculate_partner_share_of_income(self, entity_income: Decimal, partner: PartnerShareholder) -> Decimal:
+        """
+        Calculate a partner's share of entity income.
+
+        Args:
+            entity_income: Total entity income
+            partner: Partner to calculate for
+
+        Returns:
+            Decimal: Partner's share of income
+        """
+        return entity_income * (partner.ownership_percentage / Decimal('100'))
+
+    def calculate_partner_share_of_losses(self, entity_loss: Decimal, ownership_percentage: Decimal) -> Decimal:
+        """
+        Calculate a partner's share of entity losses.
+
+        Args:
+            entity_loss: Total entity loss
+            ownership_percentage: Partner's ownership percentage
+
+        Returns:
+            Decimal: Partner's share of loss
+        """
+        return entity_loss * (ownership_percentage / Decimal('100'))
+
+    def calculate_dividend_per_share(self, net_income: Decimal, number_of_shares: int) -> Decimal:
+        """
+        Calculate dividend per share for S-Corp.
+
+        Args:
+            net_income: Net income available for distribution
+            number_of_shares: Total number of shares outstanding
+
+        Returns:
+            Decimal: Dividend per share
+        """
+        if number_of_shares == 0:
+            return Decimal('0')
+        return net_income / Decimal(number_of_shares)
+
+    def calculate_capital_account(self, beginning_balance: Decimal, income_allocated: Decimal, distributions: Decimal) -> Decimal:
+        """
+        Calculate partner's capital account balance.
+
+        Args:
+            beginning_balance: Beginning capital account balance
+            income_allocated: Income allocated to partner
+            distributions: Distributions made to partner
+
+        Returns:
+            Decimal: Ending capital account balance
+        """
+        return beginning_balance + income_allocated - distributions
+
+    def validate_partner_data(self, partner: PartnerShareholder) -> List[str]:
+        """
+        Validate partner/shareholder data.
+
+        Args:
+            partner: Partner to validate
+
+        Returns:
+            List of validation error messages
+        """
+        errors = []
+        
+        if not partner.name.strip():
+            errors.append("Partner/shareholder name is required")
+        
+        if not partner.ssn_ein.strip():
+            errors.append("Partner/shareholder SSN or EIN is required")
+        
+        if not partner.address.strip():
+            errors.append("Partner/shareholder address is required")
+        
+        if partner.ownership_percentage < 0 or partner.ownership_percentage > 100:
+            errors.append("Ownership percentage must be between 0 and 100")
+        
+        return errors
 
     def get_filing_instructions(self) -> str:
         """

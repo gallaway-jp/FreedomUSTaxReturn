@@ -381,30 +381,63 @@ class TestDependentsPageIntegration:
 
     def test_age_calculation(self):
         """Test age calculation from birth date"""
-        root = tk.Tk()
-        config = AppConfig.from_env()
-        tax_data = TaxData(config)
-        main_window = Mock()
-        theme_manager = Mock()
+        # Use mocked tkinter setup like other tests
+        with patch('tkinter.Tk') as mock_tk, \
+             patch('tkinter.ttk.Frame') as mock_frame, \
+             patch('tkinter.ttk.Label') as mock_label, \
+             patch('tkinter.ttk.Button') as mock_button, \
+             patch('tkinter.Listbox') as mock_listbox, \
+             patch('tkinter.ttk.Scrollbar') as mock_scrollbar, \
+             patch('tkinter.StringVar') as mock_stringvar, \
+             patch('tkinter.Canvas') as mock_canvas:
 
-        page = DependentsPage(root, tax_data, main_window, theme_manager)
+            # Configure mocks
+            mock_root = MagicMock()
+            mock_tk.return_value = mock_root
 
-        # Test various birth dates
-        test_cases = [
-            ("01/01/2010", 16),  # Born in 2010, age 16 in 2026
-            ("12/31/2024", 1),   # Born late 2024, age 1 in 2026 (turns 1 on 12/31/2025)
-            ("07/15/2000", 25),  # Born in 2000, age 25 in 2026
-        ]
+            mock_frame_instance = MagicMock()
+            mock_frame.return_value = mock_frame_instance
 
-        for birth_date, expected_age in test_cases:
-            age = page._calculate_age(birth_date)
-            assert age == expected_age, f"Expected age {expected_age} for birth date {birth_date}, got {age}"
+            mock_listbox_instance = MagicMock()
+            mock_listbox_instance._items = []
+            mock_listbox_instance.curselection = Mock(return_value=())
+            mock_listbox_instance.selection_set = Mock(side_effect=lambda idx: setattr(mock_listbox_instance.curselection, 'return_value', (idx,)))
+            mock_listbox.return_value = mock_listbox_instance
 
-        # Test invalid date
-        assert page._calculate_age("invalid") is None
-        assert page._calculate_age("") is None
+            mock_canvas_instance = MagicMock()
+            mock_canvas.return_value = mock_canvas_instance
 
-        root.destroy()
+            mock_stringvar_instance = MagicMock()
+            mock_stringvar_instance.get.return_value = ""
+            mock_stringvar_instance.set.return_value = None
+            mock_stringvar.return_value = mock_stringvar_instance
+
+            config = AppConfig.from_env()
+            tax_data = TaxData(config)
+            main_window = Mock()
+            theme_manager = Mock()
+            theme_manager.get_color.side_effect = lambda color: {
+                "success": "green",
+                "error": "red", 
+                "fg": "black"
+            }.get(color, "black")
+
+            page = DependentsPage(mock_root, tax_data, main_window, theme_manager)
+
+            # Test various birth dates
+            test_cases = [
+                ("01/01/2010", 16),  # Born in 2010, age 16 in 2026
+                ("12/31/2024", 1),   # Born late 2024, age 1 in 2026 (turns 1 on 12/31/2025)
+                ("07/15/2000", 25),  # Born in 2000, age 25 in 2026
+            ]
+
+            for birth_date, expected_age in test_cases:
+                age = page._calculate_age(birth_date)
+                assert age == expected_age, f"Expected age {expected_age} for birth date {birth_date}, got {age}"
+
+            # Test invalid date
+            assert page._calculate_age("invalid") is None
+            assert page._calculate_age("") is None
 
     def test_full_workflow(self):
         """Test a complete add-edit-delete workflow"""
