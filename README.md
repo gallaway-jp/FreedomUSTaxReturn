@@ -2,9 +2,9 @@
 
 A completely free Python GUI application for preparing US federal income tax returns.
 
-## Tax Year 2025
+## Tax Year 2026
 
-This application is designed for the **2025 tax year** (returns filed in 2026).
+This application is designed for the **2026 tax year** (returns filed in 2027).
 
 ## Features
 

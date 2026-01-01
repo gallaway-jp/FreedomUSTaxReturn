@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Tax Year:** 2025 (Returns filed in 2026)
+**Tax Year:** 2026 (Returns filed in 2027)
 **Current Development Focus:** Version 3.0 - E-Filing Integration 🎯
 
 ## Version 1.0 (Current) ✅
