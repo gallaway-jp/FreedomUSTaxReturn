@@ -43,6 +43,7 @@ from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
 from gui.pages.modern_form_viewer_page import ModernFormViewerPage
 from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
+from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -324,6 +325,14 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🤖 AI Deduction Finder",
             command=self._show_ai_deduction_finder,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="₿ Cryptocurrency Tax",
+            command=self._show_cryptocurrency_tax,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -871,6 +880,20 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("AI Deduction Finder Error", f"Failed to open AI deduction finder: {str(e)}")
+
+    def _show_cryptocurrency_tax(self):
+        """Show cryptocurrency tax reporting window"""
+        try:
+            # Create and show cryptocurrency tax window
+            crypto_window = CryptocurrencyTaxWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            crypto_window.show()
+            
+        except Exception as e:
+            show_error_message("Cryptocurrency Tax Error", f"Failed to open cryptocurrency tax window: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
