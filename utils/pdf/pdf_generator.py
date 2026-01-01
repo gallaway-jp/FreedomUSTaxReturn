@@ -534,8 +534,141 @@ class TaxReturnPDFGenerator:
 
     def _map_schedule_e(self, tax_data: DotDict) -> Dict[str, str]:
         """Map Schedule E (Supplemental Income and Loss)"""
-        # TODO: Implement Schedule E mapping
-        return {}
+        fields = {}
+        rental_income = tax_data.get('income', {}).get('rental_income', [])
+
+        if not rental_income:
+            return fields
+
+        # Schedule E - Part I: Income or Loss From Rental Real Estate and Royalties
+        total_rental_income = Decimal('0')
+        total_rental_expenses = Decimal('0')
+        total_depreciation = Decimal('0')
+
+        for i, rental in enumerate(rental_income):
+            if i >= 3:  # Schedule E supports up to 3 properties on main form
+                break
+
+            # Property address (Line 1A)
+            address = rental.get('address', '')
+            if address:
+                fields[f'topmostSubform[0].Page1[0].Line1_ReadOrder[{i}].f1_01[{i}]'] = address[:35]  # Limit to 35 chars
+
+            # Location (Line 1B) - City and State
+            city = rental.get('city', '')
+            state = rental.get('state', '')
+            if city and state:
+                location = f"{city}, {state}"
+                fields[f'topmostSubform[0].Page1[0].Line1_ReadOrder[{i}].f1_02[{i}]'] = location[:25]  # Limit to 25 chars
+
+            # Gross rents (Line 3)
+            gross_rents = rental.get('gross_rental_income', 0)
+            if gross_rents:
+                fields[f'topmostSubform[0].Page1[0].Line3_ReadOrder[{i}].f1_03[{i}]'] = f"{gross_rents:,.2f}"
+                total_rental_income += Decimal(str(gross_rents))
+
+            # Advertising (Line 5A)
+            advertising = rental.get('advertising', 0)
+            if advertising:
+                fields[f'topmostSubform[0].Page1[0].Line5A_ReadOrder[{i}].f1_04[{i}]'] = f"{advertising:,.2f}"
+                total_rental_expenses += Decimal(str(advertising))
+
+            # Auto and travel (Line 5B)
+            auto_travel = rental.get('auto_travel', 0)
+            if auto_travel:
+                fields[f'topmostSubform[0].Page1[0].Line5B_ReadOrder[{i}].f1_05[{i}]'] = f"{auto_travel:,.2f}"
+                total_rental_expenses += Decimal(str(auto_travel))
+
+            # Cleaning and maintenance (Line 5C)
+            cleaning = rental.get('cleaning_maintenance', 0)
+            if cleaning:
+                fields[f'topmostSubform[0].Page1[0].Line5C_ReadOrder[{i}].f1_06[{i}]'] = f"{cleaning:,.2f}"
+                total_rental_expenses += Decimal(str(cleaning))
+
+            # Commissions (Line 5D)
+            commissions = rental.get('commissions', 0)
+            if commissions:
+                fields[f'topmostSubform[0].Page1[0].Line5D_ReadOrder[{i}].f1_07[{i}]'] = f"{commissions:,.2f}"
+                total_rental_expenses += Decimal(str(commissions))
+
+            # Insurance (Line 5E)
+            insurance = rental.get('insurance', 0)
+            if insurance:
+                fields[f'topmostSubform[0].Page1[0].Line5E_ReadOrder[{i}].f1_08[{i}]'] = f"{insurance:,.2f}"
+                total_rental_expenses += Decimal(str(insurance))
+
+            # Legal and other professional fees (Line 5F)
+            legal_fees = rental.get('legal_fees', 0)
+            if legal_fees:
+                fields[f'topmostSubform[0].Page1[0].Line5F_ReadOrder[{i}].f1_09[{i}]'] = f"{legal_fees:,.2f}"
+                total_rental_expenses += Decimal(str(legal_fees))
+
+            # Management fees (Line 5G)
+            management_fees = rental.get('management_fees', 0)
+            if management_fees:
+                fields[f'topmostSubform[0].Page1[0].Line5G_ReadOrder[{i}].f1_10[{i}]'] = f"{management_fees:,.2f}"
+                total_rental_expenses += Decimal(str(management_fees))
+
+            # Mortgage interest paid to banks (Line 5H)
+            mortgage_interest = rental.get('mortgage_interest', 0)
+            if mortgage_interest:
+                fields[f'topmostSubform[0].Page1[0].Line5H_ReadOrder[{i}].f1_11[{i}]'] = f"{mortgage_interest:,.2f}"
+                total_rental_expenses += Decimal(str(mortgage_interest))
+
+            # Other interest (Line 5I)
+            other_interest = rental.get('other_interest', 0)
+            if other_interest:
+                fields[f'topmostSubform[0].Page1[0].Line5I_ReadOrder[{i}].f1_12[{i}]'] = f"{other_interest:,.2f}"
+                total_rental_expenses += Decimal(str(other_interest))
+
+            # Repairs (Line 5J)
+            repairs = rental.get('repairs', 0)
+            if repairs:
+                fields[f'topmostSubform[0].Page1[0].Line5J_ReadOrder[{i}].f1_13[{i}]'] = f"{repairs:,.2f}"
+                total_rental_expenses += Decimal(str(repairs))
+
+            # Supplies (Line 5K)
+            supplies = rental.get('supplies', 0)
+            if supplies:
+                fields[f'topmostSubform[0].Page1[0].Line5K_ReadOrder[{i}].f1_14[{i}]'] = f"{supplies:,.2f}"
+                total_rental_expenses += Decimal(str(supplies))
+
+            # Taxes and licenses (Line 5L)
+            taxes_licenses = rental.get('taxes_licenses', 0)
+            if taxes_licenses:
+                fields[f'topmostSubform[0].Page1[0].Line5L_ReadOrder[{i}].f1_15[{i}]'] = f"{taxes_licenses:,.2f}"
+                total_rental_expenses += Decimal(str(taxes_licenses))
+
+            # Utilities (Line 5M)
+            utilities = rental.get('utilities', 0)
+            if utilities:
+                fields[f'topmostSubform[0].Page1[0].Line5M_ReadOrder[{i}].f1_16[{i}]'] = f"{utilities:,.2f}"
+                total_rental_expenses += Decimal(str(utilities))
+
+            # Depreciation expense or depletion (Line 12)
+            depreciation = rental.get('depreciation', 0)
+            if depreciation:
+                fields[f'topmostSubform[0].Page1[0].Line12_ReadOrder[{i}].f1_17[{i}]'] = f"{depreciation:,.2f}"
+                total_depreciation += Decimal(str(depreciation))
+
+        # Total rental real estate income (Line 23)
+        if total_rental_income > 0:
+            fields['topmostSubform[0].Page1[0].Line23_ReadOrder[0].f1_23[0]'] = f"{total_rental_income:,.2f}"
+
+        # Total rental real estate expenses (Line 20)
+        if total_rental_expenses > 0:
+            fields['topmostSubform[0].Page1[0].Line20_ReadOrder[0].f1_20[0]'] = f"{total_rental_expenses:,.2f}"
+
+        # Depreciation (Line 22)
+        if total_depreciation > 0:
+            fields['topmostSubform[0].Page1[0].Line22_ReadOrder[0].f1_22[0]'] = f"{total_depreciation:,.2f}"
+
+        # Net rental income/loss (Line 26) - calculated as income minus expenses minus depreciation
+        net_rental = total_rental_income - total_rental_expenses - total_depreciation
+        if net_rental != 0:
+            fields['topmostSubform[0].Page1[0].Line26_ReadOrder[0].f1_26[0]'] = f"{net_rental:,.2f}"
+
+        return fields
 
     def _map_schedule_se(self, tax_data: DotDict) -> Dict[str, str]:
         """Map Schedule SE (Self-Employment Tax)"""

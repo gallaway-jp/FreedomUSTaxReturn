@@ -55,13 +55,70 @@ class Form1040Fields:
 
 class ScheduleCFields:
     """Field names for Schedule C (Profit or Loss from Business)"""
-    # TODO: Add Schedule C field names when implementing
-    pass
+    
+    # Part I: Income
+    GROSS_RECEIPTS = 'topmostSubform[0].Page1[0].Line1_ReadOrder[0].f1_01[0]'
+    RETURNS_AND_ALLOWANCES = 'topmostSubform[0].Page1[0].Line2_ReadOrder[0].f1_02[0]'
+    COST_OF_GOODS_SOLD = 'topmostSubform[0].Page1[0].Line4_ReadOrder[0].f1_04[0]'
+    
+    # Part II: Expenses
+    ADVERTISING = 'topmostSubform[0].Page1[0].Line8_ReadOrder[0].f1_08[0]'
+    CAR_AND_TRUCK_EXPENSES = 'topmostSubform[0].Page1[0].Line9_ReadOrder[0].f1_09[0]'
+    COMMISSIONS_AND_FEES = 'topmostSubform[0].Page1[0].Line10_ReadOrder[0].f1_10[0]'
+    CONTRACT_LABOR = 'topmostSubform[0].Page1[0].Line11_ReadOrder[0].f1_11[0]'
+    DEPRECIATION = 'topmostSubform[0].Page1[0].Line12_ReadOrder[0].f1_12[0]'
+    EMPLOYEE_BENEFIT_PROGRAMS = 'topmostSubform[0].Page1[0].Line13_ReadOrder[0].f1_13[0]'
+    INSURANCE = 'topmostSubform[0].Page1[0].Line14_ReadOrder[0].f1_14[0]'
+    INTEREST_MORTGAGE = 'topmostSubform[0].Page1[0].Line15_ReadOrder[0].f1_15[0]'
+    INTEREST_OTHER = 'topmostSubform[0].Page1[0].Line16_ReadOrder[0].f1_16[0]'
+    LEGAL_AND_PROFESSIONAL_SERVICES = 'topmostSubform[0].Page1[0].Line17_ReadOrder[0].f1_17[0]'
+    OFFICE_EXPENSE = 'topmostSubform[0].Page1[0].Line18_ReadOrder[0].f1_18[0]'
+    PENSION_AND_PROFIT_SHARING = 'topmostSubform[0].Page1[0].Line19_ReadOrder[0].f1_19[0]'
+    RENT_OR_LEASE_VEHICLES = 'topmostSubform[0].Page1[0].Line20a_ReadOrder[0].f1_20a[0]'
+    RENT_OR_LEASE_OTHER = 'topmostSubform[0].Page1[0].Line20b_ReadOrder[0].f1_20b[0]'
+    REPAIRS_AND_MAINTENANCE = 'topmostSubform[0].Page1[0].Line21_ReadOrder[0].f1_21[0]'
+    SUPPLIES = 'topmostSubform[0].Page1[0].Line22_ReadOrder[0].f1_22[0]'
+    TAXES_AND_LICENSES = 'topmostSubform[0].Page1[0].Line23_ReadOrder[0].f1_23[0]'
+    TRAVEL = 'topmostSubform[0].Page1[0].Line24a_ReadOrder[0].f1_24a[0]'
+    MEALS = 'topmostSubform[0].Page1[0].Line24b_ReadOrder[0].f1_24b[0]'
+    UTILITIES = 'topmostSubform[0].Page1[0].Line25_ReadOrder[0].f1_25[0]'
+    WAGES = 'topmostSubform[0].Page1[0].Line26_ReadOrder[0].f1_26[0]'
+    OTHER_EXPENSES = 'topmostSubform[0].Page1[0].Line27a_ReadOrder[0].f1_27a[0]'
+    
+    # Business Information
+    BUSINESS_NAME = 'topmostSubform[0].Page1[0].BusinessName[0].f1_28[0]'
+    BUSINESS_CODE = 'topmostSubform[0].Page1[0].BusinessCode[0].f1_29[0]'
 
 
 class ScheduleAFields:
     """Field names for Schedule A (Itemized Deductions)"""
-    # TODO: Add Schedule A field names when implementing
+    
+    # Part I: Medical and Dental Expenses
+    MEDICAL_EXPENSES = 'topmostSubform[0].Page1[0].Line1_ReadOrder[0].f1_01[0]'
+    
+    # Part II: Taxes You Paid
+    STATE_LOCAL_INCOME_TAXES = 'topmostSubform[0].Page1[0].Line5_ReadOrder[0].f1_05[0]'
+    STATE_LOCAL_REAL_ESTATE_TAXES = 'topmostSubform[0].Page1[0].Line6_ReadOrder[0].f1_06[0]'
+    STATE_LOCAL_PERSONAL_PROPERTY_TAXES = 'topmostSubform[0].Page1[0].Line7_ReadOrder[0].f1_07[0]'
+    OTHER_TAXES = 'topmostSubform[0].Page1[0].Line8_ReadOrder[0].f1_08[0]'
+    
+    # Part III: Interest You Paid
+    HOME_MORTGAGE_INTEREST = 'topmostSubform[0].Page1[0].Line10_ReadOrder[0].f1_10[0]'
+    HOME_MORTGAGE_INTEREST_NOT_REPORTED = 'topmostSubform[0].Page1[0].Line11_ReadOrder[0].f1_11[0]'
+    POINTS_NOT_REPORTED = 'topmostSubform[0].Page1[0].Line12_ReadOrder[0].f1_12[0]'
+    MORTGAGE_INSURANCE_PREMIUMS = 'topmostSubform[0].Page1[0].Line13_ReadOrder[0].f1_13[0]'
+    INVESTMENT_INTEREST = 'topmostSubform[0].Page1[0].Line14_ReadOrder[0].f1_14[0]'
+    
+    # Part IV: Gifts to Charity
+    CASH_CONTRIBUTIONS = 'topmostSubform[0].Page1[0].Line15_ReadOrder[0].f1_15[0]'
+    NON_CASH_CONTRIBUTIONS = 'topmostSubform[0].Page1[0].Line16_ReadOrder[0].f1_16[0]'
+    CARRYOVER_CONTRIBUTIONS = 'topmostSubform[0].Page1[0].Line17_ReadOrder[0].f1_17[0]'
+    
+    # Part V: Casualty and Theft Losses
+    CASUALTY_THEFT_LOSSES = 'topmostSubform[0].Page1[0].Line18_ReadOrder[0].f1_18[0]'
+    
+    # Part VI: Other Itemized Deductions
+    OTHER_MISC_DEDUCTIONS = 'topmostSubform[0].Page1[0].Line19_ReadOrder[0].f1_19[0]'
 
 
 class Form1040XFields:

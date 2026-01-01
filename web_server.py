@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.app_config import AppConfig
 from services.tax_calculation_service import TaxCalculationService
 from services.tax_analytics_service import TaxAnalyticsService
+from services.receipt_scanning_service import ReceiptScanningService
 from models.tax_data import TaxData
 from services.encryption_service import EncryptionService
 from utils.error_tracker import ErrorTracker
@@ -43,6 +44,7 @@ class TaxWebServer:
         self.error_tracker = ErrorTracker(self.config.log_dir)
         self.tax_service = TaxCalculationService()
         self.analytics_service = TaxAnalyticsService(self.config, self.tax_service)
+        self.receipt_scanner = ReceiptScanningService(self.config)
 
         # Setup logging
         logging.basicConfig(level=logging.INFO)
@@ -306,13 +308,39 @@ class TaxWebServer:
                 filepath = os.path.join(upload_dir, filename)
                 file.save(filepath)
 
-                # TODO: Implement OCR processing here
-                # For now, just acknowledge the upload
-                return jsonify({
-                    'success': True,
-                    'filename': filename,
-                    'message': 'Document uploaded successfully'
-                })
+                # Implement OCR processing using receipt scanning service
+                try:
+                    scan_result = self.receipt_scanner.scan_receipt(filepath)
+                    
+                    return jsonify({
+                        'success': True,
+                        'filename': filename,
+                        'scan_result': {
+                            'vendor_name': scan_result.vendor_name,
+                            'total_amount': str(scan_result.total_amount),
+                            'tax_amount': str(scan_result.tax_amount) if scan_result.tax_amount else None,
+                            'date': scan_result.date.isoformat() if scan_result.date else None,
+                            'category': scan_result.category,
+                            'confidence': scan_result.confidence_score,
+                            'line_items': [
+                                {
+                                    'description': item.description,
+                                    'amount': str(item.amount),
+                                    'category': item.category
+                                } for item in scan_result.line_items
+                            ] if scan_result.line_items else []
+                        },
+                        'message': 'Document scanned and processed successfully'
+                    })
+                except Exception as ocr_error:
+                    self.logger.warning(f"OCR processing failed: {ocr_error}")
+                    # Fall back to basic upload acknowledgment
+                    return jsonify({
+                        'success': True,
+                        'filename': filename,
+                        'message': 'Document uploaded successfully (OCR processing unavailable)',
+                        'warning': 'OCR processing failed, but document was saved'
+                    })
             except Exception as e:
                 self.error_tracker.log_error(e, "Document scan failed")
                 return jsonify({

@@ -214,19 +214,27 @@ class AsyncPDFGenerator:
         """
         Generate Schedule A PDF for itemized deductions
         """
-        # Placeholder for Schedule A generation
+        from utils.pdf.pdf_generator import TaxReturnPDFGenerator
+        
+        # Use the mapping from pdf_generator
+        generator = TaxReturnPDFGenerator()
+        field_mappings = generator._map_schedule_a(task.tax_data)
+        
         filler = PDFFormFiller()
-        fields = {}  # Would need proper field mappings
-        filler.fill_form("f1040sa.pdf", fields, str(task.output_path))
+        filler.fill_form("f1040sa.pdf", field_mappings, str(task.output_path))
     
     def _generate_schedule_e(self, task: PDFGenerationTask) -> None:
         """
         Generate Schedule E PDF for rental income
         """
-        # Placeholder for Schedule E generation
+        from utils.pdf.pdf_generator import TaxReturnPDFGenerator
+        
+        # Use the mapping from pdf_generator
+        generator = TaxReturnPDFGenerator()
+        field_mappings = generator._map_schedule_e(task.tax_data)
+        
         filler = PDFFormFiller()
-        fields = {}  # Would need proper field mappings
-        filler.fill_form("f1040se.pdf", fields, str(task.output_path))
+        filler.fill_form("f1040se.pdf", field_mappings, str(task.output_path))
     
     async def generate_multiple_pdfs(
         self,
@@ -302,14 +310,72 @@ class AsyncPDFGenerator:
             output_path=output_dir / "Form_1040.pdf"
         ))
         
-        # TODO: Add other forms based on tax data
-        # Example: Schedule C if business income exists
-        # if tax_data.get('schedules', {}).get('schedule_c'):
-        #     tasks.append(PDFGenerationTask(
-        #         form_name="Schedule C",
-        #         tax_data=tax_data,
-        #         output_path=output_dir / "Schedule_C.pdf"
-        #     ))
+        # Add other forms based on tax data
+        schedules = tax_data.get('schedules', {})
+        income = tax_data.get('income', {})
+        
+        # Schedule C - Profit or Loss from Business
+        if schedules.get('schedule_c') or income.get('business_income'):
+            tasks.append(PDFGenerationTask(
+                form_name="Schedule C",
+                tax_data=tax_data,
+                output_path=output_dir / "Schedule_C.pdf"
+            ))
+        
+        # Schedule D - Capital Gains and Losses
+        if schedules.get('schedule_d') or income.get('capital_gains'):
+            tasks.append(PDFGenerationTask(
+                form_name="Schedule D",
+                tax_data=tax_data,
+                output_path=output_dir / "Schedule_D.pdf"
+            ))
+        
+        # Schedule E - Supplemental Income and Loss
+        if income.get('rental_income'):
+            tasks.append(PDFGenerationTask(
+                form_name="Schedule E",
+                tax_data=tax_data,
+                output_path=output_dir / "Schedule_E.pdf"
+            ))
+        
+        # Schedule SE - Self-Employment Tax
+        if schedules.get('schedule_se') or schedules.get('schedule_c'):
+            tasks.append(PDFGenerationTask(
+                form_name="Schedule SE",
+                tax_data=tax_data,
+                output_path=output_dir / "Schedule_SE.pdf"
+            ))
+        
+        # Form 8949 - Sales and Other Dispositions of Capital Assets
+        if income.get('capital_gains') or schedules.get('schedule_d'):
+            tasks.append(PDFGenerationTask(
+                form_name="Form 8949",
+                tax_data=tax_data,
+                output_path=output_dir / "Form_8949.pdf"
+            ))
+        
+        # Form 1041 - Estates and Trusts (if applicable)
+        if tax_data.get('estate_trust_data'):
+            tasks.append(PDFGenerationTask(
+                form_name="Form 1041",
+                tax_data=tax_data,
+                output_path=output_dir / "Form_1041.pdf"
+            ))
+        
+        # Partnership/S-Corp forms
+        if tax_data.get('partnership_data'):
+            tasks.append(PDFGenerationTask(
+                form_name="Form 1065",
+                tax_data=tax_data,
+                output_path=output_dir / "Form_1065.pdf"
+            ))
+        
+        if tax_data.get('s_corp_data'):
+            tasks.append(PDFGenerationTask(
+                form_name="Form 1120-S",
+                tax_data=tax_data,
+                output_path=output_dir / "Form_1120_S.pdf"
+            ))
         
         return await self.generate_multiple_pdfs(tasks, progress_callback)
     
