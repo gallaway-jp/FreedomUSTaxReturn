@@ -1,0 +1,200 @@
+{
+  "questions": [
+    {
+      "id": "personal_info_complete",
+      "text": "Have you entered your basic personal information (name, SSN, address)?",
+      "type": "yes_no",
+      "category": "personal_info",
+      "help_text": "This includes your full name, Social Security Number, date of birth, and current mailing address. You'll need your Social Security card and recent mail for this information.",
+      "required": true
+    },
+    {
+      "id": "filing_status",
+      "text": "What is your filing status?",
+      "type": "multiple_choice",
+      "category": "filing_status",
+      "options": ["Single", "Married Filing Jointly", "Married Filing Separately", "Head of Household", "Qualifying Widow(er)"],
+      "help_text": "Your filing status determines your tax rates, standard deduction, and eligibility for certain credits. Check IRS Publication 501 for details.",
+      "required": true
+    },
+    {
+      "id": "has_dependents",
+      "text": "Do you have dependents (children, relatives) who lived with you?",
+      "type": "yes_no",
+      "category": "dependents",
+      "help_text": "Dependents can include children under 19 (or 24 if students), or other qualifying relatives. You'll need their Social Security numbers and relationship to you.",
+      "required": true,
+      "follow_up_questions": ["dependents_count"]
+    },
+    {
+      "id": "dependents_count",
+      "text": "How many dependents do you have?",
+      "type": "numeric",
+      "category": "dependents",
+      "help_text": "Count each qualifying child or relative. Make sure you have their full names and Social Security numbers.",
+      "conditional_logic": {"depends_on": "has_dependents", "value": true}
+    },
+    {
+      "id": "income_employment",
+      "text": "Did you receive income from employment (W-2 forms)?",
+      "type": "yes_no",
+      "category": "income",
+      "help_text": "This includes wages, salaries, tips, and other compensation from employers. Check your W-2 forms from all jobs worked this year.",
+      "required": true,
+      "follow_up_questions": ["income_multiple_jobs"]
+    },
+    {
+      "id": "income_multiple_jobs",
+      "text": "How many W-2 forms did you receive?",
+      "type": "numeric",
+      "category": "income",
+      "help_text": "Count each employer you worked for. You'll need to enter information from each W-2 form.",
+      "conditional_logic": {"depends_on": "income_employment", "value": true}
+    },
+    {
+      "id": "income_business",
+      "text": "Did you have self-employment income (freelance, business, gig work)?",
+      "type": "yes_no",
+      "category": "business",
+      "help_text": "This includes income from freelancing, consulting, rideshare driving, or running your own business. You'll need records of income and business expenses.",
+      "follow_up_questions": ["business_type"]
+    },
+    {
+      "id": "business_type",
+      "text": "What type of self-employment income did you have?",
+      "type": "multiple_choice",
+      "category": "business",
+      "options": ["Freelance/Consulting", "Rideshare/Taxi", "Delivery Services", "Rental Income", "Other Business"],
+      "help_text": "Different types of self-employment may require different forms and have different deduction rules.",
+      "conditional_logic": {"depends_on": "income_business", "value": true}
+    },
+    {
+      "id": "income_investments",
+      "text": "Did you receive investment income (interest, dividends, capital gains)?",
+      "type": "yes_no",
+      "category": "investments",
+      "help_text": "This includes interest from savings/bonds, dividends from stocks, or profits from selling investments. Check 1099-INT, 1099-DIV, and 1099-B forms.",
+      "follow_up_questions": ["investment_types"]
+    },
+    {
+      "id": "investment_types",
+      "text": "What types of investment income did you receive?",
+      "type": "multiple_choice",
+      "category": "investments",
+      "options": ["Interest Income", "Dividend Income", "Capital Gains/Losses", "All of the above"],
+      "help_text": "Different types of investment income are reported on different forms and may have different tax rates.",
+      "conditional_logic": {"depends_on": "income_investments", "value": true}
+    },
+    {
+      "id": "income_crypto",
+      "text": "Did you buy, sell, or trade cryptocurrency this year?",
+      "type": "yes_no",
+      "category": "crypto",
+      "help_text": "This includes Bitcoin, Ethereum, and other digital currencies. You'll need records of all transactions including dates, amounts, and values.",
+      "help_text": "Cryptocurrency transactions must be reported as capital gains/losses. Keep detailed records of all buys, sells, and trades."
+    },
+    {
+      "id": "income_retirement",
+      "text": "Did you receive retirement income (pensions, IRAs, Social Security)?",
+      "type": "yes_no",
+      "category": "income",
+      "help_text": "This includes pensions, 401(k) distributions, IRA withdrawals, and Social Security benefits. Check Forms SSA-1099 and 1099-R."
+    },
+    {
+      "id": "income_foreign",
+      "text": "Did you have foreign income or own foreign bank accounts?",
+      "type": "yes_no",
+      "category": "foreign",
+      "help_text": "This includes income earned abroad or accounts in foreign banks. Foreign accounts over $10,000 must be reported on FBAR.",
+      "follow_up_questions": ["foreign_accounts_over_10k"]
+    },
+    {
+      "id": "foreign_accounts_over_10k",
+      "text": "Did any foreign bank account have a balance over $10,000 at any time?",
+      "type": "yes_no",
+      "category": "foreign",
+      "help_text": "If yes, you must file FBAR (FinCEN Form 114) in addition to your tax return. This is required even if you don't owe additional tax.",
+      "conditional_logic": {"depends_on": "income_foreign", "value": true}
+    },
+    {
+      "id": "deductions_itemized",
+      "text": "Do you want to itemize deductions instead of taking the standard deduction?",
+      "type": "yes_no",
+      "category": "deductions",
+      "help_text": "Itemizing allows you to deduct expenses like mortgage interest, state taxes, medical expenses, and charitable donations. Compare with the standard deduction.",
+      "follow_up_questions": ["deduction_types"]
+    },
+    {
+      "id": "deduction_types",
+      "text": "Which types of itemized deductions do you have?",
+      "type": "multiple_choice",
+      "category": "deductions",
+      "options": ["Medical Expenses", "State/Local Taxes", "Mortgage Interest", "Charitable Donations", "Casualty Losses", "None of these"],
+      "help_text": "Select all that apply. You'll need receipts and records for each type of deduction claimed.",
+      "conditional_logic": {"depends_on": "deductions_itemized", "value": true}
+    },
+    {
+      "id": "deductions_home_office",
+      "text": "Did you work from home or have a home office for business?",
+      "type": "yes_no",
+      "category": "deductions",
+      "help_text": "If you used part of your home exclusively for business, you may be able to deduct home office expenses like utilities and internet."
+    },
+    {
+      "id": "credits_children",
+      "text": "Do you have qualifying children under 17 for the Child Tax Credit?",
+      "type": "yes_no",
+      "category": "credits",
+      "help_text": "The Child Tax Credit provides up to $2,000 per qualifying child. Children must be under 17 at year-end and live with you more than half the year."
+    },
+    {
+      "id": "credits_education",
+      "text": "Did you or your dependents pay for college or other higher education?",
+      "type": "yes_no",
+      "category": "credits",
+      "help_text": "You may qualify for education credits like the American Opportunity Credit ($2,500) or Lifetime Learning Credit. You'll need Form 1098-T from the school."
+    },
+    {
+      "id": "credits_energy",
+      "text": "Did you make energy-efficient home improvements?",
+      "type": "yes_no",
+      "category": "credits",
+      "help_text": "Credits are available for solar panels, energy-efficient windows, electric vehicles, and other green improvements. Check IRS Publication 570."
+    },
+    {
+      "id": "credits_earned_income",
+      "text": "Based on your income level, do you think you might qualify for the Earned Income Credit?",
+      "type": "yes_no",
+      "category": "credits",
+      "help_text": "The EIC is a refundable credit for low-to-moderate income workers. Maximum credit is $7,430 for 2024. Income limits apply."
+    },
+    {
+      "id": "estate_trust",
+      "text": "Are you filing as an estate, trust, or decedent?",
+      "type": "yes_no",
+      "category": "estate_trust",
+      "help_text": "If you're the executor of an estate or trustee of a trust, you'll need to file Form 1041 instead of or in addition to Form 1040."
+    },
+    {
+      "id": "partnership_corp",
+      "text": "Do you own an interest in a partnership, LLC, or S-Corporation?",
+      "type": "yes_no",
+      "category": "business",
+      "help_text": "If you received a K-1 form from a business entity, you'll need to report that income on your personal return."
+    },
+    {
+      "id": "prior_year_amendment",
+      "text": "Do you need to amend a prior year's tax return?",
+      "type": "yes_no",
+      "category": "amendment",
+      "help_text": "If you discovered errors or omissions from a previous return, you can file Form 1040-X to claim a refund or pay additional tax."
+    },
+    {
+      "id": "estimated_payments",
+      "text": "Did you make quarterly estimated tax payments?",
+      "type": "yes_no",
+      "category": "payments",
+      "help_text": "If you had significant self-employment income or other non-withholding income, you may have made quarterly payments using Form 1040-ES."
+    }
+  ]
+}
