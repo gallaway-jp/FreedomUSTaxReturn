@@ -50,8 +50,36 @@ class EFilingService:
             'production': 'https://irs.gov/efile'
         }
 
+        # State e-file endpoints for major states (these would be real URLs in production)
+        self.state_endpoints = {
+            'CA': {'test': 'https://test.ftb.ca.gov/efile', 'production': 'https://ftb.ca.gov/efile'},
+            'NY': {'test': 'https://test.tax.ny.gov/efile', 'production': 'https://tax.ny.gov/efile'},
+            'NJ': {'test': 'https://test.state.nj.us/efile', 'production': 'https://state.nj.us/efile'},
+            'IL': {'test': 'https://test.revenue.state.il.us/efile', 'production': 'https://revenue.state.il.us/efile'},
+            'PA': {'test': 'https://test.revenue.pa.gov/efile', 'production': 'https://revenue.pa.gov/efile'},
+            'MA': {'test': 'https://test.mass.gov/efile', 'production': 'https://mass.gov/efile'},
+            'TX': {'test': 'https://test.comptroller.texas.gov/efile', 'production': 'https://comptroller.texas.gov/efile'},
+            'FL': {'test': 'https://test.myflorida.com/efile', 'production': 'https://myflorida.com/efile'},
+            'WA': {'test': 'https://test.dor.wa.gov/efile', 'production': 'https://dor.wa.gov/efile'},
+            'CO': {'test': 'https://test.revenue.colorado.gov/efile', 'production': 'https://revenue.colorado.gov/efile'}
+        }
+
         # XML namespace for IRS Modernized e-File
         self.mef_namespace = 'http://www.irs.gov/efile'
+
+        # State filing status code mappings (may vary by state)
+        self.state_filing_status_codes = {
+            'CA': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'NY': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'NJ': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'IL': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4', 'widow_er': '5'},
+            'PA': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'MA': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'TX': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'FL': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'WA': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'},
+            'CO': {'single': '1', 'married_filing_jointly': '2', 'married_filing_separately': '3', 'head_of_household': '4'}
+        }
 
         # IRS filing status code mapping
         self.filing_status_codes = {
@@ -633,6 +661,327 @@ class EFilingService:
         """
         return self.acknowledgment_tracker.get_status(confirmation_number)
 
+    # ==================== STATE E-FILING METHODS ====================
+
+    def get_supported_state_efile_states(self) -> List[str]:
+        """
+        Get list of states that support e-filing.
+
+        Returns:
+            List of two-letter state codes
+        """
+        return list(self.state_endpoints.keys())
+
+    def generate_state_efile_xml(self, tax_data: TaxData, state_code: str, tax_year: int = 2025) -> str:
+        """
+        Generate state-specific e-file XML for state tax returns.
+
+        Args:
+            tax_data: Tax return data
+            state_code: Two-letter state code (e.g., 'CA', 'NY')
+            tax_year: Tax year for the return
+
+        Returns:
+            XML string in state-specific format
+
+        Raises:
+            ValueError: If state is not supported for e-filing
+        """
+        if state_code not in self.state_endpoints:
+            raise ValueError(f"State {state_code} is not supported for e-filing")
+
+        try:
+            # Create root element for state filing
+            root = ET.Element("StateTaxReturn")
+            root.set("state", state_code)
+            root.set("taxYear", str(tax_year))
+            root.set("version", "1.0")
+            root.set("id", f"STATE-{state_code}-{tax_year}-{uuid.uuid4().hex[:8].upper()}")
+
+            # Add XML declaration
+            xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
+
+            # Add taxpayer information
+            taxpayer = ET.SubElement(root, "Taxpayer")
+            self._add_state_taxpayer_info(taxpayer, tax_data, state_code)
+
+            # Add return data
+            return_data = ET.SubElement(root, "ReturnData")
+            self._add_state_return_data(return_data, tax_data, state_code, tax_year)
+
+            # Convert to string
+            xml_str = ET.tostring(root, encoding='unicode', method='xml')
+            return xml_content + xml_str
+
+        except Exception as e:
+            logger.error(f"Failed to generate state e-file XML for {state_code}: {e}")
+            raise
+
+    def _add_state_taxpayer_info(self, taxpayer_element: ET.Element, tax_data: TaxData, state_code: str):
+        """Add taxpayer information to state XML"""
+        personal_info = tax_data.data.get('personal_info', {})
+
+        ET.SubElement(taxpayer_element, "FirstName").text = personal_info.get('first_name', '')
+        ET.SubElement(taxpayer_element, "LastName").text = personal_info.get('last_name', '')
+        ET.SubElement(taxpayer_element, "SSN").text = personal_info.get('ssn', '')
+
+        # Address information
+        address = personal_info.get('address', {})
+        ET.SubElement(taxpayer_element, "StreetAddress").text = address.get('street', '')
+        ET.SubElement(taxpayer_element, "City").text = address.get('city', '')
+        ET.SubElement(taxpayer_element, "State").text = address.get('state', '')
+        ET.SubElement(taxpayer_element, "ZIPCode").text = address.get('zip_code', '')
+
+        # State-specific information
+        ET.SubElement(taxpayer_element, "StateCode").text = state_code
+
+    def _add_state_return_data(self, return_element: ET.Element, tax_data: TaxData, state_code: str, tax_year: int):
+        """Add return data to state XML"""
+        # Filing status
+        filing_status = tax_data.data.get('filing_status', {}).get('status', 'single')
+        state_codes = self.state_filing_status_codes.get(state_code, {})
+        filing_code = state_codes.get(filing_status, '1')
+        ET.SubElement(return_element, "FilingStatus").text = filing_code
+
+        # Federal AGI (used by most states as starting point)
+        federal_agi = self._calculate_federal_agi(tax_data)
+        ET.SubElement(return_element, "FederalAGI").text = f"{federal_agi:.2f}"
+
+        # State-specific income adjustments
+        income_data = tax_data.data.get('income', {})
+        ET.SubElement(return_element, "Wages").text = f"{income_data.get('wages', 0):.2f}"
+        ET.SubElement(return_element, "Interest").text = f"{income_data.get('interest', 0):.2f}"
+        ET.SubElement(return_element, "Dividends").text = f"{income_data.get('dividends', 0):.2f}"
+
+        # State tax withheld
+        payments = tax_data.data.get('payments', {})
+        ET.SubElement(return_element, "StateTaxWithheld").text = f"{payments.get('state_withholding', 0):.2f}"
+        ET.SubElement(return_element, "StateEstimatedPayments").text = f"{payments.get('state_estimated_payments', 0):.2f}"
+
+    def _calculate_federal_agi(self, tax_data: TaxData) -> float:
+        """Calculate federal AGI for state filing purposes"""
+        income = tax_data.data.get('income', {})
+        adjustments = tax_data.data.get('adjustments', {})
+
+        # Gross income
+        gross_income = (
+            income.get('wages', 0) +
+            income.get('interest', 0) +
+            income.get('dividends', 0) +
+            income.get('business_income', 0) +
+            income.get('rental_income', 0)
+        )
+
+        # Subtract adjustments
+        agi = gross_income - (
+            adjustments.get('traditional_ira', 0) +
+            adjustments.get('student_loan_interest', 0) +
+            adjustments.get('self_employment_tax', 0)
+        )
+
+        return max(0, agi)  # AGI cannot be negative
+
+    def submit_state_efile(self, tax_data: TaxData, state_code: str, tax_year: int = 2025) -> Dict[str, Any]:
+        """
+        Submit state e-file to state tax authority.
+
+        Args:
+            tax_data: Tax return data
+            state_code: Two-letter state code
+            tax_year: Tax year
+
+        Returns:
+            Submission result
+        """
+        if state_code not in self.state_endpoints:
+            raise ValueError(f"State {state_code} is not supported for e-filing")
+
+        # Validate readiness first
+        validation_result = self.validate_state_efile_readiness(tax_data, state_code)
+        if not validation_result['ready']:
+            issues = ', '.join(validation_result['issues'])
+            raise ValueError(f"State e-file not ready for {state_code}: {issues}")
+
+        # Generate XML
+        xml_content = self.generate_state_efile_xml(tax_data, state_code, tax_year)
+
+        # Submit to state authority
+        try:
+            submission_result = self.submit_state_efile_to_authority(xml_content, {
+                'state_code': state_code,
+                'confirmation_number': f"STATE-{state_code}-{uuid.uuid4().hex[:12].upper()}",
+                'timestamp': datetime.now().isoformat()
+            })
+            confirmation_number = submission_result.get('confirmation_number', f"STATE-{state_code}-{uuid.uuid4().hex[:12].upper()}")
+
+            # Record submission in audit trail
+            if self.audit_service:
+                self.audit_service.record_event(
+                    event_type="state_e_file_submitted",
+                    description=f"State e-file submitted for {state_code} tax year {tax_year}",
+                    details={
+                        'state_code': state_code,
+                        'tax_year': tax_year,
+                        'confirmation_number': confirmation_number,
+                        'endpoint': self.state_endpoints[state_code]['test' if self.test_mode else 'production']
+                    }
+                )
+
+            logger.info(f"Successfully submitted state e-file for {state_code}, confirmation: {confirmation_number}")
+            return {
+                'success': True,
+                'confirmation_number': confirmation_number,
+                'status': 'submitted',
+                'timestamp': datetime.now().isoformat(),
+                'state': state_code
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to submit state e-file for {state_code}: {e}")
+            raise ValueError(f"State e-file submission failed: {str(e)}")
+
+    def submit_state_efile_to_authority(self, xml_content: str, submission_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Submit XML to state tax authority (mock implementation).
+
+        In production, this would make actual HTTP requests to state endpoints.
+        """
+        state_code = submission_data['state_code']
+        test_mode = submission_data.get('test_mode', True)
+
+        # Generate mock confirmation number
+        confirmation_number = f"STATE-{state_code}-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+        # Simulate submission delay and success
+        logger.info(f"Mock state e-file submission to {state_code} {'(test mode)' if test_mode else '(production)'}")
+
+        return {
+            'success': True,
+            'confirmation_number': confirmation_number,
+            'status': 'submitted',
+            'message': f'Successfully submitted to {state_code} tax authority',
+            'estimated_processing_time': '2-4 weeks'
+        }
+
+    def check_state_submission_status(self, confirmation_number: str, state_code: str) -> Dict[str, Any]:
+        """
+        Check status of state e-file submission.
+
+        Args:
+            confirmation_number: State confirmation number
+            state_code: Two-letter state code
+
+        Returns:
+            Status information
+        """
+        # Load state acknowledgments
+        acknowledgments = self._load_state_acknowledgments()
+
+        if confirmation_number in acknowledgments:
+            return acknowledgments[confirmation_number]
+        else:
+            return {
+                'status': 'not_found',
+                'message': f'Confirmation number {confirmation_number} not found for state {state_code}'
+            }
+
+    def record_state_submission(self, confirmation_number: str, submission_data: Dict[str, Any]):
+        """
+        Record a state e-file submission.
+
+        Args:
+            confirmation_number: State confirmation number
+            submission_data: Submission details
+        """
+        acknowledgments = self._load_state_acknowledgments()
+
+        acknowledgments[confirmation_number] = {
+            'confirmation_number': confirmation_number,
+            'state_code': submission_data.get('state_code'),
+            'timestamp': submission_data.get('timestamp', datetime.now().isoformat()),
+            'status': 'submitted',
+            'test_mode': submission_data.get('test_mode', True),
+            'xml_content_length': len(submission_data.get('xml_content', ''))
+        }
+
+        self._save_state_acknowledgments(acknowledgments)
+
+    def _load_state_acknowledgments(self) -> Dict[str, Any]:
+        """Load state e-file acknowledgments from file"""
+        ack_file = self.config.safe_dir / "state_efile_acknowledgments.json"
+
+        if ack_file.exists():
+            try:
+                with open(ack_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load state acknowledgments: {e}")
+
+        return {}
+
+    def _save_state_acknowledgments(self, acknowledgments: Dict[str, Any]):
+        """Save state e-file acknowledgments to file"""
+        ack_file = self.config.safe_dir / "state_efile_acknowledgments.json"
+
+        try:
+            ack_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(ack_file, 'w') as f:
+                json.dump(acknowledgments, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save state acknowledgments: {e}")
+
+    def validate_state_efile_readiness(self, tax_data: TaxData, state_code: str) -> Dict[str, Any]:
+        """
+        Validate if tax data is ready for state e-filing.
+
+        Args:
+            tax_data: Tax return data
+            state_code: Two-letter state code
+
+        Returns:
+            Validation result with readiness status and issues
+        """
+        issues = []
+
+        # Check if state is supported
+        if state_code not in self.state_endpoints:
+            return {
+                'ready': False,
+                'state_supported': False,
+                'issues': [f'State {state_code} does not support e-filing']
+            }
+
+        # Check required personal information
+        personal_info = tax_data.data.get('personal_info', {})
+        required_fields = ['first_name', 'last_name', 'ssn', 'address']
+
+        for field in required_fields:
+            if not personal_info.get(field):
+                issues.append(f'Missing required field: {field.replace("_", " ").title()}')
+
+        # Check address completeness
+        address = personal_info.get('address', {})
+        address_fields = ['street', 'city', 'state', 'zip_code']
+        for field in address_fields:
+            if not address.get(field):
+                issues.append(f'Missing address field: {field.replace("_", " ").title()}')
+
+        # Check filing status
+        filing_status = tax_data.data.get('filing_status', {}).get('status')
+        if not filing_status:
+            issues.append('Filing status not specified')
+
+        # Check for income data
+        income = tax_data.data.get('income', {})
+        if not any(income.values()):  # Check if any income fields have values
+            issues.append('No income information provided')
+
+        return {
+            'ready': len(issues) == 0,
+            'state_supported': True,
+            'issues': issues
+        }
+
 
 class IRSSubmissionClient:
     """
@@ -832,31 +1181,3 @@ class EFileAcknowledgmentTracker:
         """
         acknowledgments = self._load_acknowledgments()
         return acknowledgments.get(confirmation_number)
-
-    def get_all_acknowledgments(self) -> Dict[str, Any]:
-        """
-        Get all e-file acknowledgments.
-
-        Returns:
-            All acknowledgment records
-        """
-        return self._load_acknowledgments()
-
-    def _load_acknowledgments(self) -> Dict[str, Any]:
-        """Load acknowledgments from file."""
-        if self.acknowledgments_file.exists():
-            try:
-                with open(self.acknowledgments_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Failed to load acknowledgments: {e}")
-        return {}
-
-    def _save_acknowledgments(self, acknowledgments: Dict[str, Any]) -> None:
-        """Save acknowledgments to file."""
-        try:
-            with open(self.acknowledgments_file, 'w') as f:
-                json.dump(acknowledgments, f, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save acknowledgments: {e}")
-            raise
