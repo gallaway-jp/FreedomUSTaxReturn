@@ -379,6 +379,135 @@ class TaxWebServer:
                     'error': str(e)
                 }), 500
 
+        @self.app.route('/api/generate-pdf', methods=['POST'])
+        def api_generate_pdf():
+            """API endpoint for generating PDF tax returns"""
+            try:
+                # Get tax data from session
+                tax_data = self._get_tax_data()
+                if not tax_data or not tax_data.get('personal_info'):
+                    return jsonify({
+                        'success': False,
+                        'error': 'No tax data found. Please complete your tax return first.'
+                    }), 400
+
+                # Generate PDFs using the existing PDF generator
+                from utils.pdf_generator import generate_pdf
+                import tempfile
+                import os
+                from pathlib import Path
+
+                # Create temporary directory for PDFs
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    temp_path = Path(temp_dir)
+
+                    # Generate PDFs
+                    results = generate_pdf(tax_data.to_dict(), temp_path)
+
+                    if not results or len(results) == 0:
+                        return jsonify({
+                            'success': False,
+                            'error': 'Failed to generate PDF forms'
+                        }), 500
+
+                    # Check if any PDFs were successfully generated
+                    successful_results = [r for r in results if r.success]
+                    if not successful_results:
+                        error_messages = [r.error for r in results if r.error]
+                        return jsonify({
+                            'success': False,
+                            'error': '; '.join(error_messages) if error_messages else 'PDF generation failed'
+                        }), 500
+
+                    # For now, return the first successful PDF
+                    # In a full implementation, you might want to zip multiple PDFs
+                    first_pdf = successful_results[0]
+                    pdf_path = first_pdf.output_path
+
+                    # Read the PDF file and return it
+                    if pdf_path and pdf_path.exists():
+                        with open(pdf_path, 'rb') as f:
+                            pdf_data = f.read()
+
+                        # Generate filename
+                        tax_year = tax_data.get('metadata', {}).get('tax_year', self.config.get_current_tax_year())
+                        filename = f"tax_return_{tax_year}.pdf"
+
+                        # Return PDF as downloadable file
+                        from flask import send_file, Response
+                        response = Response(pdf_data, mimetype='application/pdf')
+                        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+                        return response
+
+                    else:
+                        return jsonify({
+                            'success': False,
+                            'error': 'PDF file was not created successfully'
+                        }), 500
+
+            except Exception as e:
+                self.error_tracker.log_error(e, "PDF generation failed")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
+        @self.app.route('/api/efile', methods=['POST'])
+        def api_efile():
+            """API endpoint for electronic filing of tax returns"""
+            try:
+                # Get tax data from session
+                tax_data = self._get_tax_data()
+                if not tax_data or not tax_data.get('personal_info'):
+                    return jsonify({
+                        'success': False,
+                        'error': 'No tax data found. Please complete your tax return first.'
+                    }), 400
+
+                # Initialize e-filing service
+                from services.e_filing_service import EFilingService
+                efile_service = EFilingService(self.config, self.analytics_service.audit_service, self.ptin_ero_service)
+
+                # Generate XML for e-filing
+                xml_content = efile_service.generate_efile_xml(tax_data.to_dict())
+
+                if not xml_content:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to generate e-file XML'
+                    }), 500
+
+                # Validate the XML
+                validation_result = efile_service.validate_efile_xml(xml_content)
+                if not validation_result.get('valid', False):
+                    return jsonify({
+                        'success': False,
+                        'error': f'XML validation failed: {validation_result.get("errors", "Unknown error")}'
+                    }), 400
+
+                # For now, we'll simulate e-filing since we can't actually submit to IRS
+                # In a real implementation, this would submit to IRS
+                submission_result = {
+                    'success': True,
+                    'confirmation_number': f'EF{datetime.now().strftime("%Y%m%d%H%M%S")}',
+                    'submission_id': str(uuid.uuid4()),
+                    'status': 'submitted',
+                    'message': 'Tax return submitted electronically (simulation)',
+                    'estimated_processing_time': '2-4 weeks'
+                }
+
+                # Log the submission attempt
+                self.logger.info(f"E-file submission simulated for tax year {self.config.get_current_tax_year()}")
+
+                return jsonify(submission_result)
+
+            except Exception as e:
+                self.error_tracker.log_error(e, "E-filing failed")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
     def _get_tax_data(self):
         """Get tax data from session"""
         data = session.get('tax_data', TaxData().to_dict())

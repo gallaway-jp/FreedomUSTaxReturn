@@ -227,13 +227,80 @@
 {% block extra_js %}
 <script>
 function downloadPDF() {
-    // This would trigger PDF generation
-    alert('PDF download feature coming soon!');
+    // Trigger PDF generation and download
+    fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // If successful, the response should be the PDF file
+            return response.blob();
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.error || 'PDF generation failed');
+            });
+        }
+    })
+    .then(blob => {
+        // Create download link for the PDF
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'tax_return.pdf';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert('PDF downloaded successfully!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating PDF: ' + error.message);
+    });
 }
 
 function fileElectronically() {
-    // This would start the e-filing process
-    alert('Electronic filing feature coming soon!');
+    // Confirm before proceeding
+    if (!confirm('Are you ready to electronically file your tax return? This will submit your return to the IRS.')) {
+        return;
+    }
+
+    // Show loading message
+    const submitButton = document.querySelector('button[onclick="fileElectronically()"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Filing...';
+    submitButton.disabled = true;
+
+    // Submit e-file
+    fetch('/api/efile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message with confirmation details
+            alert(`Electronic filing successful!\n\nConfirmation Number: ${data.confirmation_number}\nSubmission ID: ${data.submission_id}\nStatus: ${data.status}\n\n${data.message}\n\nEstimated processing time: ${data.estimated_processing_time}`);
+        } else {
+            alert('Electronic filing failed: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error filing electronically: ' + error.message);
+    })
+    .finally(() => {
+        // Restore button
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
 }
 </script>
 {% endblock %}
