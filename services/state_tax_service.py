@@ -219,6 +219,144 @@ class StateTaxService:
                 property_tax_rate=0.0122, sales_tax_rate=0.0625
             ),
 
+            # Additional major states
+            StateCode.GA: StateTaxInfo(
+                code=StateCode.GA, name="Georgia", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.01), (750, 0.02), (2250, 0.03), (3750, 0.04), (5250, 0.05), (7000, 0.0575)
+                ],
+                standard_deduction={"single": 5400, "married_joint": 7100, "head_household": 5400},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0089, sales_tax_rate=0.04
+            ),
+
+            StateCode.MI: StateTaxInfo(
+                code=StateCode.MI, name="Michigan", has_income_tax=True,
+                tax_rates=[(0, 0.0425)],  # Flat rate
+                standard_deduction={"single": 0, "married_joint": 0, "head_household": 0},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0156, sales_tax_rate=0.06
+            ),
+
+            StateCode.NC: StateTaxInfo(
+                code=StateCode.NC, name="North Carolina", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.05), (12500, 0.0525)
+                ],
+                standard_deduction={"single": 12750, "married_joint": 25500, "head_household": 19125},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0082, sales_tax_rate=0.0475
+            ),
+
+            StateCode.MD: StateTaxInfo(
+                code=StateCode.MD, name="Maryland", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.02), (1000, 0.03), (125000, 0.04), (150000, 0.045), (250000, 0.05)
+                ],
+                standard_deduction={"single": 0, "married_joint": 0, "head_household": 0},
+                personal_exemption=3200.0, dependent_exemption=3200.0,
+                property_tax_rate=0.0104, sales_tax_rate=0.06
+            ),
+
+            StateCode.WA: StateTaxInfo(
+                code=StateCode.WA, name="Washington", has_income_tax=False,
+                tax_rates=[], standard_deduction={}, property_tax_rate=0.0092, sales_tax_rate=0.065
+            ),
+
+            StateCode.AZ: StateTaxInfo(
+                code=StateCode.AZ, name="Arizona", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.0259), (27808, 0.0334), (55615, 0.0417), (83413, 0.0450)
+                ],
+                standard_deduction={"single": 13850, "married_joint": 27700, "head_household": 20800},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0069, sales_tax_rate=0.056
+            ),
+
+            StateCode.TN: StateTaxInfo(
+                code=StateCode.TN, name="Tennessee", has_income_tax=False,
+                tax_rates=[], standard_deduction={}, property_tax_rate=0.0069, sales_tax_rate=0.07
+            ),
+
+            StateCode.IN: StateTaxInfo(
+                code=StateCode.IN, name="Indiana", has_income_tax=True,
+                tax_rates=[(0, 0.0323)],  # Flat rate
+                standard_deduction={"single": 0, "married_joint": 0, "head_household": 0},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0084, sales_tax_rate=0.07
+            ),
+
+            StateCode.MO: StateTaxInfo(
+                code=StateCode.MO, name="Missouri", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.015), (111, 0.02), (222, 0.025), (333, 0.03), (444, 0.035),
+                    (555, 0.04), (666, 0.045), (888, 0.0495), (10555, 0.054)
+                ],
+                standard_deduction={"single": 13850, "married_joint": 27700, "head_household": 20800},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0097, sales_tax_rate=0.04225
+            ),
+
+            StateCode.VA: StateTaxInfo(
+                code=StateCode.VA, name="Virginia", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.02), (3000, 0.03), (17000, 0.05), (50000, 0.0575)
+                ],
+                standard_deduction={"single": 9300, "married_joint": 18600, "head_household": 15550},
+                personal_exemption=930.0, dependent_exemption=930.0,
+                property_tax_rate=0.0081, sales_tax_rate=0.053
+            ),
+
+            StateCode.NJ: StateTaxInfo(
+                code=StateCode.NJ, name="New Jersey", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.014), (20000, 0.0175), (35000, 0.035), (40000, 0.055),
+                    (75000, 0.0637), (500000, 0.0897), (1000000, 0.1075)
+                ],
+                standard_deduction={"single": 0, "married_joint": 0, "head_household": 0},
+                personal_exemption=1000.0, dependent_exemption=1500.0,
+                property_tax_rate=0.0224, sales_tax_rate=0.06625
+            ),
+
+            StateCode.CT: StateTaxInfo(
+                code=StateCode.CT, name="Connecticut", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.03), (10000, 0.05), (50000, 0.055), (100000, 0.0599),
+                    (200000, 0.0635), (250000, 0.065), (500000, 0.0699)
+                ],
+                standard_deduction={"single": 0, "married_joint": 0, "head_household": 0},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0191, sales_tax_rate=0.0635
+            ),
+
+            StateCode.CO: StateTaxInfo(
+                code=StateCode.CO, name="Colorado", has_income_tax=True,
+                tax_rates=[(0, 0.0455)],  # Flat rate
+                standard_deduction={"single": 13850, "married_joint": 27700, "head_household": 20800},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0051, sales_tax_rate=0.0295
+            ),
+
+            StateCode.MN: StateTaxInfo(
+                code=StateCode.MN, name="Minnesota", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.0535), (29750, 0.068), (68550, 0.0785), (101000, 0.0985), (135000, 0.108)
+                ],
+                standard_deduction={"single": 13825, "married_joint": 27650, "head_household": 20738},
+                personal_exemption=0.0, dependent_exemption=0.0,
+                property_tax_rate=0.0106, sales_tax_rate=0.06875
+            ),
+
+            StateCode.WI: StateTaxInfo(
+                code=StateCode.WI, name="Wisconsin", has_income_tax=True,
+                tax_rates=[
+                    (0, 0.0354), (13810, 0.0465), (27630, 0.0627), (30470, 0.0765)
+                ],
+                standard_deduction={"single": 12760, "married_joint": 23950, "head_household": 19190},
+                personal_exemption=700.0, dependent_exemption=700.0,
+                property_tax_rate=0.0184, sales_tax_rate=0.05
+            ),
+
             # Add more states as needed...
         }
 

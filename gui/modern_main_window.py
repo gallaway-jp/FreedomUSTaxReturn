@@ -41,6 +41,7 @@ from gui.pages.modern_credits_page import ModernCreditsPage
 from gui.pages.modern_payments_page import ModernPaymentsPage
 from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
 from gui.pages.modern_form_viewer_page import ModernFormViewerPage
+from gui.state_tax_window import open_state_tax_window
 
 
 class ModernMainWindow(ctk.CTk):
@@ -193,6 +194,26 @@ class ModernMainWindow(ctk.CTk):
         self.form_buttons_frame = ctk.CTkFrame(sidebar_scroll, fg_color="transparent")
         self.form_buttons_frame.pack(fill="x", padx=5, pady=5)
         self.form_buttons_frame.pack_forget()  # Initially hidden
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== STATE TAX SECTION =====
+        state_header = ModernLabel(
+            sidebar_scroll,
+            text="🏛️ STATE TAX",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        state_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="📋 State Tax Returns",
+            command=self._open_state_tax_window,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
 
         # Separator
         self._create_separator(sidebar_scroll)
@@ -800,6 +821,17 @@ class ModernMainWindow(ctk.CTk):
     def _open_audit_trail(self):
         """Open audit trail window (placeholder)"""
         show_info_message("Audit Trail", "Audit trail will be implemented in the next phase.")
+
+    def _open_state_tax_window(self):
+        """Open the state tax returns window"""
+        if not self.tax_data:
+            show_error_message("No Tax Data", "Please complete the tax interview first to access state tax features.")
+            return
+
+        try:
+            open_state_tax_window(self, self.tax_data)
+        except Exception as e:
+            show_error_message("State Tax Error", f"Failed to open state tax window:\n\n{str(e)}")
 
     def _update_progress(self):
         """Update the progress bar"""

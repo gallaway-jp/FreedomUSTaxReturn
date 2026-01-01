@@ -129,6 +129,10 @@ class FormRecommendationService:
         foreign_recs = self._analyze_foreign_activities(tax_data, context)
         recommendations.extend(foreign_recs)
 
+        # Analyze state tax requirements
+        state_recs = self._analyze_state_tax_requirements(tax_data, context)
+        recommendations.extend(state_recs)
+
         # Analyze special situations
         special_recs = self._analyze_special_situations(tax_data, context)
         recommendations.extend(special_recs)
@@ -541,6 +545,75 @@ class FormRecommendationService:
             ))
 
         return recommendations
+
+    def _analyze_state_tax_requirements(self, tax_data: 'TaxData', context: RecommendationContext) -> List[FormRecommendation]:
+        """Analyze state tax requirements and recommend state forms"""
+        recommendations = []
+
+        # Check if taxpayer has state tax obligations
+        # Most taxpayers have state tax obligations unless they live in no-income-tax states
+        has_state_tax_obligation = True  # Default assumption
+
+        # Check for no-income-tax states (simplified check)
+        no_tax_states = ['TX', 'FL', 'NV', 'NH', 'SD', 'TN', 'WA', 'WY', 'AK']
+        taxpayer_state = getattr(tax_data, 'state', '')
+
+        if taxpayer_state in no_tax_states:
+            has_state_tax_obligation = False
+            recommendations.append(FormRecommendation(
+                form_name=f"{taxpayer_state} State Tax Return",
+                form_type=FormType.INDIVIDUAL_RETURN,
+                priority=RecommendationPriority.LOW,
+                reason=f"{taxpayer_state} has no state income tax - no return required",
+                required_data=["state_residence"],
+                estimated_time=0,
+                help_resources=[f"{taxpayer_state} State Tax Information"]
+            ))
+        else:
+            # Recommend state tax return for states with income tax
+            state_name = self._get_state_name(taxpayer_state)
+            recommendations.append(FormRecommendation(
+                form_name=f"{state_name} State Income Tax Return",
+                form_type=FormType.INDIVIDUAL_RETURN,
+                priority=RecommendationPriority.HIGH,
+                reason=f"You reside in {state_name} and likely have state income tax obligations",
+                required_data=["state_residence", "federal_income"],
+                estimated_time=45,
+                help_resources=[f"{state_name} State Tax Forms", f"{state_name} Tax Instructions"]
+            ))
+
+        # Check for multi-state income (work in multiple states)
+        if hasattr(tax_data, 'multi_state_income') and tax_data.multi_state_income:
+            recommendations.append(FormRecommendation(
+                form_name="Multi-State Tax Return",
+                form_type=FormType.INDIVIDUAL_RETURN,
+                priority=RecommendationPriority.MEDIUM,
+                reason="You have income from multiple states requiring separate returns",
+                required_data=["multi_state_income"],
+                estimated_time=90,
+                help_resources=["Multi-State Tax Information", "State Tax Allocation"]
+            ))
+
+        return recommendations
+
+    def _get_state_name(self, state_code: str) -> str:
+        """Get full state name from state code"""
+        state_names = {
+            'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+            'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+            'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+            'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+            'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+            'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+            'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+            'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+            'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+            'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+            'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+            'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+            'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+        }
+        return state_names.get(state_code, state_code)
 
     def _get_standard_deduction(self, filing_status: str, tax_year: int) -> int:
         """Get standard deduction amount for filing status and year"""

@@ -98,6 +98,18 @@ class StateFormPDFGenerator:
             StateCode.IL,  # Illinois
             StateCode.PA,  # Pennsylvania
             StateCode.MA,  # Massachusetts
+            StateCode.GA,  # Georgia
+            StateCode.MI,  # Michigan
+            StateCode.NC,  # North Carolina
+            StateCode.MD,  # Maryland
+            StateCode.AZ,  # Arizona
+            StateCode.IN,  # Indiana
+            StateCode.MO,  # Missouri
+            StateCode.VA,  # Virginia
+            StateCode.CT,  # Connecticut
+            StateCode.CO,  # Colorado
+            StateCode.MN,  # Minnesota
+            StateCode.WI,  # Wisconsin
         ]
 
     def _get_template_path(self, state_code: StateCode) -> Path:
@@ -142,6 +154,30 @@ class StateFormPDFGenerator:
             return self._prepare_pennsylvania_fields(form_data)
         elif state_code == StateCode.MA:
             return self._prepare_massachusetts_fields(form_data)
+        elif state_code == StateCode.GA:
+            return self._prepare_georgia_fields(form_data)
+        elif state_code == StateCode.MI:
+            return self._prepare_michigan_fields(form_data)
+        elif state_code == StateCode.NC:
+            return self._prepare_north_carolina_fields(form_data)
+        elif state_code == StateCode.MD:
+            return self._prepare_maryland_fields(form_data)
+        elif state_code == StateCode.AZ:
+            return self._prepare_arizona_fields(form_data)
+        elif state_code == StateCode.IN:
+            return self._prepare_indiana_fields(form_data)
+        elif state_code == StateCode.MO:
+            return self._prepare_missouri_fields(form_data)
+        elif state_code == StateCode.VA:
+            return self._prepare_virginia_fields(form_data)
+        elif state_code == StateCode.CT:
+            return self._prepare_connecticut_fields(form_data)
+        elif state_code == StateCode.CO:
+            return self._prepare_colorado_fields(form_data)
+        elif state_code == StateCode.MN:
+            return self._prepare_minnesota_fields(form_data)
+        elif state_code == StateCode.WI:
+            return self._prepare_wisconsin_fields(form_data)
         else:
             raise ValueError(f"Unsupported state for field preparation: {state_code.value}")
 
@@ -356,6 +392,305 @@ class StateFormPDFGenerator:
         fields[Massachusetts1Fields.MA_ADJUSTED_GROSS_INCOME] = f"{calc.taxable_income:.2f}"
         fields[Massachusetts1Fields.TAXABLE_INCOME] = f"{calc.taxable_income:.2f}"
         fields[Massachusetts1Fields.TAX_DUE] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_georgia_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Georgia Form 500"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["GEORGIA_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_michigan_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Michigan Form 1040"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["MICHIGAN_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_north_carolina_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for North Carolina Form D-400"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["NC_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_maryland_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Maryland Form 502"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["MARYLAND_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_arizona_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Arizona Form 140"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["ARIZONA_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_indiana_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Indiana Form IT-40"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["INDIANA_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_missouri_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Missouri Form MO-1040"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["MISSOURI_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_virginia_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Virginia Form 760"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["VIRGINIA_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_connecticut_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Connecticut Form CT-1040"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["CONNECTICUT_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_colorado_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Colorado Form 104"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["COLORADO_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_minnesota_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Minnesota Form M1"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["MINNESOTA_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
+
+        return fields
+
+    def _prepare_wisconsin_fields(self, form_data: StateFormData) -> Dict[str, Any]:
+        """Prepare field data for Wisconsin Form 1"""
+        fields = {}
+        info = form_data.taxpayer_info
+        calc = form_data.tax_calculation
+
+        # Personal Information
+        fields["SSN"] = info.get('ssn', '')
+        fields["FIRST_NAME"] = info.get('first_name', '')
+        fields["MIDDLE_INITIAL"] = info.get('middle_initial', '')
+        fields["LAST_NAME"] = info.get('last_name', '')
+
+        # Address
+        fields["ADDRESS"] = info.get('address', '')
+        fields["CITY"] = info.get('city', '')
+        fields["STATE"] = info.get('state', '')
+        fields["ZIP_CODE"] = info.get('zip_code', '')
+
+        # Income and Tax Data
+        fields["FEDERAL_AGI"] = f"{form_data.income_data.get('federal_agi', 0):.2f}"
+        fields["WISCONSIN_TAXABLE_INCOME"] = f"{calc.taxable_income:.2f}"
+        fields["TAX_DUE"] = f"{calc.tax_owed:.2f}"
 
         return fields
 
