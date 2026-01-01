@@ -42,6 +42,7 @@ from gui.pages.modern_payments_page import ModernPaymentsPage
 from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
 from gui.pages.modern_form_viewer_page import ModernFormViewerPage
 from gui.state_tax_window import open_state_tax_window
+from gui.tax_analytics_window import TaxAnalyticsWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -295,6 +296,26 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="⚙️ Settings",
             command=self._show_settings,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== ANALYTICS & REPORTING =====
+        analytics_header = ModernLabel(
+            sidebar_scroll,
+            text="📊 ANALYTICS",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        analytics_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="📈 Tax Analytics",
+            command=self._show_tax_analytics,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -798,6 +819,28 @@ class ModernMainWindow(ctk.CTk):
         new_mode = "Light" if current_mode == "Dark" else "Dark"
         ctk.set_appearance_mode(new_mode)
         show_info_message("Theme Changed", f"Theme changed to {new_mode} mode.")
+
+    def _show_tax_analytics(self):
+        """Show tax analytics window"""
+        if not self.tax_data:
+            show_error_message("No Tax Data", "Please complete the tax interview first to view analytics.")
+            return
+
+        try:
+            # Import required services
+            from services.tax_calculation_service import TaxCalculationService
+            
+            # Create analytics window
+            tax_calc_service = TaxCalculationService(self.config)
+            analytics_window = TaxAnalyticsWindow(
+                self.config, 
+                tax_calc_service, 
+                self.tax_data
+            )
+            analytics_window.show()
+            
+        except Exception as e:
+            show_error_message("Analytics Error", f"Failed to open analytics: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
