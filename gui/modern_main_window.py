@@ -19,6 +19,7 @@ from gui.modern_ui_components import (
 )
 from gui.tax_interview_wizard import TaxInterviewWizard
 from gui.pages.modern_income_page import ModernIncomePage
+from gui.pages.modern_deductions_page import ModernDeductionsPage
 
 
 class ModernMainWindow(ctk.CTk):
@@ -56,6 +57,10 @@ class ModernMainWindow(ctk.CTk):
         self.content_frame: Optional[ModernFrame] = None
         self.progress_bar: Optional[ModernProgressBar] = None
         self.status_label: Optional[ModernLabel] = None
+
+        # Page instances (lazy-loaded)
+        self.income_page: Optional[ModernIncomePage] = None
+        self.deductions_page: Optional[ModernDeductionsPage] = None
 
         # Form pages
         self.income_page: Optional[ModernIncomePage] = None
@@ -388,6 +393,8 @@ class ModernMainWindow(ctk.CTk):
         # Route to specific form pages
         if 'income' in form_name.lower() or form_name in ['1040', 'W-2', '1099-INT', '1099-DIV', 'Schedule C', '1099-R', 'SSA-1099', 'Schedule D', 'Schedule E']:
             self._show_income_page()
+        elif 'deduction' in form_name.lower() or form_name in ['Schedule A']:
+            self._show_deductions_page()
         else:
             show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
 
@@ -399,7 +406,7 @@ class ModernMainWindow(ctk.CTk):
 
         # Initialize income page if not already done
         if self.income_page is None:
-            self.income_page = ModernIncomePage(self.content_frame, self.config)
+            self.income_page = ModernIncomePage(self.content_frame, self.config, on_complete=self._handle_income_complete)
             if self.tax_data:
                 self.income_page.load_data(self.tax_data)
 
@@ -411,6 +418,42 @@ class ModernMainWindow(ctk.CTk):
 
         # Update progress
         self._update_progress()
+
+    def _show_deductions_page(self):
+        """Show the deductions page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize deductions page if not already done
+        if self.deductions_page is None:
+            self.deductions_page = ModernDeductionsPage(self.content_frame, self.config, on_complete=self._handle_deductions_complete)
+            if self.tax_data:
+                self.deductions_page.load_data(self.tax_data)
+
+        # Show the deductions page
+        self.deductions_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Deductions - Choose standard or itemized deductions")
+
+        # Update progress
+        self._update_progress()
+
+    def _handle_income_complete(self, tax_data, action="continue"):
+        """Handle completion of income page"""
+        if action == "continue":
+            self._show_deductions_page()
+        elif action == "back":
+            # Go back to interview or previous step
+            show_info_message("Navigation", "Back navigation from income page.")
+
+    def _handle_deductions_complete(self, tax_data, action="continue"):
+        """Handle completion of deductions page"""
+        if action == "continue":
+            show_info_message("Navigation", "Deductions completed. Credits page will be implemented next.")
+        elif action == "back":
+            self._show_income_page()
 
     def _start_form_entry(self):
         """Start the form entry process"""
