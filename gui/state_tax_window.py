@@ -13,6 +13,7 @@ from tkinter import ttk, messagebox, scrolledtext
 import logging
 from typing import Dict, Any, Optional, List
 from services.state_tax_service import StateTaxService, StateCode, StateTaxCalculation
+from services.state_form_pdf_generator import StateFormPDFGenerator, StateFormData
 from utils.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class StateTaxWindow:
         self.tax_data = tax_data
         self.event_bus = event_bus
         self.state_service = StateTaxService()
+        self.pdf_generator = StateFormPDFGenerator()
 
         # Window setup
         self.window = tk.Toplevel(parent)
@@ -430,9 +432,75 @@ Full form generation will be implemented in a future version.
 
     def _generate_state_pdf(self):
         """Generate PDF for selected state form"""
-        messagebox.showinfo("PDF Generation",
-                          "State tax PDF generation is not yet implemented.\n\n"
-                          "This feature will be available in a future version.")
+        selection = self.forms_tree.selection()
+        if not selection:
+            messagebox.showinfo("No Selection", "Please select a form to generate PDF.")
+            return
+
+        item = self.forms_tree.item(selection[0])
+        values = item['values']
+        state_name = values[0]
+        form_name = values[1]
+
+        # Find the state code from the state name
+        state_code = None
+        for code in self.state_service.get_supported_states():
+            state_info = self.state_service.get_state_info(code)
+            if state_info and state_info.name == state_name:
+                state_code = code
+                break
+
+        if not state_code or state_code not in self.state_calculations:
+            messagebox.showerror("Error", f"No calculation data found for {state_name}.")
+            return
+
+        # Check if state is supported for PDF generation
+        if state_code not in self.pdf_generator.get_supported_states():
+            messagebox.showinfo("Not Supported",
+                              f"PDF generation for {state_name} is not yet implemented.\n\n"
+                              f"Currently supported states: {', '.join([s.name for s in self.pdf_generator.get_supported_states()])}")
+            return
+
+        try:
+            # Prepare form data
+            taxpayer_info = self._extract_taxpayer_info()
+            income_data = self._extract_income_data()
+            tax_calculation = self.state_calculations[state_code]
+
+            form_data = StateFormData(
+                state_code=state_code,
+                tax_year=self.tax_data.data.get('tax_year', 2024),
+                taxpayer_info=taxpayer_info,
+                income_data=income_data,
+                tax_calculation=tax_calculation,
+                filing_status=self.tax_data.data.get('filing_status', 'single'),
+                dependents=len(self.tax_data.data.get('dependents', []))
+            )
+
+            # Generate PDF
+            pdf_path = self.pdf_generator.generate_state_form_pdf(form_data)
+
+            messagebox.showinfo("PDF Generated",
+                              f"State tax form PDF has been generated successfully!\n\n"
+                              f"File saved to: {pdf_path}")
+
+            # Optionally open the PDF
+            import subprocess
+            import platform
+            try:
+                if platform.system() == "Windows":
+                    subprocess.run(["start", pdf_path], shell=True)
+                elif platform.system() == "Darwin":  # macOS
+                    subprocess.run(["open", pdf_path])
+                else:  # Linux
+                    subprocess.run(["xdg-open", pdf_path])
+            except Exception as e:
+                logger.warning(f"Could not open PDF automatically: {e}")
+
+        except Exception as e:
+            logger.error(f"Error generating state PDF: {e}")
+            messagebox.showerror("PDF Generation Error",
+                               f"Failed to generate PDF for {state_name}:\n\n{str(e)}")
 
     def _save_state_data(self):
         """Save state tax data to the main tax return"""
@@ -468,6 +536,32 @@ Full form generation will be implemented in a future version.
         except Exception as e:
             logger.error(f"Error saving state tax data: {e}")
             messagebox.showerror("Save Error", f"Failed to save state tax data:\n\n{str(e)}")
+
+    def _extract_taxpayer_info(self) -> Dict[str, Any]:
+        """Extract taxpayer information from tax data"""
+        data = self.tax_data.data
+        return {
+            'first_name': data.get('first_name', ''),
+            'middle_initial': data.get('middle_initial', ''),
+            'last_name': data.get('last_name', ''),
+            'ssn': data.get('ssn', ''),
+            'address': data.get('address', ''),
+            'city': data.get('city', ''),
+            'state': data.get('state', ''),
+            'zip_code': data.get('zip_code', ''),
+        }
+
+    def _extract_income_data(self) -> Dict[str, Any]:
+        """Extract income data from tax data"""
+        data = self.tax_data.data
+        return {
+            'federal_agi': self.tax_data.calculate_taxable_income(),
+            'federal_gross_income': self.tax_data.calculate_total_income(),
+            'wages': data.get('income', {}).get('wages', 0),
+            'interest': data.get('income', {}).get('interest', 0),
+            'dividends': data.get('income', {}).get('dividends', 0),
+            'business_income': data.get('income', {}).get('business_income', 0),
+        }
 
     def _load_current_data(self):
         """Load existing state tax data if available"""
