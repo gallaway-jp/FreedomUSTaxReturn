@@ -21,6 +21,12 @@ from typing import Optional, Dict, Any
 import tkinter as tk
 import warnings
 from unittest.mock import Mock
+import subprocess
+import webbrowser
+import threading
+import time
+import sys
+import os
 
 from config.app_config import AppConfig
 from models.tax_data import TaxData
@@ -443,7 +449,15 @@ class ModernMainWindow(ctk.CTk):
 
         ModernButton(
             sidebar_scroll,
-            text="🚪 Logout",
+            text="� Mobile/Web Interface",
+            command=self._launch_web_interface,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="�🚪 Logout",
             command=self._logout,
             button_type="secondary",
             height=32
@@ -1127,6 +1141,45 @@ class ModernMainWindow(ctk.CTk):
     def _show_about(self):
         """Show about dialog"""
         show_info_message("About Freedom US Tax Return", "Modern Edition - Guided Tax Preparation")
+
+    def _launch_web_interface(self):
+        """Launch the mobile/web interface"""
+        try:
+            import subprocess
+            import webbrowser
+            import threading
+            import time
+            
+            def start_web_server():
+                """Start the web server in a separate process"""
+                try:
+                    # Launch web server
+                    subprocess.Popen([
+                        sys.executable, 
+                        os.path.join(os.path.dirname(__file__), '..', 'web_server.py')
+                    ], 
+                    cwd=os.path.dirname(__file__),
+                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+                    )
+                    
+                    # Wait a moment for server to start
+                    time.sleep(2)
+                    
+                    # Open browser
+                    webbrowser.open('http://localhost:5000')
+                    
+                except Exception as e:
+                    print(f"Failed to start web server: {e}")
+            
+            # Start web server in background thread
+            server_thread = threading.Thread(target=start_web_server, daemon=True)
+            server_thread.start()
+            
+            show_info_message("Mobile/Web Interface", 
+                           "Launching web interface...\n\nThe mobile-responsive web application will open in your default browser at http://localhost:5000")
+            
+        except Exception as e:
+            show_error_message("Web Interface Error", f"Failed to launch web interface: {str(e)}")
 
     def _open_audit_trail(self):
         """Open audit trail window (placeholder)"""
