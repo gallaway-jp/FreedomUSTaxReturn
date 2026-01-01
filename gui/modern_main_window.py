@@ -320,6 +320,14 @@ class ModernMainWindow(ctk.CTk):
             height=32
         ).pack(fill="x", padx=5, pady=2)
 
+        ModernButton(
+            sidebar_scroll,
+            text="🤖 AI Deduction Finder",
+            command=self._show_ai_deduction_finder,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
         # Separator
         self._create_separator(sidebar_scroll)
 
@@ -831,7 +839,8 @@ class ModernMainWindow(ctk.CTk):
             from services.tax_calculation_service import TaxCalculationService
             
             # Create analytics window
-            tax_calc_service = TaxCalculationService(self.config)
+            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+            tax_calc_service = TaxCalculationService(tax_year)
             analytics_window = TaxAnalyticsWindow(
                 self.config, 
                 tax_calc_service, 
@@ -841,6 +850,27 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Analytics Error", f"Failed to open analytics: {str(e)}")
+
+    def _show_ai_deduction_finder(self):
+        """Show AI deduction finder window"""
+        if not self.tax_data:
+            show_error_message("No Tax Data", "Please complete the tax interview first to use AI deduction finder.")
+            return
+
+        try:
+            # Import AI deduction finder window
+            from gui.ai_deduction_finder_window import AIDeductionFinderWindow
+            
+            # Create and show AI deduction finder window
+            ai_window = AIDeductionFinderWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            ai_window.show()
+            
+        except Exception as e:
+            show_error_message("AI Deduction Finder Error", f"Failed to open AI deduction finder: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""

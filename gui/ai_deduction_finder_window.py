@@ -14,7 +14,7 @@ from pathlib import Path
 
 from config.app_config import AppConfig
 from models.tax_data import TaxData
-from services.ai_deduction_finder_service import AIDeductionFinderService, DeductionAnalysisResult, DeductionSuggestion
+from services.ai_deduction_finder_service import AIDeductionFinderService, DeductionAnalysisResult, DeductionSuggestion, DeductionCategory
 from services.tax_calculation_service import TaxCalculationService
 from utils.error_tracker import get_error_tracker
 
@@ -46,7 +46,8 @@ class AIDeductionFinderWindow:
         self.error_tracker = get_error_tracker()
 
         # Initialize services
-        self.tax_calculation = TaxCalculationService(config)
+        tax_year = tax_data.get_current_year() if tax_data else 2026
+        self.tax_calculation = TaxCalculationService(tax_year)
         self.ai_service = AIDeductionFinderService(config, self.tax_calculation)
 
         # Current analysis results
@@ -321,7 +322,7 @@ Consult a tax professional for personalized advice.
             self.status_label.config(text="No tax data available")
 
         # Setup category filter
-        categories = ["All"] + [cat.value for cat in self.ai_service.DeductionCategory]
+        categories = ["All"] + [cat.value for cat in DeductionCategory]
         self.category_filter["values"] = categories
         self.category_filter.current(0)
 
