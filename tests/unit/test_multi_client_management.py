@@ -12,7 +12,8 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 from config.app_config import AppConfig
-from services.authentication_service import AuthenticationService, AuthenticationError, PasswordPolicyError
+from services.authentication_service import AuthenticationService
+from services.exceptions import AuthenticationError, PasswordPolicyError
 from services.ptin_ero_service import PTINEROService
 from services.encryption_service import EncryptionService
 

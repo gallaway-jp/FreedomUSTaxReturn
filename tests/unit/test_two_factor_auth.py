@@ -8,7 +8,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from datetime import datetime
 
-from services.authentication_service import AuthenticationService, AuthenticationError
+from services.authentication_service import AuthenticationService
+from services.exceptions import AuthenticationError
 from config.app_config import AppConfig
 
 

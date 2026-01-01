@@ -302,3 +302,12 @@ class ServiceExecutionException(ServiceException):
         details['operation'] = operation
         full_msg = f"Service {service_name} failed during {operation}: {message}"
         super().__init__(full_msg, error_code="SERVICE_EXECUTION_ERROR", details=details)
+
+
+# ============================================================================
+# BACKWARDS COMPATIBILITY ALIASES (for existing test files)
+# ============================================================================
+
+# Aliases for old naming convention used in existing tests
+AuthenticationError = AuthenticationException
+PasswordPolicyError = InvalidPasswordException  # Used for password policy violations
