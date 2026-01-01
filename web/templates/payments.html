@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Payments - Freedom US Tax Return{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Progress Bar -->
+            <div class="progress mb-4" style="height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 90%;"
+                     aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-credit-card"></i> Step 6: Payments & Withholdings
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Enter any tax payments you've already made for tax year {{ current_year }}.
+                    </p>
+
+                    <form id="paymentsForm">
+                        <!-- Federal Income Tax Withheld -->
+                        <div class="payment-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-university"></i> Federal Income Tax Withheld
+                            </h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Federal income tax withheld from your W-2 forms has been automatically included. You can adjust if needed.
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Total Federal Tax Withheld</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="federal_withheld"
+                                               value="{{ payments_data.federal_withheld or 0 }}" step="0.01" readonly>
+                                    </div>
+                                    <small class="text-muted">Automatically calculated from W-2 forms</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estimated Tax Payments -->
+                        <div class="payment-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-calendar-check"></i> Estimated Tax Payments
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">2025 Q1 (Jan-Mar)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="estimated_q1"
+                                               value="{{ payments_data.estimated_q1 or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">2025 Q2 (Apr-Jun)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="estimated_q2"
+                                               value="{{ payments_data.estimated_q2 or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">2025 Q3 (Jul-Sep)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="estimated_q3"
+                                               value="{{ payments_data.estimated_q3 or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">2025 Q4 (Oct-Dec)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="estimated_q4"
+                                               value="{{ payments_data.estimated_q4 or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Payments -->
+                        <div class="payment-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-plus-circle"></i> Other Payments & Credits
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Extension Payment</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="extension_payment"
+                                               value="{{ payments_data.extension_payment or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Payment made with extension request</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Excess Social Security Withheld</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="excess_ss_withheld"
+                                               value="{{ payments_data.excess_ss_withheld or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Other Federal Tax Payments</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="other_federal_payments"
+                                               value="{{ payments_data.other_federal_payments or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('credits') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-success" id="submitBtn">
+                                <i class="fas fa-calculator"></i> Calculate My Taxes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle text-info"></i> Payment Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="helpAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#estimatedHelp">
+                                    Estimated Tax Payments
+                                </button>
+                            </h2>
+                            <div id="estimatedHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    If you didn't have enough tax withheld from your income, you may need to make quarterly estimated tax payments. These are due April 15, June 15, September 15, and January 15.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#withholdingHelp">
+                                    Understanding Withholding
+                                </button>
+                            </h2>
+                            <div id="withholdingHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    Federal income tax is withheld from your paycheck based on the W-4 form you filed with your employer. The amount withheld is shown in Box 2 of your W-2 form.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('paymentsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const paymentsData = {
+        federal_withheld: parseFloat(formData.get('federal_withheld')) || 0,
+        estimated_q1: parseFloat(formData.get('estimated_q1')) || 0,
+        estimated_q2: parseFloat(formData.get('estimated_q2')) || 0,
+        estimated_q3: parseFloat(formData.get('estimated_q3')) || 0,
+        estimated_q4: parseFloat(formData.get('estimated_q4')) || 0,
+        extension_payment: parseFloat(formData.get('extension_payment')) || 0,
+        excess_ss_withheld: parseFloat(formData.get('excess_ss_withheld')) || 0,
+        other_federal_payments: parseFloat(formData.get('other_federal_payments')) || 0
+    };
+
+    fetch('/payments', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentsData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/review';
+        } else {
+            alert('Error saving payments. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving payments. Please try again.');
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

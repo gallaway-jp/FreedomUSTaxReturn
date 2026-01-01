@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Tax Credits - Freedom US Tax Return{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Progress Bar -->
+            <div class="progress mb-4" style="height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 80%;"
+                     aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star"></i> Step 5: Tax Credits
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Tax credits reduce your tax dollar-for-dollar. Enter information about dependents and other credits for tax year {{ current_year }}.
+                    </p>
+
+                    <form id="creditsForm">
+                        <!-- Child Tax Credit -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-child"></i> Child Tax Credit
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Number of Qualifying Children</label>
+                                    <input type="number" class="form-control" name="qualifying_children"
+                                           value="{{ credits_data.qualifying_children or 0 }}" min="0" max="10">
+                                    <small class="text-muted">Children under 17 at end of tax year</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Child Tax Credit Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" class="form-control" value="$2,000 per child" readonly>
+                                    </div>
+                                    <small class="text-muted">2025 amount: $2,000 per qualifying child</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Child and Dependent Care Credit -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-baby"></i> Child and Dependent Care Credit
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Care Expenses Paid</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="child_care_expenses"
+                                               value="{{ credits_data.child_care_expenses or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Maximum $3,000 for one child, $6,000 for two or more</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Number of Care Recipients</label>
+                                    <input type="number" class="form-control" name="care_recipients"
+                                           value="{{ credits_data.care_recipients or 0 }}" min="0" max="2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education Credits -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-graduation-cap"></i> Education Credits
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">American Opportunity Credit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="american_opportunity_credit"
+                                               value="{{ credits_data.american_opportunity_credit or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">For first 4 years of higher education</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Lifetime Learning Credit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="lifetime_learning_credit"
+                                               value="{{ credits_data.lifetime_learning_credit or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">For any level of higher education</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Earned Income Tax Credit -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-money-bill-wave"></i> Earned Income Tax Credit (EITC)
+                            </h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                The Earned Income Tax Credit will be calculated automatically based on your income and number of children.
+                            </div>
+                        </div>
+
+                        <!-- Retirement Savings Credits -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-piggy-bank"></i> Retirement Savings Contributions Credit
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">IRA Contributions</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="ira_contributions"
+                                               value="{{ credits_data.ira_contributions or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Retirement Plan Contributions</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="retirement_plan_contributions"
+                                               value="{{ credits_data.retirement_plan_contributions or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Energy Credits -->
+                        <div class="credit-section mb-4">
+                            <h5 class="section-title">
+                                <i class="fas fa-leaf"></i> Residential Energy Credits
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Solar Electric System Credit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="solar_credit"
+                                               value="{{ credits_data.solar_credit or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Energy Efficient Improvements</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="energy_efficient_credit"
+                                               value="{{ credits_data.energy_efficient_credit or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('deductions') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-arrow-right"></i> Continue to Payments
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle text-info"></i> Tax Credit Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="helpAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#childCreditHelp">
+                                    Child Tax Credit
+                                </button>
+                            </h2>
+                            <div id="childCreditHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    Available for each qualifying child under age 17. The credit is $2,000 per child for 2025. Income limits apply.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eitcHelp">
+                                    Earned Income Tax Credit
+                                </button>
+                            </h2>
+                            <div id="eitcHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    A refundable credit for low to moderate income workers. The credit amount depends on income, filing status, and number of children.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('creditsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const creditsData = {
+        qualifying_children: parseInt(formData.get('qualifying_children')) || 0,
+        child_care_expenses: parseFloat(formData.get('child_care_expenses')) || 0,
+        care_recipients: parseInt(formData.get('care_recipients')) || 0,
+        american_opportunity_credit: parseFloat(formData.get('american_opportunity_credit')) || 0,
+        lifetime_learning_credit: parseFloat(formData.get('lifetime_learning_credit')) || 0,
+        ira_contributions: parseFloat(formData.get('ira_contributions')) || 0,
+        retirement_plan_contributions: parseFloat(formData.get('retirement_plan_contributions')) || 0,
+        solar_credit: parseFloat(formData.get('solar_credit')) || 0,
+        energy_efficient_credit: parseFloat(formData.get('energy_efficient_credit')) || 0
+    };
+
+    fetch('/credits', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(creditsData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/payments';
+        } else {
+            alert('Error saving credits. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving credits. Please try again.');
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

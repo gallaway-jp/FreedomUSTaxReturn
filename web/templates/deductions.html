@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Deductions - Freedom US Tax Return{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Progress Bar -->
+            <div class="progress mb-4" style="height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 60%;"
+                     aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-minus-circle"></i> Step 4: Deductions
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Choose your deduction method and enter eligible expenses for tax year {{ current_year }}.
+                    </p>
+
+                    <form id="deductionsForm">
+                        <!-- Deduction Method -->
+                        <div class="deduction-method mb-4">
+                            <h5 class="section-title">Deduction Method</h5>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="deduction_method"
+                                       id="standard" value="standard" {% if deductions_data.deduction_method != 'itemized' %}checked{% endif %}>
+                                <label class="form-check-label" for="standard">
+                                    <strong>Standard Deduction</strong><br>
+                                    <small class="text-muted">Use the standard amount set by the IRS (simpler option)</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="deduction_method"
+                                       id="itemized" value="itemized" {% if deductions_data.deduction_method == 'itemized' %}checked{% endif %}>
+                                <label class="form-check-label" for="itemized">
+                                    <strong>Itemized Deductions</strong><br>
+                                    <small class="text-muted">List individual expenses (choose if total exceeds standard deduction)</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Itemized Deductions Section -->
+                        <div id="itemizedSection" style="{% if deductions_data.deduction_method != 'itemized' %}display: none;{% endif %}">
+                            <h5 class="section-title">
+                                <i class="fas fa-list"></i> Itemized Deductions
+                            </h5>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Medical and Dental Expenses</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="medical_expenses"
+                                               value="{{ deductions_data.medical_expenses or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Only expenses exceeding 7.5% of AGI</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">State and Local Taxes</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="state_local_taxes"
+                                               value="{{ deductions_data.state_local_taxes or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Limited to $10,000 ($5,000 if married filing separately)</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Home Mortgage Interest</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="mortgage_interest"
+                                               value="{{ deductions_data.mortgage_interest or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Charitable Contributions</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="charitable_contributions"
+                                               value="{{ deductions_data.charitable_contributions or 0 }}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Cash contributions limited to 60% of AGI</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Casualty and Theft Losses</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="casualty_losses"
+                                               value="{{ deductions_data.casualty_losses or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Other Itemized Deductions</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="other_itemized"
+                                               value="{{ deductions_data.other_itemized or 0 }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('income') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-arrow-right"></i> Continue to Credits
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle text-info"></i> Deduction Help
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="helpAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#standardHelp">
+                                    Standard vs Itemized Deductions
+                                </button>
+                            </h2>
+                            <div id="standardHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Standard Deduction:</strong> A fixed amount set by the IRS that reduces your taxable income. For 2025, it's $14,600 for single filers and $29,200 for married filing jointly.</p>
+                                    <p><strong>Itemized Deductions:</strong> You list specific expenses. Choose this only if your total itemized deductions exceed the standard deduction amount.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#medicalHelp">
+                                    Medical Expense Rules
+                                </button>
+                            </h2>
+                            <div id="medicalHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    You can deduct medical expenses that exceed 7.5% of your adjusted gross income (AGI). This includes payments for doctors, hospitals, prescription drugs, and qualified long-term care services.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[name="deduction_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const itemizedSection = document.getElementById('itemizedSection');
+        if (this.value === 'itemized') {
+            itemizedSection.style.display = 'block';
+        } else {
+            itemizedSection.style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('deductionsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const deductionsData = {
+        deduction_method: formData.get('deduction_method') || 'standard',
+        medical_expenses: parseFloat(formData.get('medical_expenses')) || 0,
+        state_local_taxes: parseFloat(formData.get('state_local_taxes')) || 0,
+        mortgage_interest: parseFloat(formData.get('mortgage_interest')) || 0,
+        charitable_contributions: parseFloat(formData.get('charitable_contributions')) || 0,
+        casualty_losses: parseFloat(formData.get('casualty_losses')) || 0,
+        other_itemized: parseFloat(formData.get('other_itemized')) || 0
+    };
+
+    fetch('/deductions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(deductionsData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/credits';
+        } else {
+            alert('Error saving deductions. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving deductions. Please try again.');
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
