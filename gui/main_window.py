@@ -59,22 +59,16 @@ class MainWindow:
         self.theme_manager = ThemeManager(self.root)
         self.theme_manager.set_theme(self.config.theme)
         
-        # Initialize tax data model with config
-        self.tax_data = TaxData(self.config)
-        
-        # Initialize services
-        self.audit_service = AuditTrailService(self.config)
-        self.audit_service.start_session("main_user")
-        
-        self.tax_year_service = TaxYearService(self.config)
-        
-        self.collaboration_service = CollaborationService(self.config)
-        
-        # Initialize cloud backup service
-        self.cloud_backup_service = CloudBackupService(self.config)
-        
-        # Initialize encryption service
+        # Initialize encryption service (needed early)
         self.encryption_service = EncryptionService(self.config.key_file)
+        
+        # Initialize accessibility service
+        from services.accessibility_service import AccessibilityService
+        self.accessibility_service = AccessibilityService(self.config, self.encryption_service)
+        
+        # Update theme manager with accessibility service
+        self.theme_manager = ThemeManager(self.root, self.accessibility_service)
+        self.theme_manager.set_theme(self.config.theme)
         
         # Initialize PTIN/ERO service (needed by authentication service)
         self.ptin_ero_service = PTINEROService(self.config, self.encryption_service)
@@ -298,6 +292,9 @@ class MainWindow:
         # View menu items
         view_menu.add_command(label="Tax Dashboard", command=self._open_tax_dashboard)
         view_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
+        view_menu.add_separator()
+        view_menu.add_command(label="Accessibility Settings...", command=self._open_accessibility_settings)
+        view_menu.add_command(label="Accessibility Help", command=self._open_accessibility_help)
         
         # Tools menu
         tools_menu = tk.Menu(menubar, tearoff=0)
@@ -1835,3 +1832,23 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open audit trail: {e}")
+    
+    def _open_accessibility_settings(self):
+        """Open accessibility settings dialog"""
+        try:
+            from gui.accessibility_dialogs import AccessibilitySettingsDialog
+            dialog = AccessibilitySettingsDialog(self.root, self.accessibility_service, self.theme_manager)
+            dialog.show()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open accessibility settings: {e}")
+    
+    def _open_accessibility_help(self):
+        """Open accessibility help dialog"""
+        try:
+            from gui.accessibility_dialogs import AccessibilityHelpDialog
+            dialog = AccessibilityHelpDialog(self.root, self.accessibility_service)
+            dialog.show()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open accessibility help: {e}")
