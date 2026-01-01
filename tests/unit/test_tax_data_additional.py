@@ -602,13 +602,13 @@ class TestTaxDataMultiYearSupport:
         years = tax_data.get_available_years()
 
         # Should include the default year
-        assert 2025 in years
+        assert 2026 in years
 
     def test_create_new_year_success(self):
         """Test creating a new year successfully."""
         tax_data = TaxData()
 
-        result = tax_data.create_new_year(2024, 2025)
+        result = tax_data.create_new_year(2024, 2026)
 
         assert result is True
         assert 2024 in tax_data.data["years"]
@@ -618,9 +618,9 @@ class TestTaxDataMultiYearSupport:
         tax_data = TaxData()
 
         # First creation should succeed
-        tax_data.create_new_year(2024, 2025)
+        tax_data.create_new_year(2024, 2026)
         # Second creation should fail
-        result = tax_data.create_new_year(2024, 2025)
+        result = tax_data.create_new_year(2024, 2026)
 
         assert result is False
 
@@ -665,12 +665,12 @@ class TestTaxDataMultiYearSupport:
         tax_data = TaxData()
         tax_data.create_new_year(2024)
 
-        # Set personal info for 2025
-        tax_data.set('personal_info.first_name', 'John', 2025)
-        tax_data.set('personal_info.last_name', 'Doe', 2025)
+        # Set personal info for 2026
+        tax_data.set('personal_info.first_name', 'John', 2026)
+        tax_data.set('personal_info.last_name', 'Doe', 2026)
 
         # Copy to 2024
-        tax_data.copy_personal_info_to_year(2025, 2024)
+        tax_data.copy_personal_info_to_year(2026, 2024)
 
         # Switch to 2024 and check
         tax_data.set_current_year(2024)
@@ -703,7 +703,7 @@ class TestTaxDataAmendedReturns:
         """Test is_amended_return returns False for original returns."""
         tax_data = TaxData()
         
-        assert not tax_data.is_amended_return(2025)
+        assert not tax_data.is_amended_return(2026)
     
     def test_create_amended_return_basic(self):
         """Test creating a basic amended return."""

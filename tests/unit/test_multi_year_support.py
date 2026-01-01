@@ -117,13 +117,13 @@ class TestMultiYearTaxData:
         """Test multi-year data initialization"""
         assert "years" in self.tax_data.data
         assert "metadata" in self.tax_data.data
-        assert self.tax_data.get_current_year() == 2025
-        assert 2025 in self.tax_data.data["years"]
+        assert self.tax_data.get_current_year() == 2026
+        assert 2026 in self.tax_data.data["years"]
 
     def test_year_management(self):
         """Test basic year management"""
         # Test getting current year
-        assert self.tax_data.get_current_year() == 2025
+        assert self.tax_data.get_current_year() == 2026
 
         # Test setting current year
         self.tax_data.set_current_year(2024)
@@ -132,14 +132,14 @@ class TestMultiYearTaxData:
 
         # Test getting available years
         years = self.tax_data.get_available_years()
-        assert 2025 in years
+        assert 2026 in years
         assert 2024 in years
 
     def test_year_specific_data_access(self):
         """Test accessing data for specific years"""
-        # Set data for 2025
-        self.tax_data.set("personal_info.first_name", "John", tax_year=2025)
-        self.tax_data.set("personal_info.last_name", "Doe", tax_year=2025)
+        # Set data for 2026
+        self.tax_data.set("personal_info.first_name", "John", tax_year=2026)
+        self.tax_data.set("personal_info.last_name", "Doe", tax_year=2026)
 
         # Set data for 2024
         self.tax_data.set_current_year(2024)
@@ -147,15 +147,15 @@ class TestMultiYearTaxData:
         self.tax_data.set("personal_info.last_name", "Smith", tax_year=2024)
 
         # Verify data isolation
-        assert self.tax_data.get("personal_info.first_name", tax_year=2025) == "John"
-        assert self.tax_data.get("personal_info.last_name", tax_year=2025) == "Doe"
+        assert self.tax_data.get("personal_info.first_name", tax_year=2026) == "John"
+        assert self.tax_data.get("personal_info.last_name", tax_year=2026) == "Doe"
         assert self.tax_data.get("personal_info.first_name", tax_year=2024) == "Jane"
         assert self.tax_data.get("personal_info.last_name", tax_year=2024) == "Smith"
 
     def test_create_new_year(self):
         """Test creating a new tax year"""
-        # Create 2024 based on 2025
-        success = self.tax_data.create_new_year(2024, 2025)
+        # Create 2024 based on 2026
+        success = self.tax_data.create_new_year(2024, 2026)
         assert success
 
         # Verify the year was created
@@ -164,17 +164,17 @@ class TestMultiYearTaxData:
         # Verify metadata
         year_data = self.tax_data.get_year_data(2024)
         assert year_data["metadata"]["tax_year"] == 2024
-        assert year_data["metadata"]["based_on_year"] == 2025
+        assert year_data["metadata"]["based_on_year"] == 2026
 
     def test_copy_personal_info(self):
         """Test copying personal info between years"""
-        # Set personal info for 2025
-        self.tax_data.set("personal_info.first_name", "John", tax_year=2025)
-        self.tax_data.set("personal_info.ssn", "123-45-6789", tax_year=2025)
+        # Set personal info for 2026
+        self.tax_data.set("personal_info.first_name", "John", tax_year=2026)
+        self.tax_data.set("personal_info.ssn", "123-45-6789", tax_year=2026)
 
         # Create 2024 and copy personal info
-        self.tax_data.create_new_year(2024, 2025)
-        self.tax_data.copy_personal_info_to_year(2025, 2024)
+        self.tax_data.create_new_year(2024, 2026)
+        self.tax_data.copy_personal_info_to_year(2026, 2024)
 
         # Verify copy
         assert self.tax_data.get("personal_info.first_name", tax_year=2024) == "John"
@@ -183,23 +183,23 @@ class TestMultiYearTaxData:
     def test_delete_year(self):
         """Test deleting a tax year"""
         # Create a year to delete
-        self.tax_data.create_new_year(2024, 2025)
+        self.tax_data.create_new_year(2024, 2026)
 
         # Try to delete current year (should fail)
-        success = self.tax_data.delete_year(2025)
+        success = self.tax_data.delete_year(2026)
         assert not success
 
-        # Switch to 2024 and try to delete 2025
+        # Switch to 2024 and try to delete 2026
         self.tax_data.set_current_year(2024)
-        success = self.tax_data.delete_year(2025)
+        success = self.tax_data.delete_year(2026)
         assert success
-        assert 2025 not in self.tax_data.data["years"]
+        assert 2026 not in self.tax_data.data["years"]
 
     def test_data_validation_across_years(self):
         """Test that validation works across different years"""
         # Test SSN validation - should fail for invalid SSN
         with pytest.raises(ValueError):
-            self.tax_data.set("personal_info.ssn", "invalid-ssn", tax_year=2025)
+            self.tax_data.set("personal_info.ssn", "invalid-ssn", tax_year=2026)
 
         # Test valid SSN
         self.tax_data.set("personal_info.ssn", "123-45-6789", tax_year=2024)
@@ -207,13 +207,13 @@ class TestMultiYearTaxData:
 
     def test_get_section_by_year(self):
         """Test getting sections for specific years"""
-        # Set data for 2025
-        self.tax_data.set("income.w2_forms", [{"wages": 50000}], tax_year=2025)
+        # Set data for 2026
+        self.tax_data.set("income.w2_forms", [{"wages": 50000}], tax_year=2026)
 
-        # Get section for 2025
-        income_2025 = self.tax_data.get_section("income", tax_year=2025)
-        assert "w2_forms" in income_2025
-        assert len(income_2025["w2_forms"]) == 1
+        # Get section for 2026
+        income_2026 = self.tax_data.get_section("income", tax_year=2026)
+        assert "w2_forms" in income_2026
+        assert len(income_2026["w2_forms"]) == 1
 
         # Get section for 2024 (should initialize with default structure)
         income_2024 = self.tax_data.get_section("income", tax_year=2024)
@@ -242,21 +242,21 @@ class TestYearComparisonIntegration:
         self.tax_data.set("calculations.total_tax", 6750, tax_year=2024)
         self.tax_data.set("credits.total_credits", 2000, tax_year=2024)
 
-        # 2025 data
-        self.tax_data.set("income.total_income", 65000, tax_year=2025)
-        self.tax_data.set("deductions.total_deductions", 16000, tax_year=2025)
-        self.tax_data.set("calculations.taxable_income", 49000, tax_year=2025)
-        self.tax_data.set("calculations.total_tax", 7350, tax_year=2025)
-        self.tax_data.set("credits.total_credits", 2500, tax_year=2025)
+        # 2026 data
+        self.tax_data.set("income.total_income", 65000, tax_year=2026)
+        self.tax_data.set("deductions.total_deductions", 16000, tax_year=2026)
+        self.tax_data.set("calculations.taxable_income", 49000, tax_year=2026)
+        self.tax_data.set("calculations.total_tax", 7350, tax_year=2026)
+        self.tax_data.set("credits.total_credits", 2500, tax_year=2026)
 
     def test_year_comparison_data(self):
         """Test generating comparison data"""
         data_2024 = self.tax_data.get_year_data(2024)
-        data_2025 = self.tax_data.get_year_data(2025)
+        data_2026 = self.tax_data.get_year_data(2026)
 
-        comparison = self.service.get_year_comparison_data(2024, 2025, data_2024, data_2025)
+        comparison = self.service.get_year_comparison_data(2024, 2026, data_2024, data_2026)
 
-        assert comparison["years"] == [2024, 2025]
+        assert comparison["years"] == [2024, 2026]
 
         summary = comparison["summary"]
         assert summary["total_income"]["year1"] == 60000
@@ -282,9 +282,9 @@ class TestYearComparisonIntegration:
     def test_chart_generation_logic(self, mock_show):
         """Test that chart data can be generated (without actually showing plots)"""
         data_2024 = self.tax_data.get_year_data(2024)
-        data_2025 = self.tax_data.get_year_data(2025)
+        data_2026 = self.tax_data.get_year_data(2026)
 
-        comparison = self.service.get_year_comparison_data(2024, 2025, data_2024, data_2025)
+        comparison = self.service.get_year_comparison_data(2024, 2026, data_2024, data_2026)
 
         # Verify comparison has the data needed for charts
         assert "summary" in comparison

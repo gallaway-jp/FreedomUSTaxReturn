@@ -40,7 +40,7 @@ class AppConfig:
     theme: str = "light"  # "light" or "dark"
     
     # Tax Year Settings
-    tax_year: int = 2025
+    tax_year: int = 2026
     
     # Security
     encryption_enabled: bool = True

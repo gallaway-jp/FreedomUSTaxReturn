@@ -127,7 +127,7 @@ class TaxData:
         self.data = {
             "years": {},  # Dictionary of tax year data
             "metadata": {
-                "current_year": 2025,  # Currently active tax year
+                "current_year": 2026,  # Currently active tax year
                 "supported_years": [2020, 2021, 2022, 2023, 2024, 2025, 2026],
                 "created_date": datetime.now().isoformat(),
                 "last_modified": datetime.now().isoformat(),
@@ -136,7 +136,7 @@ class TaxData:
         }
 
         # Initialize current year data
-        self._initialize_year_data(2025)
+        self._initialize_year_data(2026)
 
     def _initialize_year_data(self, tax_year: int):
         """

@@ -15,9 +15,9 @@ class TestTaxDataInitialization:
         assert isinstance(tax_data.data, dict)
     
     def test_default_tax_year(self):
-        """Test default tax year is 2025"""
+        """Test default tax year is 2026"""
         tax_data = TaxData()
-        assert tax_data.get('metadata.tax_year') == 2025
+        assert tax_data.get('metadata.tax_year') == 2026
     
     def test_default_filing_status(self):
         """Test default filing status is Single"""

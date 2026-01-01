@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 class FBARThreshold(Enum):
-    """FBAR reporting thresholds"""
+    """FBAR reporting thresholds by tax year"""
     SINGLE_2025 = 10000  # $10,000 for single filers in 2025
     MARRIED_2025 = 20000  # $20,000 for married filing jointly in 2025
+    SINGLE_2026 = 10000  # $10,000 for single filers in 2026 (unchanged)
+    MARRIED_2026 = 20000  # $20,000 for married filing jointly in 2026 (unchanged)
 
 
 class ForeignAccountType(Enum):
@@ -251,9 +253,13 @@ class ForeignIncomeFBARService:
         try:
             accounts = self.get_foreign_accounts(tax_data)
 
-            # Get threshold based on filing status
+            # Get threshold based on filing status and tax year
             filing_status = tax_data.get("filing_status.status", "Single")
-            threshold = FBARThreshold.MARRIED_2025.value if filing_status in ["MFJ", "MFS"] else FBARThreshold.SINGLE_2025.value
+
+            if tax_year == 2026:
+                threshold = FBARThreshold.MARRIED_2026.value if filing_status in ["MFJ", "MFS"] else FBARThreshold.SINGLE_2026.value
+            else:  # Default to 2025 for backward compatibility
+                threshold = FBARThreshold.MARRIED_2025.value if filing_status in ["MFJ", "MFS"] else FBARThreshold.SINGLE_2025.value
 
             total_max_value = sum(account.max_value_during_year for account in accounts)
 

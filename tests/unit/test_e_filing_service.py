@@ -33,20 +33,20 @@ class TestEFilingService:
     def sample_tax_data(self):
         """Create sample tax data for testing"""
         tax_data = TaxData()
-        tax_data.data['years'][2025]['personal_info']['first_name'] = 'John'
-        tax_data.data['years'][2025]['personal_info']['last_name'] = 'Doe'
-        tax_data.data['years'][2025]['personal_info']['ssn'] = '123-45-6789'
-        tax_data.data['years'][2025]['personal_info']['address'] = '123 Main St'
-        tax_data.data['years'][2025]['personal_info']['city'] = 'Anytown'
-        tax_data.data['years'][2025]['personal_info']['state'] = 'CA'
-        tax_data.data['years'][2025]['personal_info']['zip_code'] = '12345'
-        tax_data.data['years'][2025]['filing_status']['status'] = 'single'
-        tax_data.data['years'][2025]['income']['w2_forms'] = [{'wages': 50000, 'employer_name': 'Test Corp'}]
-        tax_data.data['years'][2025]['income']['interest_income'] = 1000
-        tax_data.data['years'][2025]['income']['dividend_income'] = 2000
-        tax_data.data['years'][2025]['deductions']['standard_deduction'] = 13850
-        tax_data.data['years'][2025]['credits']['child_tax_credit'] = 2000
-        tax_data.data['years'][2025]['payments']['federal_withholding'] = 8000
+        tax_data.data['years'][2026]['personal_info']['first_name'] = 'John'
+        tax_data.data['years'][2026]['personal_info']['last_name'] = 'Doe'
+        tax_data.data['years'][2026]['personal_info']['ssn'] = '123-45-6789'
+        tax_data.data['years'][2026]['personal_info']['address'] = '123 Main St'
+        tax_data.data['years'][2026]['personal_info']['city'] = 'Anytown'
+        tax_data.data['years'][2026]['personal_info']['state'] = 'CA'
+        tax_data.data['years'][2026]['personal_info']['zip_code'] = '12345'
+        tax_data.data['years'][2026]['filing_status']['status'] = 'single'
+        tax_data.data['years'][2026]['income']['w2_forms'] = [{'wages': 50000, 'employer_name': 'Test Corp'}]
+        tax_data.data['years'][2026]['income']['interest_income'] = 1000
+        tax_data.data['years'][2026]['income']['dividend_income'] = 2000
+        tax_data.data['years'][2026]['deductions']['standard_deduction'] = 13850
+        tax_data.data['years'][2026]['credits']['child_tax_credit'] = 2000
+        tax_data.data['years'][2026]['payments']['federal_withholding'] = 8000
         return tax_data
 
     def test_initialization(self, e_filing_service):
@@ -58,7 +58,7 @@ class TestEFilingService:
 
     def test_generate_efile_xml(self, e_filing_service, sample_tax_data, audit_service):
         """Test XML generation for e-filing"""
-        xml_content = e_filing_service.generate_efile_xml(sample_tax_data, 2025)
+        xml_content = e_filing_service.generate_efile_xml(sample_tax_data, 2026)
 
         # Verify XML structure
         assert '<?xml' in xml_content
@@ -72,11 +72,11 @@ class TestEFilingService:
         audit_service.log_event.assert_called_once()
         call_args = audit_service.log_event.call_args
         assert call_args[0][0] == 'e_file_generated'
-        assert '2025' in call_args[0][1]
+        assert '2026' in call_args[0][1]
 
     def test_validate_efile_xml_valid(self, e_filing_service, sample_tax_data):
         """Test XML validation with valid data"""
-        xml_content = e_filing_service.generate_efile_xml(sample_tax_data)
+        xml_content = e_filing_service.generate_efile_xml(sample_tax_data, 2026)
 
         result = e_filing_service.validate_efile_xml(xml_content)
 
@@ -86,7 +86,7 @@ class TestEFilingService:
     def test_validate_efile_xml_invalid_ssn(self, e_filing_service, sample_tax_data):
         """Test XML validation with invalid SSN"""
         # Generate XML first, then manually modify it for testing
-        xml_content = e_filing_service.generate_efile_xml(sample_tax_data)
+        xml_content = e_filing_service.generate_efile_xml(sample_tax_data, 2026)
         
         # Replace valid SSN with invalid one in the XML
         invalid_xml = xml_content.replace('123-45-6789', 'invalid-ssn')
@@ -102,14 +102,14 @@ class TestEFilingService:
         <MeF xmlns="http://www.irs.gov/efile" version="1.0">
             <Transmission id="test-id">
                 <Header>
-                    <TaxYear>2025</TaxYear>
+                    <TaxYear>2026</TaxYear>
                     <TaxpayerId>123-45-6789</TaxpayerId>
                     <SoftwareId>FreedomUSTaxReturn</SoftwareId>
                     <SoftwareVersion>3.0</SoftwareVersion>
                     <TransmissionType>Original</TransmissionType>
                 </Header>
                 <ReturnData>
-                    <Form1040 taxYear="2025"/>
+                    <Form1040 taxYear="2026"/>
                 </ReturnData>
             </Transmission>
         </MeF>'''
@@ -121,7 +121,7 @@ class TestEFilingService:
 
     def test_submit_efile(self, e_filing_service, sample_tax_data):
         """Test e-file submission (mock)"""
-        xml_content = e_filing_service.generate_efile_xml(sample_tax_data)
+        xml_content = e_filing_service.generate_efile_xml(sample_tax_data, 2026)
 
         result = e_filing_service.submit_efile(xml_content, test_mode=True)
 

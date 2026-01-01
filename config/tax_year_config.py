@@ -336,6 +336,275 @@ TAX_YEAR_2025 = TaxYearConfig(
 )
 
 
+# Tax Year 2026 Configuration
+TAX_YEAR_2026 = TaxYearConfig(
+    year=2026,
+
+    standard_deductions={
+        "Single": 16100.0,  # ~2.5% increase from 2025
+        "MFJ": 32200.0,    # Married Filing Jointly
+        "Married Filing Jointly": 32200.0,
+        "MFS": 16100.0,    # Married Filing Separately
+        "Married Filing Separately": 16100.0,
+        "HOH": 24150.0,    # Head of Household
+        "Head of Household": 24150.0,
+        "QW": 32200.0,     # Qualifying Widow(er)
+        "Qualifying Widow(er)": 32200.0,
+    },
+
+    tax_brackets={
+        "Single": [
+            (12200, 0.10),   # ~2.5% increase from 2025
+            (49600, 0.12),
+            (105900, 0.22),
+            (201800, 0.24),
+            (257100, 0.32),
+            (641800, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "MFJ": [
+            (24400, 0.10),
+            (99200, 0.12),
+            (211800, 0.22),
+            (403600, 0.24),
+            (514200, 0.32),
+            (771600, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "Married Filing Jointly": [  # Same as MFJ
+            (24400, 0.10),
+            (99200, 0.12),
+            (211800, 0.22),
+            (403600, 0.24),
+            (514200, 0.32),
+            (771600, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "MFS": [
+            (12200, 0.10),
+            (49600, 0.12),
+            (105900, 0.22),
+            (201800, 0.24),
+            (257100, 0.32),
+            (385800, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "Married Filing Separately": [  # Same as MFS
+            (12200, 0.10),
+            (49600, 0.12),
+            (105900, 0.22),
+            (201800, 0.24),
+            (257100, 0.32),
+            (385800, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "HOH": [
+            (17350, 0.10),
+            (66200, 0.12),
+            (105900, 0.22),
+            (201800, 0.24),
+            (257000, 0.32),
+            (641800, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "Head of Household": [  # Same as HOH
+            (17350, 0.10),
+            (66200, 0.12),
+            (105900, 0.22),
+            (201800, 0.24),
+            (257000, 0.32),
+            (641800, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "QW": [
+            (24400, 0.10),
+            (99200, 0.12),
+            (211800, 0.22),
+            (403600, 0.24),
+            (514200, 0.32),
+            (771600, 0.35),
+            (float('inf'), 0.37)
+        ],
+        "Qualifying Widow(er)": [  # Same as QW
+            (24400, 0.10),
+            (99200, 0.12),
+            (211800, 0.22),
+            (403600, 0.24),
+            (514200, 0.32),
+            (771600, 0.35),
+            (float('inf'), 0.37)
+        ]
+    },
+
+    ss_wage_base=180000.0,  # ~2.2% increase from 2025
+    medicare_threshold=200000.0,  # Unchanged
+
+    # Alternative Minimum Tax (AMT) thresholds for 2026
+    amt_exemptions={
+        "Single": 83100.0,      # ~2.2% increase from 2025
+        "MFJ": 129300.0,
+        "Married Filing Jointly": 129300.0,
+        "MFS": 64650.0,
+        "Married Filing Separately": 64650.0,
+        "HOH": 83100.0,
+        "Head of Household": 83100.0,
+        "QW": 129300.0,
+        "Qualifying Widow(er)": 129300.0,
+    },
+    amt_phase_out_thresholds={
+        "Single": 624000.0,     # ~2.5% increase from 2025
+        "MFJ": 1248000.0,
+        "Married Filing Jointly": 1248000.0,
+        "MFS": 624000.0,
+        "Married Filing Separately": 624000.0,
+        "HOH": 624000.0,
+        "Head of Household": 624000.0,
+        "QW": 1248000.0,
+        "Qualifying Widow(er)": 1248000.0,
+    },
+
+    # Net Investment Income Tax (NIIT) thresholds for 2026
+    niit_thresholds={
+        "Single": 200000.0,     # Unchanged
+        "MFJ": 250000.0,
+        "Married Filing Jointly": 250000.0,
+        "MFS": 125000.0,
+        "Married Filing Separately": 125000.0,
+        "HOH": 200000.0,
+        "Head of Household": 200000.0,
+        "QW": 250000.0,
+        "Qualifying Widow(er)": 250000.0,
+    },
+
+    # Retirement savings credit limits (AGI thresholds for credit percentages)
+    retirement_savings_credit_limits={
+        "Single": {
+            "50_percent": 38375,  # ~2.5% increase from 2025
+            "20_percent": 42188,
+            "10_percent": 70313,
+        },
+        "MFJ": {
+            "50_percent": 76750,
+            "20_percent": 84375,
+            "10_percent": 140625,
+        },
+        "Married Filing Jointly": {
+            "50_percent": 76750,
+            "20_percent": 84375,
+            "10_percent": 140625,
+        },
+        "MFS": {
+            "50_percent": 38375,
+            "20_percent": 42188,
+            "10_percent": 70313,
+        },
+        "Married Filing Separately": {
+            "50_percent": 38375,
+            "20_percent": 42188,
+            "10_percent": 70313,
+        },
+        "HOH": {
+            "50_percent": 57563,
+            "20_percent": 63281,
+            "10_percent": 105469,
+        },
+        "Head of Household": {
+            "50_percent": 57563,
+            "20_percent": 63281,
+            "10_percent": 105469,
+        },
+        "QW": {
+            "50_percent": 76750,
+            "20_percent": 84375,
+            "10_percent": 140625,
+        },
+        "Qualifying Widow(er)": {
+            "50_percent": 76750,
+            "20_percent": 84375,
+            "10_percent": 140625,
+        },
+    },
+
+    # Child and dependent care credit phase-out limits
+    child_dependent_care_limits={
+        "Single": {
+            "threshold": 15375,  # ~2.5% increase from 2025
+        },
+        "MFJ": {
+            "threshold": 30750,
+        },
+        "Married Filing Jointly": {
+            "threshold": 30750,
+        },
+        "MFS": {
+            "threshold": 15375,
+        },
+        "Married Filing Separately": {
+            "threshold": 15375,
+        },
+        "HOH": {
+            "threshold": 15375,
+        },
+        "Head of Household": {
+            "threshold": 15375,
+        },
+        "QW": {
+            "threshold": 30750,
+        },
+        "Qualifying Widow(er)": {
+            "threshold": 30750,
+        },
+    },
+
+    # Retirement contribution limits for 2026
+    retirement_limits={
+        "traditional_ira": 7000.0,  # Unchanged from 2025
+        "roth_ira": 7000.0,
+        "401k": 23500.0,            # ~2.2% increase from 2025
+        "catch_up_50_plus": 1000.0, # Unchanged
+    },
+
+    # IRA deductibility limits (Modified AGI limits for Traditional IRA deductions)
+    ira_deductibility_limits={
+        "Single": {
+            "magi_limit": 78925,  # ~2.5% increase from 2025
+        },
+        "MFJ": {
+            "magi_limit": 126275,
+        },
+        "Married Filing Jointly": {
+            "magi_limit": 126275,
+        },
+        "MFS": {
+            "magi_limit": 10000,  # Unchanged
+        },
+        "Married Filing Separately": {
+            "magi_limit": 10000,
+        },
+        "HOH": {
+            "magi_limit": 78925,
+        },
+        "Head of Household": {
+            "magi_limit": 78925,
+        },
+        "QW": {
+            "magi_limit": 126275,
+        },
+        "Qualifying Widow(er)": {
+            "magi_limit": 126275,
+        },
+    },
+
+    # Filing deadlines for 2026 tax year (due in 2027)
+    filing_deadlines={
+        "individual": "2027-04-15",  # Individual filers: April 15, 2027
+        "partnership": "2027-03-16",  # Partnerships and S Corporations: March 16, 2027
+        "s_corporation": "2027-03-16",  # S Corporations: March 16, 2027
+        "c_corporation": "2027-04-15",  # C Corporations: April 15, 2027
+    },
+)
+
+
 # Tax Year 2023 Configuration (for backward compatibility)
 TAX_YEAR_2023 = TaxYearConfig(
     year=2023,
@@ -515,12 +784,13 @@ TAX_YEAR_2023 = TaxYearConfig(
 
 # Registry of available tax year configurations
 TAX_YEAR_CONFIGS = {
+    2026: TAX_YEAR_2026,
     2025: TAX_YEAR_2025,
     2023: TAX_YEAR_2023,
 }
 
 
-def get_tax_year_config(year: int = 2025) -> TaxYearConfig:
+def get_tax_year_config(year: int = 2026) -> TaxYearConfig:
     """
     Get tax year configuration for specified year.
     
@@ -534,9 +804,9 @@ def get_tax_year_config(year: int = 2025) -> TaxYearConfig:
         ValueError: If tax year configuration not available
         
     Example:
-        >>> config = get_tax_year_config(2025)
+        >>> config = get_tax_year_config(2026)
         >>> config.standard_deductions['Single']
-        15750.0
+        16100.0
     """
     if year not in TAX_YEAR_CONFIGS:
         raise ValueError(
