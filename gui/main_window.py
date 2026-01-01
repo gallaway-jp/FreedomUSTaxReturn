@@ -37,6 +37,7 @@ from gui.client_login_dialog import ClientLoginDialog
 from gui.ptin_ero_dialogs import PTINEROManagementDialog
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.ai_deduction_finder_window import AIDeductionFinderWindow
+from gui.tax_dashboard_window import open_tax_dashboard
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -291,6 +292,7 @@ class MainWindow:
         menubar.add_cascade(label="View", menu=view_menu)
         
         # View menu items
+        view_menu.add_command(label="Tax Dashboard", command=self._open_tax_dashboard)
         view_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
         
         # Tools menu
@@ -1769,6 +1771,15 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open tax analytics: {e}")
+    
+    def _open_tax_dashboard(self):
+        """Open tax dashboard window"""
+        try:
+            # Create tax dashboard window with current tax data
+            open_tax_dashboard(self.root, self.config, self.tax_data)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open tax dashboard: {e}")
     
     def _open_ai_deduction_finder(self):
         """Open AI deduction finder window"""
