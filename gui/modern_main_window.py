@@ -46,6 +46,9 @@ from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
 from gui.estate_trust_window import EstateTrustWindow
 from gui.partnership_s_corp_window import PartnershipSCorpWindow
+from gui.tax_planning_window import TaxPlanningWindow
+from gui.receipt_scanning_window import ReceiptScanningWindow
+from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -351,6 +354,30 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🤝 Partnership & S-Corp Returns",
             command=self._show_partnership_s_corp,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="📊 Tax Planning Tools",
+            command=self._show_tax_planning,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="📄 Receipt Scanning",
+            command=self._show_receipt_scanning,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🌍 Foreign Income & FBAR",
+            command=self._show_foreign_income_fbar,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -940,6 +967,47 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Partnership & S-Corp Error", f"Failed to open partnership & S-corp window: {str(e)}")
+
+    def _show_tax_planning(self):
+        """Show tax planning tools window"""
+        try:
+            # Create and show tax planning window
+            planning_window = TaxPlanningWindow(
+                self,
+                self.tax_data
+            )
+            planning_window.show()
+            
+        except Exception as e:
+            show_error_message("Tax Planning Error", f"Failed to open tax planning window: {str(e)}")
+
+    def _show_receipt_scanning(self):
+        """Show receipt scanning window"""
+        try:
+            # Create and show receipt scanning window
+            scanning_window = ReceiptScanningWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            scanning_window.show()
+            
+        except Exception as e:
+            show_error_message("Receipt Scanning Error", f"Failed to open receipt scanning window: {str(e)}")
+
+    def _show_foreign_income_fbar(self):
+        """Show foreign income and FBAR reporting window"""
+        try:
+            # Create and show foreign income FBAR window
+            fbar_window = ForeignIncomeFBARWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            fbar_window.show()
+            
+        except Exception as e:
+            show_error_message("Foreign Income & FBAR Error", f"Failed to open foreign income & FBAR window: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
