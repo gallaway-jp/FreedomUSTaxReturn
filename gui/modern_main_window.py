@@ -797,6 +797,10 @@ class ModernMainWindow(ctk.CTk):
         """Show about dialog"""
         show_info_message("About Freedom US Tax Return", "Modern Edition - Guided Tax Preparation")
 
+    def _open_audit_trail(self):
+        """Open audit trail window (placeholder)"""
+        show_info_message("Audit Trail", "Audit trail will be implemented in the next phase.")
+
     def _update_progress(self):
         """Update the progress bar"""
         if not self.progress_bar:

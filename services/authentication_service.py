@@ -20,7 +20,9 @@ from services.exceptions import (
     InvalidPasswordException,
     MasterPasswordNotSetException,
     AuthenticationTimeoutException,
-    AuthenticationException
+    AuthenticationException,
+    AuthenticationError,
+    PasswordPolicyError
 )
 from services.error_logger import get_error_logger
 

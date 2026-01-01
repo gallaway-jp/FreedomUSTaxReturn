@@ -243,7 +243,7 @@ class TestAuditTrailIntegration:
         
         # Import and create modern main window (will be mocked)
         from gui.modern_main_window import ModernMainWindow
-        main_window = ModernMainWindow(config, accessibility_service)
+        main_window = ModernMainWindow(config, accessibility_service, demo_mode=False)
         
         # Verify ModernMainWindow was called with correct args
         mock_main_window.assert_called_once_with(config, accessibility_service, demo_mode=False)
