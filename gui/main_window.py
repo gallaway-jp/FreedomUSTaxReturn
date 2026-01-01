@@ -39,6 +39,7 @@ from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.ai_deduction_finder_window import AIDeductionFinderWindow
 from gui.tax_dashboard_window import open_tax_dashboard
 from gui.bank_account_linking_window import open_bank_account_linking_window
+from gui.quickbooks_integration_window import QuickBooksIntegrationWindow
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -223,6 +224,7 @@ class MainWindow:
         self.root.bind('<Control-A>', lambda e: self._open_tax_analytics())
         self.root.bind('<Control-d>', lambda e: self._open_ai_deduction_finder())
         self.root.bind('<Control-b>', lambda e: self._open_bank_account_linking())
+        self.root.bind('<Control-q>', lambda e: self._open_quickbooks_integration())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         self.root.bind('<Control-f>', lambda e: self._open_e_filing())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
@@ -307,6 +309,7 @@ class MainWindow:
         tools_menu.add_command(label="Tax Analytics", command=self._open_tax_analytics, accelerator="Ctrl+Shift+A")
         tools_menu.add_command(label="AI Deduction Finder", command=self._open_ai_deduction_finder, accelerator="Ctrl+D")
         tools_menu.add_command(label="Bank Account Linking", command=self._open_bank_account_linking, accelerator="Ctrl+B")
+        tools_menu.add_command(label="QuickBooks Integration", command=self._open_quickbooks_integration, accelerator="Ctrl+Q")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
 
         # Security menu
@@ -1806,6 +1809,15 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open bank account linking: {e}")
+    
+    def _open_quickbooks_integration(self):
+        """Open QuickBooks integration window"""
+        try:
+            # Create QuickBooks integration window
+            QuickBooksIntegrationWindow(self.root, self.theme_manager)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open QuickBooks integration: {e}")
     
     def _open_tax_planning(self):
         """Open tax planning tools (placeholder)"""
