@@ -50,6 +50,7 @@ from gui.tax_planning_window import TaxPlanningWindow
 from gui.receipt_scanning_window import ReceiptScanningWindow
 from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 from gui.e_filing_window import EFilingWindow
+from gui.amended_return_dialog import AmendedReturnDialog
 
 
 class ModernMainWindow(ctk.CTk):
@@ -275,6 +276,14 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="📥 Import Data",
             command=self._show_import_menu,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="📝 Amended Return",
+            command=self._create_amended_return,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -1049,6 +1058,28 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("E-Filing Error", f"Failed to open e-filing window: {str(e)}")
+
+    def _create_amended_return(self):
+        """Create an amended tax return"""
+        if not self.tax_data:
+            show_error_message("No Tax Data", "Please complete a tax return first before creating an amended return.")
+            return
+
+        try:
+            # Create amended return dialog
+            dialog = AmendedReturnDialog(self, self.tax_data)
+            
+            # If user created an amended return, refresh the interface
+            if dialog.result:
+                show_info_message("Amended Return Created", 
+                                f"Amended return for tax year {dialog.result.get('tax_year')} has been created.\n\n" +
+                                "You can now modify the return data and file the amended return.")
+                
+                # Update status to reflect amended return
+                self.status_label.configure(text=f"Amended return created for tax year {dialog.result.get('tax_year')}")
+                
+        except Exception as e:
+            show_error_message("Amended Return Error", f"Failed to create amended return: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
