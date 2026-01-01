@@ -1,0 +1,63 @@
+{
+  "CA": {
+    "state_code": "StateCode.CA",
+    "state_name": "California",
+    "tax_type": "StateTaxType.PROGRESSIVE",
+    "flat_rate": null,
+    "brackets": [
+      {
+        "min_income": 0,
+        "max_income": 10099,
+        "rate": 0.01,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 10099,
+        "max_income": 23942,
+        "rate": 0.02,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 23942,
+        "max_income": 37788,
+        "rate": 0.04,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 37788,
+        "max_income": 52455,
+        "rate": 0.06,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 52455,
+        "max_income": 66295,
+        "rate": 0.08,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 66295,
+        "max_income": 349137,
+        "rate": 0.09,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 349137,
+        "max_income": 590742,
+        "rate": 0.1,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 590742,
+        "max_income": 1000000,
+        "rate": 0.11,
+        "filing_status": "FilingStatus.SINGLE"
+      },
+      {
+        "min_income": 1000000,
+        "max_income": null,
+        "rate": 0.13,
+        "filing_status": "FilingStatus.SINGLE"
+      }
+    ],
+    "standard_deduction": {
