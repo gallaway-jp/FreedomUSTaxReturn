@@ -86,6 +86,68 @@ class TaxTrendAnalysis:
 
 @dataclass
 class TaxOptimizationInsight:
+    """Tax optimization insight with actionable recommendations"""
+    category: str  # "deductions", "credits", "retirement", "income", "planning"
+    title: str
+    description: str
+    potential_savings: float
+    priority: str  # "high", "medium", "low"
+    implementation_steps: List[str]
+    prerequisites: List[str]
+    risk_level: str  # "low", "medium", "high"
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for serialization"""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'TaxOptimizationInsight':
+        """Create from dictionary"""
+        return cls(**data)
+
+
+@dataclass
+class TaxProjectionScenario:
+    """Tax projection scenario with assumptions and results"""
+    scenario_name: str
+    projection_year: int
+    base_year: int
+    assumptions: Dict[str, Any]
+    projected_income: float
+    projected_tax_liability: float
+    projected_effective_rate: float
+    confidence_level: str  # "High", "Medium", "Low"
+    risk_factors: List[str]
+    calculated_at: datetime
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for serialization"""
+        data = asdict(self)
+        data['calculated_at'] = self.calculated_at.isoformat()
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'TaxProjectionScenario':
+        """Create from dictionary"""
+        data['calculated_at'] = datetime.fromisoformat(data['calculated_at'])
+        return cls(**data)
+
+
+@dataclass
+class TaxProjectionResult:
+    """Complete tax projection analysis"""
+    base_tax_year: int
+    scenarios: List[TaxProjectionScenario]
+    summary_insights: List[str]
+    recommended_actions: List[str]
+    calculated_at: datetime
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for serialization"""
+        data = asdict(self)
+        data['scenarios'] = [s.to_dict() for s in self.scenarios]
+        data['calculated_at'] = self.calculated_at.isoformat()
+        return data
     """Tax optimization recommendation"""
     category: str  # 'income', 'deductions', 'credits', 'retirement', 'investments'
     title: str
@@ -571,6 +633,238 @@ class TaxAnalyticsService:
             insights.append("Self-employment tax is significant - consider retirement contributions")
 
         return insights
+
+    def project_future_tax_liability(self, tax_data: TaxData, 
+                                   projection_years: int = 5,
+                                   income_growth_rate: float = 0.03,
+                                   inflation_rate: float = 0.025) -> TaxProjectionResult:
+        """
+        Project future tax liability based on current tax situation.
+
+        This method creates multiple scenarios for future tax planning:
+        1. Base case: Current income with moderate growth
+        2. Conservative: Lower income growth
+        3. Aggressive: Higher income growth
+        4. Retirement: Reduced income scenario
+
+        Args:
+            tax_data: Current tax data to base projections on
+            projection_years: Number of years to project (default: 5)
+            income_growth_rate: Expected annual income growth rate (default: 3%)
+            inflation_rate: Expected annual inflation rate (default: 2.5%)
+
+        Returns:
+            TaxProjectionResult with multiple scenarios and insights
+        """
+        try:
+            base_year = tax_data.get_current_year()
+            scenarios = []
+            summary_insights = []
+            recommended_actions = []
+
+            # Get current income data
+            current_income_data = tax_data.get_section('income', base_year)
+            current_total_income = sum(Decimal(str(v)) for v in current_income_data.values() if v)
+
+            if current_total_income <= 0:
+                return TaxProjectionResult(
+                    base_tax_year=base_year,
+                    scenarios=[],
+                    summary_insights=["Cannot project taxes without current income data"],
+                    recommended_actions=["Complete income section first"],
+                    calculated_at=datetime.now()
+                )
+
+            # Scenario 1: Base Case (Moderate Growth)
+            base_scenario = self._create_projection_scenario(
+                tax_data, base_year, projection_years,
+                income_growth_rate, inflation_rate,
+                "Base Case", "Medium"
+            )
+            scenarios.append(base_scenario)
+
+            # Scenario 2: Conservative (Lower Growth)
+            conservative_scenario = self._create_projection_scenario(
+                tax_data, base_year, projection_years,
+                max(income_growth_rate * 0.5, 0.01), inflation_rate,
+                "Conservative", "High"
+            )
+            scenarios.append(conservative_scenario)
+
+            # Scenario 3: Aggressive (Higher Growth)
+            aggressive_scenario = self._create_projection_scenario(
+                tax_data, base_year, projection_years,
+                income_growth_rate * 1.5, inflation_rate,
+                "Aggressive", "Low"
+            )
+            scenarios.append(aggressive_scenario)
+
+            # Scenario 4: Retirement (Reduced Income)
+            retirement_scenario = self._create_projection_scenario(
+                tax_data, base_year, projection_years,
+                -0.02, inflation_rate,  # 2% annual reduction
+                "Retirement", "Medium"
+            )
+            scenarios.append(retirement_scenario)
+
+            # Generate summary insights
+            summary_insights = self._generate_projection_insights(scenarios, base_year)
+
+            # Generate recommended actions
+            recommended_actions = self._generate_projection_actions(scenarios, tax_data)
+
+            return TaxProjectionResult(
+                base_tax_year=base_year,
+                scenarios=scenarios,
+                summary_insights=summary_insights,
+                recommended_actions=recommended_actions,
+                calculated_at=datetime.now()
+            )
+
+        except Exception as e:
+            self.error_tracker.track_error(
+                error=e,
+                context={"operation": "project_future_tax_liability", "base_year": tax_data.get_current_year()}
+            )
+            # Return minimal result on error
+            return TaxProjectionResult(
+                base_tax_year=tax_data.get_current_year(),
+                scenarios=[],
+                summary_insights=["Projection failed due to error"],
+                recommended_actions=["Contact support if issue persists"],
+                calculated_at=datetime.now()
+            )
+
+    def _create_projection_scenario(self, tax_data: TaxData, base_year: int, 
+                                  projection_years: int, income_growth: float,
+                                  inflation: float, scenario_name: str, 
+                                  confidence: str) -> TaxProjectionScenario:
+        """Create a single projection scenario"""
+        # Calculate projected income for the target year
+        projection_year = base_year + projection_years
+        
+        current_income_data = tax_data.get_section('income', base_year)
+        current_total_income = sum(Decimal(str(v)) for v in current_income_data.values() if v)
+        
+        # Project income with compound growth
+        projected_income = float(current_total_income * (1 + income_growth) ** projection_years)
+        
+        # Adjust for inflation (tax brackets and deductions are inflation-adjusted)
+        inflation_factor = (1 + inflation) ** projection_years
+        
+        # Create projected tax data (simplified - only income changes)
+        projected_tax_data = tax_data.clone()
+        projected_tax_data.set_current_year(projection_year)
+        
+        # Scale income sources proportionally
+        if current_total_income > 0:
+            income_ratio = projected_income / float(current_total_income)
+            for income_type, amount in current_income_data.items():
+                if amount:
+                    projected_tax_data.set(f'income.{income_type}', 
+                                         float(amount) * income_ratio, projection_year)
+        
+        # Calculate projected tax liability
+        tax_result = self.tax_calculation.calculate_tax(projected_tax_data)
+        projected_tax_liability = float(tax_result.total_tax_owed)
+        
+        # Calculate effective rate
+        effective_rate = (projected_tax_liability / projected_income) * 100 if projected_income > 0 else 0
+        
+        # Determine risk factors
+        risk_factors = []
+        if income_growth > 0.05:
+            risk_factors.append("High income growth assumption")
+        if projection_years > 10:
+            risk_factors.append("Long projection horizon increases uncertainty")
+        if scenario_name == "Retirement" and projected_income < 40000:
+            risk_factors.append("Projected retirement income below poverty threshold")
+        
+        return TaxProjectionScenario(
+            scenario_name=scenario_name,
+            projection_year=projection_year,
+            base_year=base_year,
+            assumptions={
+                'income_growth_rate': income_growth,
+                'inflation_rate': inflation,
+                'projection_years': projection_years
+            },
+            projected_income=projected_income,
+            projected_tax_liability=projected_tax_liability,
+            projected_effective_rate=effective_rate,
+            confidence_level=confidence,
+            risk_factors=risk_factors,
+            calculated_at=datetime.now()
+        )
+
+    def _generate_projection_insights(self, scenarios: List[TaxProjectionScenario], 
+                                    base_year: int) -> List[str]:
+        """Generate insights from projection scenarios"""
+        insights = []
+        
+        if not scenarios:
+            return ["No projection scenarios available"]
+        
+        # Compare scenarios
+        base_case = next((s for s in scenarios if s.scenario_name == "Base Case"), None)
+        conservative = next((s for s in scenarios if s.scenario_name == "Conservative"), None)
+        aggressive = next((s for s in scenarios if s.scenario_name == "Aggressive"), None)
+        retirement = next((s for s in scenarios if s.scenario_name == "Retirement"), None)
+        
+        if base_case and conservative and aggressive:
+            # Tax liability range
+            min_tax = min(s.projected_tax_liability for s in scenarios)
+            max_tax = max(s.projected_tax_liability for s in scenarios)
+            tax_range = max_tax - min_tax
+            
+            insights.append(f"Projected tax liability in {base_case.projection_year} ranges from ${min_tax:,.0f} to ${max_tax:,.0f}")
+            
+            if tax_range > base_case.projected_tax_liability * 0.5:
+                insights.append("Wide range of possible tax outcomes - consider tax planning strategies")
+            
+            # Effective rate trends
+            if aggressive.projected_effective_rate > base_case.projected_effective_rate * 1.2:
+                insights.append("Aggressive growth scenario may push you into higher tax brackets")
+        
+        if retirement:
+            if retirement.projected_tax_liability < 1000:
+                insights.append("Retirement scenario shows very low tax liability - maximize retirement contributions")
+            elif retirement.projected_tax_liability > 50000:
+                insights.append("Retirement income may still result in significant tax liability")
+        
+        return insights
+
+    def _generate_projection_actions(self, scenarios: List[TaxProjectionScenario], 
+                                   tax_data: TaxData) -> List[str]:
+        """Generate recommended actions based on projections"""
+        actions = []
+        
+        if not scenarios:
+            return ["Complete tax return to enable projections"]
+        
+        base_case = next((s for s in scenarios if s.scenario_name == "Base Case"), None)
+        
+        if base_case:
+            # Tax planning actions based on projected liability
+            if base_case.projected_effective_rate > 30:
+                actions.append("Consider tax-advantaged retirement contributions to reduce future tax burden")
+                actions.append("Review investment choices for tax efficiency")
+            
+            if base_case.projected_tax_liability > 50000:
+                actions.append("Consult tax professional for advanced planning strategies")
+            
+            # Income growth planning
+            if any(s.projected_income > base_case.projected_income * 1.5 for s in scenarios):
+                actions.append("Consider tax implications of significant income growth")
+        
+        # General actions
+        actions.extend([
+            "Review and update retirement contribution limits annually",
+            "Consider tax-loss harvesting opportunities",
+            "Keep detailed records for all deductible expenses"
+        ])
+        
+        return actions
 
     def save_analytics_result(self, result: TaxAnalyticsResult, filename: Optional[str] = None) -> Path:
         """

@@ -353,6 +353,14 @@ class ModernMainWindow(ctk.CTk):
 
         ModernButton(
             sidebar_scroll,
+            text="🔮 Tax Projections",
+            command=self._show_tax_projections,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
             text="🤖 AI Deduction Finder",
             command=self._show_ai_deduction_finder,
             button_type="secondary",
@@ -957,6 +965,30 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Analytics Error", f"Failed to open analytics: {str(e)}")
+
+    def _show_tax_projections(self):
+        """Show tax projections window"""
+        if not self.tax_data:
+            show_error_message("No Tax Data", "Please complete the tax interview first to view tax projections.")
+            return
+
+        try:
+            # Import required services
+            from services.tax_calculation_service import TaxCalculationService
+            from gui.tax_projections_window import TaxProjectionsWindow
+            
+            # Create tax projections window
+            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+            tax_calc_service = TaxCalculationService(tax_year)
+            projections_window = TaxProjectionsWindow(
+                self.config,
+                tax_calc_service,
+                self.tax_data
+            )
+            projections_window.show()
+            
+        except Exception as e:
+            show_error_message("Tax Projections Error", f"Failed to open tax projections: {str(e)}")
 
     def _show_ai_deduction_finder(self):
         """Show AI deduction finder window"""
