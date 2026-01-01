@@ -31,7 +31,9 @@ class TestKeyLoadingErrors:
             service.get_or_create_cipher()
     
     def test_load_key_handles_file_read_permission_error(self, tmp_path):
-        """Test that permission errors during key load are propagated."""
+        """Test that permission errors during key load are handled properly."""
+        from services.exceptions import InvalidEncryptionKeyException
+        
         key_file = tmp_path / "secure.key"
         
         # Create valid key file first
@@ -42,7 +44,7 @@ class TestKeyLoadingErrors:
         
         # Mock open to raise PermissionError
         with patch('builtins.open', side_effect=PermissionError("Access denied")):
-            with pytest.raises(PermissionError):
+            with pytest.raises(InvalidEncryptionKeyException, match="Failed to load encryption key: Access denied"):
                 service.get_or_create_cipher()
 
 

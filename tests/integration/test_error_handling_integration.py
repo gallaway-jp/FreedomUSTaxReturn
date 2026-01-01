@@ -103,24 +103,19 @@ class TestTaxCalculationErrorHandling:
             assert len(str(e)) > 0
     
     def test_calculation_with_negative_income(self):
-        """Test calculation handles edge case of negative income."""
+        """Test calculation properly rejects negative income."""
+        from services.exceptions import DataValidationException
+        
         data = TaxData()
         data.set('filing_info.filing_status', 'single')
         
         calculator = TaxCalculationService()
         
-        # System accepts negative wages but they result in negative AGI
-        # Test verifies the system doesn't crash with negative values
+        # System should reject negative wages with validation error
         data.add_w2_form({'wages': -1000})
-        result = calculator.calculate_complete_return(data)
         
-        # System handles it - negative income results in:
-        # - negative AGI (system accepts it)
-        # - taxable income is max(0, AGI - deduction) = 0
-        # - no tax owed
-        assert result.total_income == -1000
-        assert result.taxable_income == 0  # Can't be negative
-        assert result.total_tax == 0
+        with pytest.raises(DataValidationException, match="Total income cannot be negative"):
+            calculator.calculate_complete_return(data)
     
     def test_calculation_with_extremely_high_income(self):
         """Test calculation handles very large numbers."""
