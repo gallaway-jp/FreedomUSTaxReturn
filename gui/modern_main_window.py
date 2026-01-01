@@ -45,6 +45,7 @@ from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
 from gui.estate_trust_window import EstateTrustWindow
+from gui.partnership_s_corp_window import PartnershipSCorpWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -342,6 +343,14 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🏛️ Estate & Trust Returns",
             command=self._show_estate_trust,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🤝 Partnership & S-Corp Returns",
+            command=self._show_partnership_s_corp,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -917,6 +926,20 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Estate & Trust Error", f"Failed to open estate & trust window: {str(e)}")
+
+    def _show_partnership_s_corp(self):
+        """Show partnership and S-Corp tax returns window"""
+        try:
+            # Create and show partnership/S-corp tax window
+            partnership_window = PartnershipSCorpWindow(
+                self,
+                self.config,
+                self.tax_data
+            )
+            partnership_window.show()
+            
+        except Exception as e:
+            show_error_message("Partnership & S-Corp Error", f"Failed to open partnership & S-corp window: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
