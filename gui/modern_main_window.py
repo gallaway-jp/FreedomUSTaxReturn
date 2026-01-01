@@ -23,6 +23,7 @@ from gui.pages.modern_deductions_page import ModernDeductionsPage
 from gui.pages.modern_credits_page import ModernCreditsPage
 from gui.pages.modern_payments_page import ModernPaymentsPage
 from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
+from gui.pages.modern_form_viewer_page import ModernFormViewerPage
 
 
 class ModernMainWindow(ctk.CTk):
@@ -67,6 +68,7 @@ class ModernMainWindow(ctk.CTk):
         self.credits_page: Optional[ModernCreditsPage] = None
         self.payments_page: Optional[ModernPaymentsPage] = None
         self.foreign_income_page: Optional[ModernForeignIncomePage] = None
+        self.form_viewer_page: Optional[ModernFormViewerPage] = None
 
         # Form pages
         self.income_page: Optional[ModernIncomePage] = None
@@ -407,6 +409,8 @@ class ModernMainWindow(ctk.CTk):
             self._show_payments_page()
         elif 'foreign' in form_name.lower() or form_name in ['FBAR', '8938', '1116']:
             self._show_foreign_income_page()
+        elif 'summary' in form_name.lower() or 'viewer' in form_name.lower() or form_name in ['Form 1040 Summary', 'Tax Return Summary']:
+            self._show_form_viewer_page()
         else:
             show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
 
@@ -518,6 +522,30 @@ class ModernMainWindow(ctk.CTk):
         # Update progress
         self._update_progress()
 
+    def _show_form_viewer_page(self):
+        """Show the form viewer page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize form viewer page if not already done
+        if self.form_viewer_page is None:
+            self.form_viewer_page = ModernFormViewerPage(
+                self.content_frame,
+                self.tax_data,
+                self.config,
+                on_back_callback=self._handle_form_viewer_back
+            )
+
+        # Show the form viewer page
+        self.form_viewer_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Form Viewer - Review your tax return and export to PDF")
+
+        # Update progress
+        self._update_progress()
+
     def _handle_income_complete(self, tax_data, action="continue"):
         """Handle completion of income page"""
         if action == "continue":
@@ -543,7 +571,7 @@ class ModernMainWindow(ctk.CTk):
     def _handle_payments_complete(self, tax_data, action="continue"):
         """Handle completion of payments page"""
         if action == "continue":
-            show_info_message("Navigation", "Payments completed. Form viewer will be implemented next.")
+            self._show_form_viewer_page()
         elif action == "back":
             self._show_credits_page()
 
@@ -554,6 +582,10 @@ class ModernMainWindow(ctk.CTk):
         elif action == "previous":
             # Could navigate back to previous page if needed
             show_info_message("Navigation", "Back navigation from foreign income page.")
+
+    def _handle_form_viewer_back(self):
+        """Handle back navigation from form viewer"""
+        self._show_payments_page()
 
     def _start_form_entry(self):
         """Start the form entry process"""
@@ -570,7 +602,8 @@ class ModernMainWindow(ctk.CTk):
             show_error_message("No Data", "Please complete the tax interview first.")
             return
 
-        show_info_message("Summary", "Tax return summary will be implemented in the next phase.")
+        # Navigate to form viewer for summary
+        self._show_form_viewer_page()
 
     def _show_settings(self):
         """Show settings dialog"""
