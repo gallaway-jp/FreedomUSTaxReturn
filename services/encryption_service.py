@@ -8,9 +8,18 @@ This service encapsulates all cryptography operations.
 import logging
 from pathlib import Path
 from typing import Optional
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
+
+from services.exceptions import (
+    EncryptionKeyNotFoundException,
+    DecryptionFailedException,
+    InvalidEncryptionKeyException,
+    EncryptionException
+)
+from services.error_logger import get_error_logger
 
 logger = logging.getLogger(__name__)
+error_logger = get_error_logger()
 
 
 class EncryptionService:
@@ -37,6 +46,10 @@ class EncryptionService:
         
         Returns:
             Fernet cipher instance for encryption/decryption
+            
+        Raises:
+            EncryptionKeyNotFoundException: If key file doesn't exist and can't be created
+            InvalidEncryptionKeyException: If key file is corrupted or invalid
         """
         if self._cipher is not None:
             return self._cipher
@@ -51,9 +64,26 @@ class EncryptionService:
                     key = f.read()
                 self._cipher = Fernet(key)
                 logger.info("Loaded existing encryption key")
+            except InvalidToken as e:
+                error_logger.log_exception(
+                    e,
+                    context="Encryption key validation failed",
+                    extra_details={"key_file": str(self.key_file)}
+                )
+                raise InvalidEncryptionKeyException(
+                    f"Encryption key is corrupted or invalid: {str(e)}",
+                    details={"key_file": str(self.key_file)}
+                ) from e
             except Exception as e:
-                logger.error(f"Failed to load encryption key: {e}")
-                raise
+                error_logger.log_exception(
+                    e,
+                    context="Failed to load encryption key",
+                    extra_details={"key_file": str(self.key_file)}
+                )
+                raise InvalidEncryptionKeyException(
+                    f"Failed to load encryption key: {str(e)}",
+                    details={"key_file": str(self.key_file)}
+                ) from e
         else:
             # Generate new key
             key = Fernet.generate_key()
@@ -92,9 +122,33 @@ class EncryptionService:
             
         Returns:
             Decrypted string
+            
+        Raises:
+            DecryptionFailedException: If decryption fails
         """
-        cipher = self.get_or_create_cipher()
-        return cipher.decrypt(encrypted_data).decode('utf-8')
+        try:
+            cipher = self.get_or_create_cipher()
+            return cipher.decrypt(encrypted_data).decode('utf-8')
+        except (InvalidToken, ValueError) as e:
+            error_logger.log_exception(
+                e,
+                context="Data decryption failed",
+                extra_details={"encrypted_data_length": len(encrypted_data)}
+            )
+            raise DecryptionFailedException(
+                f"Failed to decrypt data: {str(e)}",
+                details={"error_type": type(e).__name__}
+            ) from e
+        except Exception as e:
+            error_logger.log_exception(
+                e,
+                context="Unexpected error during decryption",
+                extra_details={"encrypted_data_length": len(encrypted_data)}
+            )
+            raise DecryptionFailedException(
+                f"Unexpected error during decryption: {str(e)}",
+                details={"error_type": type(e).__name__}
+            ) from e
     
     def encrypt_dict(self, data: dict) -> dict:
         """

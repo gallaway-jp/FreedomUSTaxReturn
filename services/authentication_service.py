@@ -16,18 +16,16 @@ from typing import Dict, Optional, Tuple
 
 from config.app_config import AppConfig
 from services.ptin_ero_service import PTINEROService
+from services.exceptions import (
+    InvalidPasswordException,
+    MasterPasswordNotSetException,
+    AuthenticationTimeoutException,
+    AuthenticationException
+)
+from services.error_logger import get_error_logger
 
 logger = logging.getLogger(__name__)
-
-
-class AuthenticationError(Exception):
-    """Raised when authentication fails"""
-    pass
-
-
-class PasswordPolicyError(Exception):
-    """Raised when password doesn't meet policy requirements"""
-    pass
+error_logger = get_error_logger()
 
 
 class AuthenticationService:
