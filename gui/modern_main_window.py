@@ -67,9 +67,14 @@ class ModernMainWindow(ctk.CTk):
     Features:
     - Guided tax interview wizard
     - Simplified navigation based on recommendations
-    - Progress tracking
-    - Contextual help
-    - Modern UI design
+    - Progress tracking and contextual help
+    - Modern UI design with accessibility support
+    - Section 508 and WCAG 2.1 AA compliance
+    - Keyboard shortcuts and screen reader support
+    - Multi-page form navigation with lazy loading
+    - Integrated authentication and session management
+    - Web interface launcher for mobile access
+    - Comprehensive error handling and user feedback
     """
 
     def __init__(self, config: AppConfig, accessibility_service: Optional[AccessibilityService] = None, demo_mode: bool = False):
@@ -88,7 +93,8 @@ class ModernMainWindow(ctk.CTk):
         self.demo_mode = demo_mode
         self.tax_data: Optional[TaxData] = None
         self.interview_completed = False
-        self.form_recommendations = []
+        self.form_recommendations = []  # Cache for form recommendations
+        self._recommendations_cache = None  # Cache recommendations summary
 
         # Initialize services
         self.interview_service = TaxInterviewService(config)
@@ -863,34 +869,47 @@ class ModernMainWindow(ctk.CTk):
         # Update progress
         self._update_progress()
 
+    def _handle_page_complete(self, page_name: str, tax_data, action="continue"):
+        """Generic handler for page completion with navigation logic"""
+        page_flow = {
+            "income": {
+                "continue": self._show_deductions_page,
+                "back": lambda: show_info_message("Navigation", "Back navigation from income page.")
+            },
+            "deductions": {
+                "continue": self._show_credits_page,
+                "back": self._show_income_page
+            },
+            "credits": {
+                "continue": self._show_payments_page,
+                "back": self._show_deductions_page
+            },
+            "payments": {
+                "continue": self._show_form_viewer_page,
+                "back": self._show_credits_page
+            }
+        }
+
+        if page_name in page_flow and action in page_flow[page_name]:
+            page_flow[page_name][action]()
+        else:
+            show_info_message("Navigation", f"Unknown navigation action: {page_name} -> {action}")
+
     def _handle_income_complete(self, tax_data, action="continue"):
         """Handle completion of income page"""
-        if action == "continue":
-            self._show_deductions_page()
-        elif action == "back":
-            # Go back to interview or previous step
-            show_info_message("Navigation", "Back navigation from income page.")
+        self._handle_page_complete("income", tax_data, action)
 
     def _handle_deductions_complete(self, tax_data, action="continue"):
         """Handle completion of deductions page"""
-        if action == "continue":
-            self._show_credits_page()
-        elif action == "back":
-            self._show_income_page()
+        self._handle_page_complete("deductions", tax_data, action)
 
     def _handle_credits_complete(self, tax_data, action="continue"):
         """Handle completion of credits page"""
-        if action == "continue":
-            self._show_payments_page()
-        elif action == "back":
-            self._show_deductions_page()
+        self._handle_page_complete("credits", tax_data, action)
 
     def _handle_payments_complete(self, tax_data, action="continue"):
         """Handle completion of payments page"""
-        if action == "continue":
-            self._show_form_viewer_page()
-        elif action == "back":
-            self._show_credits_page()
+        self._handle_page_complete("payments", tax_data, action)
 
     def _handle_foreign_income_complete(self, action="complete"):
         """Handle completion of foreign income page"""
@@ -1125,7 +1144,7 @@ class ModernMainWindow(ctk.CTk):
                             # Font tuple, update size
                             new_font = (current_font[0], font_size, *current_font[2:])
                             widget.configure(font=new_font)
-            except:
+            except (AttributeError, TypeError, tk.TclError):
                 pass  # Skip widgets that don't support font configuration
 
         # Recursively update children
@@ -1374,12 +1393,19 @@ class ModernMainWindow(ctk.CTk):
             def start_web_server():
                 """Start the web server in a separate process"""
                 try:
-                    # Launch web server
+                    # Get absolute path to web_server.py for security
+                    web_server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'web_server.py'))
+
+                    # Validate that the file exists and is a Python file
+                    if not os.path.isfile(web_server_path) or not web_server_path.endswith('.py'):
+                        raise FileNotFoundError(f"Web server script not found: {web_server_path}")
+
+                    # Launch web server with validated path
                     subprocess.Popen([
-                        sys.executable, 
-                        os.path.join(os.path.dirname(__file__), '..', 'web_server.py')
-                    ], 
-                    cwd=os.path.dirname(__file__),
+                        sys.executable,
+                        web_server_path
+                    ],
+                    cwd=os.path.dirname(web_server_path),
                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
                     )
                     
