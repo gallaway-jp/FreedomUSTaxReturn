@@ -55,18 +55,20 @@ class ModernMainWindow(ctk.CTk):
     - Modern UI design
     """
 
-    def __init__(self, config: AppConfig, accessibility_service: Optional[AccessibilityService] = None):
+    def __init__(self, config: AppConfig, accessibility_service: Optional[AccessibilityService] = None, demo_mode: bool = False):
         """
         Initialize the modern main window.
 
         Args:
             config: Application configuration
             accessibility_service: Optional accessibility service for feature support
+            demo_mode: If True, skip authentication dialogs
         """
         super().__init__()
 
         self.config = config
         self.accessibility_service = accessibility_service
+        self.demo_mode = demo_mode
         self.tax_data: Optional[TaxData] = None
         self.interview_completed = False
         self.form_recommendations = []
@@ -638,7 +640,7 @@ class ModernMainWindow(ctk.CTk):
 
     def _check_authentication(self) -> bool:
         """Check if user is authenticated, prompt for login if needed"""
-        if self.is_mocked:
+        if self.is_mocked or self.demo_mode:
             return True
         
         try:
@@ -666,7 +668,7 @@ class ModernMainWindow(ctk.CTk):
     def _create_menu_bar(self):
         """Create the main menu bar"""
         menubar = tk.Menu(self)
-        self.config_menu(menu=menubar)
+        self.configure(menu=menubar)
 
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
