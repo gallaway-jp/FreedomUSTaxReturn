@@ -102,7 +102,6 @@ class ModernMainWindow(ctk.CTk):
 
         self._setup_window()
         self._setup_ui()
-        self._create_menu_bar()
         self._bind_keyboard_shortcuts()
         self._show_welcome_screen()
 
@@ -164,55 +163,153 @@ class ModernMainWindow(ctk.CTk):
         self._setup_sidebar()
 
     def _setup_sidebar(self):
-        """Setup the sidebar navigation"""
-        # Interview button
+        """Setup the modern sidebar navigation with all features"""
+        # Create a scrollable container for the sidebar
+        sidebar_scroll = ctk.CTkScrollableFrame(self.sidebar_frame, fg_color="transparent")
+        sidebar_scroll.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # ===== PRIMARY ACTION =====
         self.interview_button = ModernButton(
-            self.sidebar_frame,
+            sidebar_scroll,
             text="🚀 Start Tax Interview",
             command=self._start_interview,
             button_type="primary",
             height=40
         )
-        self.interview_button.pack(fill="x", padx=10, pady=(10, 5))
+        self.interview_button.pack(fill="x", padx=5, pady=(5, 10))
 
         # Separator
-        separator = ctk.CTkFrame(self.sidebar_frame, height=2, fg_color="gray70")
-        separator.pack(fill="x", padx=10, pady=5)
+        self._create_separator(sidebar_scroll)
 
-        # Form sections (initially hidden)
-        self.form_buttons_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        self.form_buttons_frame.pack(fill="x", padx=10, pady=5)
+        # ===== FORM SECTIONS (Hidden until interview complete) =====
+        form_header = ModernLabel(
+            sidebar_scroll,
+            text="📄 TAX FORMS",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        form_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
 
-        # Initially hide form buttons
-        self.form_buttons_frame.pack_forget()
+        self.form_buttons_frame = ctk.CTkFrame(sidebar_scroll, fg_color="transparent")
+        self.form_buttons_frame.pack(fill="x", padx=5, pady=5)
+        self.form_buttons_frame.pack_forget()  # Initially hidden
 
-        # Action buttons
-        actions_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        actions_frame.pack(fill="x", padx=10, pady=(20, 10))
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== VIEW & DISPLAY OPTIONS =====
+        view_header = ModernLabel(
+            sidebar_scroll,
+            text="👁️ VIEW",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        view_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
 
         ModernButton(
-            actions_frame,
-            text="💾 Save Progress",
-            command=self._save_progress,
-            button_type="secondary",
-            height=35
-        ).pack(fill="x", pady=(0, 5))
-
-        ModernButton(
-            actions_frame,
+            sidebar_scroll,
             text="📊 View Summary",
             command=self._show_summary,
             button_type="secondary",
-            height=35
-        ).pack(fill="x", pady=(0, 5))
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
 
         ModernButton(
-            actions_frame,
+            sidebar_scroll,
+            text="🌙 Toggle Theme",
+            command=self._toggle_theme,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== FILE OPERATIONS =====
+        file_header = ModernLabel(
+            sidebar_scroll,
+            text="💾 FILE",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        file_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="💾 Save Progress",
+            command=self._save_progress,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="📥 Import Data",
+            command=self._show_import_menu,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== SECURITY & SETTINGS =====
+        security_header = ModernLabel(
+            sidebar_scroll,
+            text="🔒 SECURITY",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        security_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="🔑 Change Password",
+            command=self._change_password,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
             text="⚙️ Settings",
             command=self._show_settings,
             button_type="secondary",
-            height=35
-        ).pack(fill="x", pady=(0, 10))
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== HELP & INFO =====
+        help_header = ModernLabel(
+            sidebar_scroll,
+            text="❓ HELP",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        help_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="ℹ️ About",
+            command=self._show_about,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🚪 Logout",
+            command=self._logout,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=(2, 10))
+
+    def _create_separator(self, parent):
+        """Create a visual separator"""
+        separator = ctk.CTkFrame(parent, height=1, fg_color="gray40")
+        separator.pack(fill="x", padx=10, pady=8)
 
     def _show_welcome_screen(self):
         """Show the welcome screen"""
@@ -665,59 +762,6 @@ class ModernMainWindow(ctk.CTk):
         
         return True
 
-    def _create_menu_bar(self):
-        """Create the main menu bar"""
-        menubar = tk.Menu(self)
-        self.configure(menu=menubar)
-
-        # File menu
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        # file_menu.add_command(label="New Return", command=self._new_return, accelerator="Ctrl+N")
-        # file_menu.add_command(label="New Amended Return", command=self._new_amended_return)
-        # file_menu.add_command(label="Open", command=self._load_progress, accelerator="Ctrl+O")
-        # file_menu.add_command(label="Save", command=self._save_progress, accelerator="Ctrl+S")
-        file_menu.add_command(label="Demo Mode", command=lambda: show_info_message("Demo Mode", "Full save/load features available in production release."))
-        file_menu.add_separator()
-        
-        import_menu = tk.Menu(file_menu, tearoff=0)
-        file_menu.add_cascade(label="Import", menu=import_menu)
-        # import_menu.add_command(label="Prior Year Return", command=self._import_prior_year)
-        # import_menu.add_command(label="W-2 Form (PDF)", command=self._import_w2_pdf)
-        # import_menu.add_command(label="1099 Form (PDF)", command=self._import_1099_pdf)
-        # import_menu.add_command(label="Tax Software (TXF)", command=self._import_txf)
-        import_menu.add_command(label="Coming in Future Release...", command=lambda: show_info_message("Import", "Import features will be available in future releases."))
-        
-        # file_menu.add_command(label="Export PDF", command=self._export_pdf, accelerator="Ctrl+E")
-        # file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.destroy)
-
-        # View menu
-        view_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="View", menu=view_menu)
-        view_menu.add_command(label="Toggle Theme", command=self._toggle_theme)
-        view_menu.add_separator()
-        view_menu.add_command(label="Coming Soon...", command=lambda: show_info_message("View Options", "Additional view options and accessibility features coming in future releases."))
-
-        # Tools menu - Future Features
-        tools_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Tools", menu=tools_menu)
-        tools_menu.add_command(label="Coming Soon...", command=lambda: show_info_message("Tools", "Advanced tax tools, planning, and analytics will be available in future releases."))
-
-        # Security menu - Change Password and Logout only for now
-        security_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Security", menu=security_menu)
-        security_menu.add_command(label="Change Password", command=self._change_password)
-        security_menu.add_separator()
-        security_menu.add_command(label="Logout", command=self._logout)
-        security_menu.add_separator()
-        security_menu.add_command(label="Coming Soon...", command=lambda: show_info_message("Security Features", "Cloud backup, 2FA, client management, and PTIN/ERO features coming in future releases."))
-
-        # Help menu
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self._show_about)
-
     def _bind_keyboard_shortcuts(self):
         """Bind keyboard shortcuts for common actions"""
         # Most keyboard shortcuts will be implemented with actual features in future releases
@@ -733,6 +777,10 @@ class ModernMainWindow(ctk.CTk):
         new_mode = "Light" if current_mode == "Dark" else "Dark"
         ctk.set_appearance_mode(new_mode)
         show_info_message("Theme Changed", f"Theme changed to {new_mode} mode.")
+
+    def _show_import_menu(self):
+        """Show import options menu"""
+        show_info_message("Import Data", "Import features for W-2, 1099, and other documents will be available in future releases.")
 
     # Accessibility, Tools, and other advanced features will be implemented in future releases
 
