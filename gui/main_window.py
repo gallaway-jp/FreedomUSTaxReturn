@@ -38,6 +38,7 @@ from gui.ptin_ero_dialogs import PTINEROManagementDialog
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.ai_deduction_finder_window import AIDeductionFinderWindow
 from gui.tax_dashboard_window import open_tax_dashboard
+from gui.bank_account_linking_window import open_bank_account_linking_window
 from models.tax_data import TaxData
 
 class MainWindow:
@@ -221,6 +222,7 @@ class MainWindow:
         self.root.bind('<Control-s>', lambda e: self._open_state_taxes())
         self.root.bind('<Control-A>', lambda e: self._open_tax_analytics())
         self.root.bind('<Control-d>', lambda e: self._open_ai_deduction_finder())
+        self.root.bind('<Control-b>', lambda e: self._open_bank_account_linking())
         self.root.bind('<Control-a>', lambda e: self._open_audit_trail())
         self.root.bind('<Control-f>', lambda e: self._open_e_filing())
         self.root.bind('<Control-y>', lambda e: self._compare_years())
@@ -304,6 +306,7 @@ class MainWindow:
         tools_menu.add_command(label="State Taxes", command=self._open_state_taxes, accelerator="Ctrl+S")
         tools_menu.add_command(label="Tax Analytics", command=self._open_tax_analytics, accelerator="Ctrl+Shift+A")
         tools_menu.add_command(label="AI Deduction Finder", command=self._open_ai_deduction_finder, accelerator="Ctrl+D")
+        tools_menu.add_command(label="Bank Account Linking", command=self._open_bank_account_linking, accelerator="Ctrl+B")
         tools_menu.add_command(label="Audit Trail", command=self._open_audit_trail, accelerator="Ctrl+A")
 
         # Security menu
@@ -1794,6 +1797,15 @@ class MainWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open AI deduction finder: {e}")
+    
+    def _open_bank_account_linking(self):
+        """Open bank account linking window"""
+        try:
+            # Create bank account linking window
+            open_bank_account_linking_window(self.root, self.theme_manager)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open bank account linking: {e}")
     
     def _open_tax_planning(self):
         """Open tax planning tools (placeholder)"""
