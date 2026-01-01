@@ -49,6 +49,7 @@ from gui.partnership_s_corp_window import PartnershipSCorpWindow
 from gui.tax_planning_window import TaxPlanningWindow
 from gui.receipt_scanning_window import ReceiptScanningWindow
 from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
+from gui.e_filing_window import EFilingWindow
 
 
 class ModernMainWindow(ctk.CTk):
@@ -378,6 +379,26 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🌍 Foreign Income & FBAR",
             command=self._show_foreign_income_fbar,
+            button_type="secondary",
+            height=32
+        ).pack(fill="x", padx=5, pady=2)
+
+        # Separator
+        self._create_separator(sidebar_scroll)
+
+        # ===== E-FILING =====
+        efiling_header = ModernLabel(
+            sidebar_scroll,
+            text="📡 E-FILING",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color="gray60"
+        )
+        efiling_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+
+        ModernButton(
+            sidebar_scroll,
+            text="🚀 IRS E-Filing",
+            command=self._show_e_filing,
             button_type="secondary",
             height=32
         ).pack(fill="x", padx=5, pady=2)
@@ -1008,6 +1029,26 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Foreign Income & FBAR Error", f"Failed to open foreign income & FBAR window: {str(e)}")
+
+    def _show_e_filing(self):
+        """Show IRS e-filing window"""
+        try:
+            # Import e-filing service if not already imported
+            from services.e_filing_service import EFilingService
+            
+            # Create e-filing service instance
+            e_filing_service = EFilingService(self.config)
+            
+            # Create and show e-filing window
+            e_filing_window = EFilingWindow(
+                self,
+                self.tax_data,
+                self.config,
+                e_filing_service
+            )
+            
+        except Exception as e:
+            show_error_message("E-Filing Error", f"Failed to open e-filing window: {str(e)}")
 
     def _show_import_menu(self):
         """Show import options menu"""
