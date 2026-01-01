@@ -20,6 +20,7 @@ from gui.modern_ui_components import (
 from gui.tax_interview_wizard import TaxInterviewWizard
 from gui.pages.modern_income_page import ModernIncomePage
 from gui.pages.modern_deductions_page import ModernDeductionsPage
+from gui.pages.modern_credits_page import ModernCreditsPage
 
 
 class ModernMainWindow(ctk.CTk):
@@ -61,6 +62,7 @@ class ModernMainWindow(ctk.CTk):
         # Page instances (lazy-loaded)
         self.income_page: Optional[ModernIncomePage] = None
         self.deductions_page: Optional[ModernDeductionsPage] = None
+        self.credits_page: Optional[ModernCreditsPage] = None
 
         # Form pages
         self.income_page: Optional[ModernIncomePage] = None
@@ -395,6 +397,8 @@ class ModernMainWindow(ctk.CTk):
             self._show_income_page()
         elif 'deduction' in form_name.lower() or form_name in ['Schedule A']:
             self._show_deductions_page()
+        elif 'credit' in form_name.lower() or form_name in ['Schedule 3', 'Child Tax Credit', 'Earned Income Credit', 'Education Credits']:
+            self._show_credits_page()
         else:
             show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
 
@@ -440,6 +444,27 @@ class ModernMainWindow(ctk.CTk):
         # Update progress
         self._update_progress()
 
+    def _show_credits_page(self):
+        """Show the credits page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize credits page if not already done
+        if self.credits_page is None:
+            self.credits_page = ModernCreditsPage(self.content_frame, self.config, on_complete=self._handle_credits_complete)
+            if self.tax_data:
+                self.credits_page.load_data(self.tax_data)
+
+        # Show the credits page
+        self.credits_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Tax Credits - Enter eligible tax credits")
+
+        # Update progress
+        self._update_progress()
+
     def _handle_income_complete(self, tax_data, action="continue"):
         """Handle completion of income page"""
         if action == "continue":
@@ -451,9 +476,16 @@ class ModernMainWindow(ctk.CTk):
     def _handle_deductions_complete(self, tax_data, action="continue"):
         """Handle completion of deductions page"""
         if action == "continue":
-            show_info_message("Navigation", "Deductions completed. Credits page will be implemented next.")
+            self._show_credits_page()
         elif action == "back":
             self._show_income_page()
+
+    def _handle_credits_complete(self, tax_data, action="continue"):
+        """Handle completion of credits page"""
+        if action == "continue":
+            show_info_message("Navigation", "Credits completed. Payments page will be implemented next.")
+        elif action == "back":
+            self._show_deductions_page()
 
     def _start_form_entry(self):
         """Start the form entry process"""
