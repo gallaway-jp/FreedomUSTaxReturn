@@ -260,197 +260,114 @@ class ModernMainWindow(ctk.CTk):
         self._setup_sidebar()
 
     def _setup_sidebar(self):
-        """Setup the modern sidebar navigation with all features"""
-        # Create a scrollable container for the sidebar
+        """Setup the comprehensive sidebar navigation with all 27 pages (Phase 6)"""
+        # Create scrollable container
         sidebar_scroll = ctk.CTkScrollableFrame(self.sidebar_frame, fg_color="transparent")
         sidebar_scroll.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # ===== PRIMARY ACTION =====
-        self.interview_button = ModernButton(
-            sidebar_scroll,
-            text="🚀 Start Tax Interview",
-            command=self._start_interview,
-            button_type="primary",
-            height=40,
-            accessibility_service=self.accessibility_service
-        )
-        self.interview_button.pack(fill="x", padx=5, pady=(5, 5))
+        # Quick Start Section
+        self._create_sidebar_section(sidebar_scroll, "🚀 QUICK START", [
+            ("Start Interview", lambda: self._start_interview()),
+            ("View Dashboard", lambda: self._switch_to_page('tax_dashboard')),
+        ])
 
-        # Skip interview button
-        skip_interview_button = ModernButton(
-            sidebar_scroll,
-            text="📋 Select Tax Forms",
-            command=lambda: self._show_tax_forms_page([]),
-            button_type="secondary",
-            height=35,
-            accessibility_service=self.accessibility_service
-        )
-        skip_interview_button.pack(fill="x", padx=5, pady=(0, 10))
+        # Tax Forms Section
+        self._create_sidebar_section(sidebar_scroll, "📋 TAX FORMS", [
+            ("Income", lambda: self._navigate_to_form({"form": "Income"})),
+            ("Deductions", lambda: self._navigate_to_form({"form": "Deductions"})),
+            ("Credits", lambda: self._navigate_to_form({"form": "Credits"})),
+        ])
 
-        # Separator
-        self._create_separator(sidebar_scroll)
+        # Financial Planning Section
+        self._create_sidebar_section(sidebar_scroll, "💼 FINANCIAL PLANNING", [
+            ("Estate & Trust", lambda: self._switch_to_page('estate_trust')),
+            ("Partnership & S-Corp", lambda: self._switch_to_page('partnership_s_corp')),
+            ("State Tax Planning", lambda: self._switch_to_page('tax_planning')),
+            ("State Tax Calculator", lambda: self._switch_to_page('state_tax_calculator')),
+            ("Tax Projections", lambda: self._switch_to_page('tax_projections')),
+        ])
 
-        # ===== FORM SECTIONS (Hidden until interview complete) =====
-        form_header = ModernLabel(
-            sidebar_scroll,
-            text="📄 TAX FORMS",
+        # Business Integration Section
+        self._create_sidebar_section(sidebar_scroll, "📊 BUSINESS INTEGRATION", [
+            ("QuickBooks Integration", lambda: self._switch_to_page('quickbooks_integration')),
+            ("Receipt Scanning", lambda: self._switch_to_page('receipt_scanning')),
+            ("Bank Account Linking", lambda: self._switch_to_page('bank_account_linking')),
+            ("State Tax Returns", lambda: self._switch_to_page('state_tax')),
+        ])
+
+        # Advanced Features Section
+        self._create_sidebar_section(sidebar_scroll, "🤖 ADVANCED FEATURES", [
+            ("AI Deduction Finder", lambda: self._switch_to_page('ai_deduction_finder')),
+            ("Cryptocurrency Tax", lambda: self._switch_to_page('cryptocurrency_tax')),
+        ])
+
+        # International & Compliance Section
+        self._create_sidebar_section(sidebar_scroll, "🌍 INTERNATIONAL & COMPLIANCE", [
+            ("Foreign Income & FBAR", lambda: self._switch_to_page('foreign_income_fbar')),
+            ("PTIN & ERO Management", lambda: self._switch_to_page('ptin_ero_management')),
+            ("State Tax Integration", lambda: self._switch_to_page('state_tax_integration')),
+            ("Translation Management", lambda: self._switch_to_page('translation_management')),
+        ])
+
+        # Analysis & Reporting Section
+        self._create_sidebar_section(sidebar_scroll, "📈 ANALYSIS & REPORTING", [
+            ("Tax Dashboard", lambda: self._switch_to_page('tax_dashboard')),
+            ("Tax Analytics", lambda: self._switch_to_page('tax_analytics')),
+            ("Year Comparison", lambda: self._switch_to_page('year_comparison')),
+            ("Audit Trail", lambda: self._switch_to_page('audit_trail')),
+        ])
+
+        # Management Section
+        self._create_sidebar_section(sidebar_scroll, "⚙️ MANAGEMENT & TOOLS", [
+            ("Cloud Backup", lambda: self._switch_to_page('cloud_backup')),
+            ("Plugin Management", lambda: self._switch_to_page('plugin_management')),
+            ("Settings & Preferences", lambda: self._switch_to_page('settings_preferences')),
+            ("Help & Documentation", lambda: self._switch_to_page('help_documentation')),
+        ])
+
+        # Filing & E-File Section
+        self._create_sidebar_section(sidebar_scroll, "📮 FILING", [
+            ("E-Filing", lambda: self._switch_to_page('e_filing')),
+            ("Tax Interview", lambda: self._switch_to_page('tax_interview')),
+        ])
+
+        # Session Section
+        self._create_sidebar_section(sidebar_scroll, "🔐 SESSION", [
+            ("Logout", lambda: self._logout()),
+        ])
+
+    def _create_sidebar_section(self, parent, title: str, items: list):
+        """
+        Create a sidebar section with title and navigation buttons.
+        
+        Args:
+            parent: Parent widget (scrollable frame)
+            title: Section title (e.g., "🚀 QUICK START")
+            items: List of (label, command) tuples for each button
+        """
+        # Section header
+        header = ModernLabel(
+            parent,
+            text=title,
             font=ctk.CTkFont(size=10, weight="bold"),
             text_color="gray60"
         )
-        form_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+        header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
 
-        self.form_buttons_frame = ctk.CTkFrame(sidebar_scroll, fg_color="transparent")
-        self.form_buttons_frame.pack(fill="x", padx=5, pady=5)
-        # Don't hide initially - always show TAX FORMS section
+        # Buttons for each item
+        for label, command in items:
+            button = ModernButton(
+                parent,
+                text=label,
+                command=command,
+                button_type="secondary",
+                height=32,
+                accessibility_service=self.accessibility_service
+            )
+            button.pack(fill="x", padx=5, pady=2)
 
-        # Always add Income button first (maps to 1040)
-        self.income_button = ModernButton(
-            self.form_buttons_frame,
-            text="💰 Income",
-            command=lambda: self._navigate_to_form({"form": "Income"}),
-            button_type="secondary",
-            height=35,
-            anchor="w",
-            accessibility_service=self.accessibility_service
-        )
-        self.income_button.pack(fill="x", pady=(0, 2))
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== STATE TAX SECTION =====
-        state_header = ModernLabel(
-            sidebar_scroll,
-            text="🏛️ STATE TAX",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        state_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="📋 State Tax Returns",
-            command=self._open_state_tax_window,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== VIEW & DISPLAY OPTIONS =====
-        view_header = ModernLabel(
-            sidebar_scroll,
-            text="👁️ VIEW",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        view_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="📊 View Summary",
-            command=self._show_summary,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📈 Tax Analytics",
-            command=self._show_tax_analytics,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== FILE OPERATIONS =====
-        file_header = ModernLabel(
-            sidebar_scroll,
-            text="💾 FILE",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        file_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="💾 Save Progress",
-            command=self._save_progress,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📥 Import Data",
-            command=self._show_import_menu,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📝 Amended Return",
-            command=self._create_amended_return,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== SECURITY & SETTINGS =====
-        security_header = ModernLabel(
-            sidebar_scroll,
-            text="🔒 SECURITY",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        security_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="� Audit Trail",
-            command=self._show_audit_trail,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="⚙️ Settings",
-            command=self._show_settings_page,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== SESSION =====
-        session_header = ModernLabel(
-            sidebar_scroll,
-            text="🔐 SESSION",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        session_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="🚪 Logout",
-            command=self._logout,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=(2, 10))
+        # Separator after section
+        self._create_separator(parent)
 
     def _create_separator(self, parent):
         """Create a visual separator"""
