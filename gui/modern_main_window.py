@@ -54,6 +54,8 @@ from gui.pages.modern_settings_page import ModernSettingsPage
 from gui.pages.modern_audit_trail_page import ModernAuditTrailPage
 from gui.pages.modern_save_progress_page import ModernSaveProgressPage
 from gui.pages.modern_amended_return_page import ModernAmendedReturnPage
+from gui.pages.modern_tax_interview_page import ModernTaxInterviewPage
+from gui.pages.modern_tax_forms_page import ModernTaxFormsPage
 from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
@@ -127,6 +129,8 @@ class ModernMainWindow(ctk.CTk):
         self.foreign_income_page: Optional[ModernForeignIncomePage] = None
         self.form_viewer_page: Optional[ModernFormViewerPage] = None
         self.settings_page: Optional[ModernSettingsPage] = None
+        self.tax_interview_page: Optional[ModernTaxInterviewPage] = None
+        self.tax_forms_page: Optional[ModernTaxFormsPage] = None
 
         # Background calculation system
         self.calculation_thread: Optional[threading.Thread] = None
@@ -225,7 +229,18 @@ class ModernMainWindow(ctk.CTk):
             height=40,
             accessibility_service=self.accessibility_service
         )
-        self.interview_button.pack(fill="x", padx=5, pady=(5, 10))
+        self.interview_button.pack(fill="x", padx=5, pady=(5, 5))
+
+        # Skip interview button
+        skip_interview_button = ModernButton(
+            sidebar_scroll,
+            text="📋 Skip to Tax Forms",
+            command=lambda: self._show_tax_forms_page([]),
+            button_type="secondary",
+            height=35,
+            accessibility_service=self.accessibility_service
+        )
+        skip_interview_button.pack(fill="x", padx=5, pady=(0, 10))
 
         # Separator
         self._create_separator(sidebar_scroll)
@@ -457,32 +472,79 @@ class ModernMainWindow(ctk.CTk):
         help_label.pack(pady=(20, 0))
 
     def _start_interview(self):
-        """Start the tax interview wizard"""
-        def on_interview_complete(summary: Dict[str, Any]):
-            """Handle interview completion"""
+        """Start the page-based tax interview"""
+        def on_interview_complete(recommendations: list):
+            """Handle interview completion with form recommendations"""
             self.interview_completed = True
-            self.form_recommendations = summary.get('recommendations', [])
+            self.form_recommendations = recommendations
 
             # Create initial tax data if not exists
             if not self.tax_data:
                 from models.tax_data import TaxData
                 self.tax_data = TaxData(self.config)
 
-            # Start background calculations
-            self._calculate_form_recommendations_background(self._on_form_recommendations_calculated)
-
-            # Update UI
-            self._update_sidebar_after_interview()
-            self._show_recommendations_screen(summary)
-            self._update_progress()
+            # Show the tax forms selection page with recommendations
+            self._show_tax_forms_page(recommendations)
 
             show_info_message(
                 "Interview Complete",
-                f"Great! We've identified {len(self.form_recommendations)} forms you may need to complete."
+                f"Great! We've identified {len(recommendations)} forms you may need. Select the forms you want to file."
             )
 
-        # Show interview wizard
-        TaxInterviewWizard(self, self.config, on_complete=on_interview_complete)
+        def on_interview_skip():
+            """Handle interview skip - go directly to forms selection"""
+            # Show the tax forms selection page without recommendations
+            self._show_tax_forms_page([])
+
+        # Clear content and show interview page
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self.tax_interview_page = ModernTaxInterviewPage(
+            self.content_frame,
+            self.config,
+            accessibility_service=self.accessibility_service,
+            on_complete=on_interview_complete,
+            on_skip=on_interview_skip
+        )
+        self.tax_interview_page.pack(fill="both", expand=True)
+
+    def _show_tax_forms_page(self, initial_recommendations: list):
+        """Show the tax forms selection page"""
+        def on_forms_selected(selected_forms: list):
+            """Handle forms selection"""
+            self.form_recommendations = selected_forms
+
+            # Create initial tax data if not exists
+            if not self.tax_data:
+                from models.tax_data import TaxData
+                self.tax_data = TaxData(self.config)
+
+            # Update sidebar
+            self._update_sidebar_after_interview()
+
+            # Show the form viewer or first form page
+            if selected_forms:
+                first_form = selected_forms[0]
+                self._navigate_to_form(first_form)
+
+            show_info_message(
+                "Forms Selected",
+                f"You've selected {len(selected_forms)} forms. Let's get started!"
+            )
+
+        # Clear content and show forms page
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self.tax_forms_page = ModernTaxFormsPage(
+            self.content_frame,
+            self.config,
+            accessibility_service=self.accessibility_service,
+            initial_recommendations=initial_recommendations,
+            on_forms_selected=on_forms_selected
+        )
+        self.tax_forms_page.pack(fill="both", expand=True)
 
     def _update_sidebar_after_interview(self):
         """Update sidebar after interview completion"""
