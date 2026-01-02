@@ -4,8 +4,8 @@ Cryptocurrency Tax Reporting Window
 GUI for managing cryptocurrency transactions and tax reporting for Form 8949 and Schedule D.
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+import customtkinter as ctk
+from tkinter import messagebox, filedialog
 import threading
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
@@ -21,6 +21,8 @@ from services.cryptocurrency_tax_service import (
     CapitalGainLoss,
     HoldingMethod
 )
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton, ModernEntry
+from services.accessibility_service import AccessibilityService
 from utils.error_tracker import get_error_tracker
 
 
@@ -37,7 +39,7 @@ class CryptocurrencyTaxWindow:
     - Tax liability estimation
     """
 
-    def __init__(self, parent: tk.Tk, config: AppConfig, tax_data: Optional[TaxData] = None):
+    def __init__(self, parent: ctk.CTk, config: AppConfig, tax_data: Optional[TaxData] = None, accessibility_service: Optional[AccessibilityService] = None):
         """
         Initialize cryptocurrency tax reporting window.
 
@@ -45,10 +47,12 @@ class CryptocurrencyTaxWindow:
             parent: Parent window
             config: Application configuration
             tax_data: Tax return data to analyze
+            accessibility_service: Accessibility service instance
         """
         self.parent = parent
         self.config = config
         self.tax_data = tax_data
+        self.accessibility_service = accessibility_service
         self.error_tracker = get_error_tracker()
 
         # Initialize service
@@ -60,12 +64,11 @@ class CryptocurrencyTaxWindow:
         self.holding_method = HoldingMethod.FIFO
 
         # UI components
-        self.window: Optional[tk.Toplevel] = None
-        self.notebook: Optional[ttk.Notebook] = None
-        self.transactions_tree: Optional[ttk.Treeview] = None
-        self.gains_tree: Optional[ttk.Treeview] = None
-        self.progress_var: Optional[tk.DoubleVar] = None
-        self.status_label: Optional[ttk.Label] = None
+        self.window: Optional[ctk.CTkToplevel] = None
+        self.notebook: Optional[ctk.CTkTabview] = None
+        self.transactions_frame: Optional[ctk.CTkScrollableFrame] = None
+        self.gains_frame: Optional[ctk.CTkScrollableFrame] = None
+        self.status_label: Optional[ModernLabel] = None
 
         # Form variables
         self.transaction_vars = {}
@@ -73,9 +76,9 @@ class CryptocurrencyTaxWindow:
 
     def show(self):
         """Show the cryptocurrency tax reporting window"""
-        self.window = tk.Toplevel(self.parent)
-        self.window.title("Cryptocurrency Tax Reporting - Freedom US Tax Return")
-        self.window.geometry("1200x800")
+        self.window = ctk.CTkToplevel(self.parent)
+        self.window.title("Cryptocurrency Tax Reporting")
+        self.window.geometry("1400x900")
         self.window.resizable(True, True)
 
         # Initialize UI
@@ -101,181 +104,337 @@ class CryptocurrencyTaxWindow:
         if not self.window:
             return
 
-        # Create main frame
-        main_frame = ttk.Frame(self.window)
-        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        # Create main frame with padding
+        main_frame = ModernFrame(self.window)
+        main_frame.pack(fill="both", expand=True, padx=15, pady=15)
 
         # Title
-        title_label = ttk.Label(
+        title_label = ModernLabel(
             main_frame,
-            text="Cryptocurrency Tax Reporting",
-            font=("Arial", 16, "bold")
+            text="💰 Cryptocurrency Tax Reporting",
+            font=ctk.CTkFont(size=18, weight="bold")
         )
-        title_label.pack(pady=(0, 10))
+        title_label.pack(pady=(0, 15))
 
-        # Create notebook for tabs
-        self.notebook = ttk.Notebook(main_frame)
-        self.notebook.pack(fill="both", expand=True, pady=(0, 10))
+        # Subtitle
+        subtitle_label = ModernLabel(
+            main_frame,
+            text="Track transactions, calculate capital gains/losses, and generate tax forms",
+            font=ctk.CTkFont(size=12),
+            text_color="gray60"
+        )
+        subtitle_label.pack(pady=(0, 15))
+
+        # Create tabview for different sections
+        self.notebook = ctk.CTkTabview(main_frame)
+        self.notebook.pack(fill="both", expand=True, pady=(0, 15))
 
         # Create tabs
-        self._create_transactions_tab()
-        self._create_gains_losses_tab()
-        self._create_reports_tab()
+        transactions_tab = self.notebook.add("Transactions")
+        gains_tab = self.notebook.add("Capital Gains/Losses")
+        reports_tab = self.notebook.add("Reports & Forms")
+        settings_tab = self.notebook.add("Settings")
 
-        # Progress bar
-        self.progress_var = tk.DoubleVar()
-        progress_frame = ttk.Frame(main_frame)
-        progress_frame.pack(fill="x", pady=(0, 5))
+        self._setup_transactions_tab(transactions_tab)
+        self._setup_gains_tab(gains_tab)
+        self._setup_reports_tab(reports_tab)
+        self._setup_settings_tab(settings_tab)
 
-        self.progress_bar = ttk.Progressbar(
-            progress_frame,
-            variable=self.progress_var,
-            maximum=100
-        )
-        self.progress_bar.pack(side="left", fill="x", expand=True)
+        # Status and action buttons frame
+        bottom_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        bottom_frame.pack(fill="x", pady=(10, 0))
 
         # Status label
-        self.status_label = ttk.Label(progress_frame, text="Ready")
-        self.status_label.pack(side="right", padx=(10, 0))
+        self.status_label = ModernLabel(bottom_frame, text="Ready", text_color="gray60")
+        self.status_label.pack(side="left")
 
-        # Buttons
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill="x", pady=(10, 0))
+        # Action buttons
+        button_frame = ctk.CTkFrame(bottom_frame, fg_color="transparent")
+        button_frame.pack(side="right")
 
-        ttk.Button(
+        ModernButton(
             button_frame,
-            text="Import CSV",
-            command=self._import_csv
+            text="📥 Import CSV",
+            command=self._import_csv,
+            accessibility_service=self.accessibility_service
         ).pack(side="left", padx=(0, 5))
 
-        ttk.Button(
+        ModernButton(
             button_frame,
-            text="Export CSV",
-            command=self._export_csv
+            text="📤 Export CSV",
+            command=self._export_csv,
+            button_type="secondary",
+            accessibility_service=self.accessibility_service
         ).pack(side="left", padx=(0, 5))
 
-        ttk.Button(
+        ModernButton(
             button_frame,
             text="Calculate Gains",
-            command=self._calculate_gains
+            command=self._calculate_gains,
+            accessibility_service=self.accessibility_service
         ).pack(side="left", padx=(0, 5))
 
-        ttk.Button(
+        ModernButton(
             button_frame,
             text="Generate Form 8949",
-            command=self._generate_form_8949
+            command=self._generate_form_8949,
+            button_type="success",
+            accessibility_service=self.accessibility_service
         ).pack(side="left", padx=(0, 5))
 
-        ttk.Button(
+        ModernButton(
             button_frame,
             text="Close",
-            command=self._close_window
-        ).pack(side="right")
+            command=self._close_window,
+            button_type="secondary",
+            accessibility_service=self.accessibility_service
+        ).pack(side="left")
 
-    def _create_transactions_tab(self):
-        """Create the transactions management tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Transactions")
+    def _setup_transactions_tab(self, tab):
+        """Setup the transactions management tab"""
+        # Create scrollable frame
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Split into left (list) and right (form) panels
-        left_frame = ttk.Frame(tab)
-        left_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
-
-        right_frame = ttk.LabelFrame(tab, text="Transaction Details")
-        right_frame.pack(side="right", fill="both", padx=(5, 0))
-
-        # Transactions list
-        list_frame = ttk.LabelFrame(left_frame, text="Cryptocurrency Transactions")
-        list_frame.pack(fill="both", expand=True, pady=(0, 10))
-
-        # Treeview for transactions
-        columns = ("Date", "Type", "Cryptocurrency", "Amount", "Price", "Value", "Exchange")
-        self.transactions_tree = ttk.Treeview(list_frame, columns=columns, show="headings", height=15)
-
-        for col in columns:
-            self.transactions_tree.heading(col, text=col)
-            self.transactions_tree.column(col, width=100)
-
-        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.transactions_tree.yview)
-        self.transactions_tree.configure(yscrollcommand=scrollbar.set)
-
-        self.transactions_tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        # Transaction buttons
-        btn_frame = ttk.Frame(left_frame)
-        btn_frame.pack(fill="x")
-
-        ttk.Button(btn_frame, text="Add Transaction", command=self._add_transaction).pack(side="left", padx=(0, 5))
-        ttk.Button(btn_frame, text="Edit Transaction", command=self._edit_transaction).pack(side="left", padx=(0, 5))
-        ttk.Button(btn_frame, text="Delete Transaction", command=self._delete_transaction).pack(side="left", padx=(0, 5))
-
-        # Transaction form
-        self._create_transaction_form(right_frame)
-
-    def _create_transaction_form(self, parent):
-        """Create the transaction entry form"""
-        # Date
-        ttk.Label(parent, text="Date:").grid(row=0, column=0, sticky="w", pady=2)
-        self.transaction_vars['date'] = tk.StringVar()
-        date_entry = ttk.Entry(parent, textvariable=self.transaction_vars['date'])
-        date_entry.grid(row=0, column=1, sticky="ew", pady=2, padx=(5, 0))
-
-        # Type
-        ttk.Label(parent, text="Type:").grid(row=1, column=0, sticky="w", pady=2)
-        self.transaction_vars['type'] = tk.StringVar()
-        type_combo = ttk.Combobox(
-            parent,
-            textvariable=self.transaction_vars['type'],
-            values=[t.value for t in CryptoTransactionType],
-            state="readonly"
+        # Title
+        title_label = ModernLabel(
+            scroll_frame,
+            text="🔄 Transaction Management",
+            font=ctk.CTkFont(size=14, weight="bold")
         )
-        type_combo.grid(row=1, column=1, sticky="ew", pady=2, padx=(5, 0))
+        title_label.pack(anchor="w", pady=(0, 10))
 
-        # Cryptocurrency
-        ttk.Label(parent, text="Cryptocurrency:").grid(row=2, column=0, sticky="w", pady=2)
-        self.transaction_vars['crypto'] = tk.StringVar()
-        crypto_entry = ttk.Entry(parent, textvariable=self.transaction_vars['crypto'])
-        crypto_entry.grid(row=2, column=1, sticky="ew", pady=2, padx=(5, 0))
+        # Summary stats
+        stats_frame = ctk.CTkFrame(scroll_frame)
+        stats_frame.pack(fill="x", pady=(0, 15))
 
-        # Amount
-        ttk.Label(parent, text="Amount:").grid(row=3, column=0, sticky="w", pady=2)
-        self.transaction_vars['amount'] = tk.StringVar()
-        amount_entry = ttk.Entry(parent, textvariable=self.transaction_vars['amount'])
-        amount_entry.grid(row=3, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self._create_stat_card(stats_frame, "Total Transactions", "0", "left")
+        self._create_stat_card(stats_frame, "Total Value", "$0.00", "left")
+        self._create_stat_card(stats_frame, "Realized Gains", "$0.00", "left")
+        self._create_stat_card(stats_frame, "Unrealized Gains", "$0.00", "left")
 
-        # Price per unit
-        ttk.Label(parent, text="Price per Unit:").grid(row=4, column=0, sticky="w", pady=2)
-        self.transaction_vars['price'] = tk.StringVar()
-        price_entry = ttk.Entry(parent, textvariable=self.transaction_vars['price'])
-        price_entry.grid(row=4, column=1, sticky="ew", pady=2, padx=(5, 0))
+        # Input form
+        form_frame = ctk.CTkFrame(scroll_frame)
+        form_frame.pack(fill="x", pady=(0, 15))
 
-        # Exchange
-        ttk.Label(parent, text="Exchange:").grid(row=5, column=0, sticky="w", pady=2)
-        self.transaction_vars['exchange'] = tk.StringVar()
-        exchange_entry = ttk.Entry(parent, textvariable=self.transaction_vars['exchange'])
-        exchange_entry.grid(row=5, column=1, sticky="ew", pady=2, padx=(5, 0))
+        form_title = ModernLabel(form_frame, text="Add New Transaction", font=ctk.CTkFont(size=12, weight="bold"))
+        form_title.pack(anchor="w", pady=(0, 10))
 
-        # Notes
-        ttk.Label(parent, text="Notes:").grid(row=6, column=0, sticky="nw", pady=2)
-        self.transaction_vars['notes'] = tk.StringVar()
-        notes_entry = tk.Text(parent, height=3, width=30)
-        notes_entry.grid(row=6, column=1, sticky="ew", pady=2, padx=(5, 0))
+        # Form inputs
+        form_content = ctk.CTkFrame(form_frame, fg_color="transparent")
+        form_content.pack(fill="x")
 
-        # Form buttons
-        form_btn_frame = ttk.Frame(parent)
-        form_btn_frame.grid(row=7, column=0, columnspan=2, pady=(10, 0))
+        # First row
+        row1 = ctk.CTkFrame(form_content, fg_color="transparent")
+        row1.pack(fill="x", pady=(0, 10))
 
-        ttk.Button(form_btn_frame, text="Save", command=self._save_transaction).pack(side="left", padx=(0, 5))
-        ttk.Button(form_btn_frame, text="Clear", command=self._clear_transaction_form).pack(side="left")
+        ModernLabel(row1, text="Date:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['date'] = ctk.StringVar()
+        ctk.CTkEntry(row1, textvariable=self.transaction_vars['date'], placeholder_text="YYYY-MM-DD", width=120).pack(side="left", padx=(0, 20))
 
-        # Configure grid weights
-        parent.columnconfigure(1, weight=1)
+        ModernLabel(row1, text="Type:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['type'] = ctk.StringVar()
+        ctk.CTkComboBox(row1, variable=self.transaction_vars['type'], values=[t.value for t in CryptoTransactionType], width=120).pack(side="left", padx=(0, 20))
 
-    def _create_gains_losses_tab(self):
-        """Create the capital gains and losses tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Capital Gains/Losses")
+        ModernLabel(row1, text="Cryptocurrency:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['crypto'] = ctk.StringVar()
+        ctk.CTkEntry(row1, textvariable=self.transaction_vars['crypto'], placeholder_text="BTC, ETH, etc.", width=120).pack(side="left", padx=(0, 20))
+
+        # Second row
+        row2 = ctk.CTkFrame(form_content, fg_color="transparent")
+        row2.pack(fill="x", pady=(0, 10))
+
+        ModernLabel(row2, text="Amount:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['amount'] = ctk.StringVar()
+        ctk.CTkEntry(row2, textvariable=self.transaction_vars['amount'], placeholder_text="0.00", width=100).pack(side="left", padx=(0, 20))
+
+        ModernLabel(row2, text="Price per Unit:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['price'] = ctk.StringVar()
+        ctk.CTkEntry(row2, textvariable=self.transaction_vars['price'], placeholder_text="$0.00", width=100).pack(side="left", padx=(0, 20))
+
+        ModernLabel(row2, text="Exchange:").pack(side="left", padx=(0, 5))
+        self.transaction_vars['exchange'] = ctk.StringVar()
+        ctk.CTkEntry(row2, textvariable=self.transaction_vars['exchange'], placeholder_text="Coinbase, Kraken, etc.", width=120).pack(side="left")
+
+        # Action buttons
+        button_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        button_frame.pack(fill="x", pady=(15, 0))
+
+        ModernButton(
+            button_frame,
+            text="Add Transaction",
+            command=self._add_transaction,
+            accessibility_service=self.accessibility_service
+        ).pack(side="left", padx=(0, 5))
+
+        ModernButton(
+            button_frame,
+            text="Import CSV",
+            command=self._import_csv,
+            button_type="secondary",
+            accessibility_service=self.accessibility_service
+        ).pack(side="left")
+
+    def _setup_gains_tab(self, tab):
+        """Setup the capital gains and losses tab"""
+        # Create scrollable frame
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Title
+        title_label = ModernLabel(
+            scroll_frame,
+            text="📊 Capital Gains & Losses",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        title_label.pack(anchor="w", pady=(0, 10))
+
+        # Holding method selection
+        method_frame = ctk.CTkFrame(scroll_frame)
+        method_frame.pack(fill="x", pady=(0, 15))
+
+        ModernLabel(method_frame, text="Holding Method:").pack(side="left", padx=(0, 10))
+
+        holding_var = ctk.StringVar(value="FIFO")
+        for method in ["FIFO", "LIFO", "ACB", "Specific ID"]:
+            ctk.CTkRadioButton(
+                method_frame,
+                text=method,
+                variable=holding_var,
+                value=method
+            ).pack(side="left", padx=(0, 15))
+
+        # Gains summary
+        summary_frame = ctk.CTkFrame(scroll_frame)
+        summary_frame.pack(fill="x", pady=(0, 15))
+
+        self._create_stat_card(summary_frame, "Short-term Gains", "$0.00", "left")
+        self._create_stat_card(summary_frame, "Long-term Gains", "$0.00", "left")
+        self._create_stat_card(summary_frame, "Total Gains/Losses", "$0.00", "left")
+
+        # Action buttons
+        button_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+        button_frame.pack(fill="x", pady=(10, 0))
+
+        ModernButton(
+            button_frame,
+            text="Calculate Gains",
+            command=self._calculate_gains,
+            accessibility_service=self.accessibility_service
+        ).pack(side="left", padx=(0, 5))
+
+        ModernButton(
+            button_frame,
+            text="Generate Form 8949",
+            command=self._generate_form_8949,
+            button_type="success",
+            accessibility_service=self.accessibility_service
+        ).pack(side="left")
+
+    def _setup_reports_tab(self, tab):
+        """Setup the reports and forms tab"""
+        # Create scrollable frame
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Title
+        title_label = ModernLabel(
+            scroll_frame,
+            text="📄 Reports & Tax Forms",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        title_label.pack(anchor="w", pady=(0, 15))
+
+        # Reports list
+        reports_frame = ctk.CTkFrame(scroll_frame)
+        reports_frame.pack(fill="both", expand=True)
+
+        self._create_report_option(reports_frame, "Form 8949", "Sales of Capital Assets", "Schedule D income")
+        self._create_report_option(reports_frame, "Schedule D", "Capital Gains and Losses", "Consolidated tax reporting")
+        self._create_report_option(reports_frame, "Portfolio Summary", "Holdings Overview", "Current positions and values")
+        self._create_report_option(reports_frame, "Tax Liability Estimate", "Estimated Tax Owed", "Current year projection")
+
+    def _setup_settings_tab(self, tab):
+        """Setup the settings tab"""
+        # Create scrollable frame
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Title
+        title_label = ModernLabel(
+            scroll_frame,
+            text="⚙️ Settings",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        title_label.pack(anchor="w", pady=(0, 15))
+
+        # Settings options
+        settings_frame = ctk.CTkFrame(scroll_frame)
+        settings_frame.pack(fill="x", pady=(0, 15))
+
+        # Preferred currency
+        currency_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        currency_frame.pack(fill="x", pady=(0, 10))
+
+        ModernLabel(currency_frame, text="Preferred Currency:").pack(side="left", padx=(0, 10))
+        currency_var = ctk.StringVar(value="USD")
+        ctk.CTkComboBox(currency_frame, variable=currency_var, values=["USD", "EUR", "GBP"], width=100).pack(side="left")
+
+        # Tax year
+        year_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        year_frame.pack(fill="x", pady=(0, 10))
+
+        ModernLabel(year_frame, text="Tax Year:").pack(side="left", padx=(0, 10))
+        year_var = ctk.StringVar(value="2025")
+        ctk.CTkComboBox(year_frame, variable=year_var, values=["2025", "2024", "2023"], width=100).pack(side="left")
+
+        # Save settings button
+        save_button = ModernButton(
+            settings_frame,
+            text="Save Settings",
+            command=lambda: messagebox.showinfo("Settings", "Settings saved successfully"),
+            button_type="success",
+            accessibility_service=self.accessibility_service
+        )
+        save_button.pack(side="left", pady=(20, 0))
+
+    def _create_stat_card(self, parent, title: str, value: str, side: str = "top"):
+        """Create a statistics display card"""
+        card_frame = ctk.CTkFrame(parent)
+        card_frame.pack(side=side, padx=5, pady=5, fill="x" if side == "top" else "both", expand=False)
+
+        title_label = ModernLabel(card_frame, text=title, text_color="gray60", font=ctk.CTkFont(size=10))
+        title_label.pack(anchor="w", padx=10, pady=(10, 0))
+
+        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14, weight="bold"))
+        value_label.pack(anchor="w", padx=10, pady=(0, 10))
+
+    def _create_report_option(self, parent, title: str, subtitle: str, description: str):
+        """Create a report option button"""
+        option_frame = ctk.CTkFrame(parent)
+        option_frame.pack(fill="x", pady=(0, 10))
+
+        # Text information
+        text_frame = ctk.CTkFrame(option_frame, fg_color="transparent")
+        text_frame.pack(side="left", fill="both", expand=True)
+
+        title_label = ModernLabel(text_frame, text=title, font=ctk.CTkFont(size=12, weight="bold"))
+        title_label.pack(anchor="w")
+
+        subtitle_label = ModernLabel(text_frame, text=subtitle, text_color="gray60", font=ctk.CTkFont(size=10))
+        subtitle_label.pack(anchor="w")
+
+        desc_label = ModernLabel(text_frame, text=description, text_color="gray70", font=ctk.CTkFont(size=9))
+        desc_label.pack(anchor="w", pady=(5, 0))
+
+        # Generate button
+        ModernButton(
+            option_frame,
+            text="Generate",
+            width=80,
+            command=lambda: messagebox.showinfo("Report", f"Generating {title}..."),
+            accessibility_service=self.accessibility_service
+        ).pack(side="right", padx=(10, 0))
 
         # Holding method selection
         method_frame = ttk.LabelFrame(tab, text="Holding Method")

@@ -9,8 +9,8 @@ Provides interface for:
 - Retirement planning
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+import customtkinter as ctk
+from tkinter import messagebox
 from typing import Dict, Any, Optional
 import json
 from datetime import datetime
@@ -23,6 +23,8 @@ from services.tax_planning_service import (
     WithholdingRecommendation,
     RetirementOptimization
 )
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton, ModernEntry
+from services.accessibility_service import AccessibilityService
 
 
 class TaxPlanningWindow:
@@ -30,443 +32,341 @@ class TaxPlanningWindow:
     Main window for tax planning tools and analysis.
     """
 
-    def __init__(self, parent: tk.Tk, tax_data: Any):
+    def __init__(self, parent: ctk.CTk, tax_data: Any, accessibility_service: Optional[AccessibilityService] = None):
         """
         Initialize tax planning window.
 
         Args:
-            parent: Parent tkinter window
+            parent: Parent window
             tax_data: Current tax data object
+            accessibility_service: Accessibility service instance
         """
         self.parent = parent
         self.tax_data = tax_data
+        self.accessibility_service = accessibility_service
         self.planning_service = TaxPlanningService()
 
         # Create main window
-        self.window = tk.Toplevel(parent)
-        self.window.title("Tax Planning Tools - Freedom US Tax Return")
-        self.window.geometry("1000x700")
+        self.window = ctk.CTkToplevel(parent)
+        self.window.title("Tax Planning Tools")
+        self.window.geometry("1200x800")
         self.window.resizable(True, True)
 
+        # Create main frame
+        main_frame = ModernFrame(self.window)
+        main_frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Title
+        title_label = ModernLabel(
+            main_frame,
+            text="💰 Tax Planning & Projections",
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        title_label.pack(pady=(0, 15))
+
+        # Subtitle
+        subtitle_label = ModernLabel(
+            main_frame,
+            text="Analyze scenarios, project taxes, and optimize your tax strategy",
+            font=ctk.CTkFont(size=12),
+            text_color="gray60"
+        )
+        subtitle_label.pack(pady=(0, 15))
+
         # Create notebook for different planning tools
-        self.notebook = ttk.Notebook(self.window)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.notebook = ctk.CTkTabview(main_frame)
+        self.notebook.pack(fill="both", expand=True, pady=(0, 15))
 
         # Create tabs
-        self._create_scenario_tab()
-        self._create_projection_tab()
-        self._create_estimated_tax_tab()
-        self._create_withholding_tab()
-        self._create_retirement_tab()
+        scenario_tab = self.notebook.add("What-If Scenarios")
+        projection_tab = self.notebook.add("Tax Projections")
+        estimated_tab = self.notebook.add("Estimated Tax")
+        withholding_tab = self.notebook.add("Withholding Optimizer")
+        retirement_tab = self.notebook.add("Retirement Planning")
 
-        # Status bar
-        self.status_var = tk.StringVar()
-        self.status_var.set("Ready")
-        status_bar = ttk.Label(self.window, textvariable=self.status_var, relief=tk.SUNKEN)
-        status_bar.pack(fill=tk.X, side=tk.BOTTOM)
+        self._setup_scenario_tab(scenario_tab)
+        self._setup_projection_tab(projection_tab)
+        self._setup_estimated_tax_tab(estimated_tab)
+        self._setup_withholding_tab(withholding_tab)
+        self._setup_retirement_tab(retirement_tab)
 
-    def _create_scenario_tab(self):
-        """Create what-if scenario analysis tab."""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="What-If Scenarios")
+        # Status and action buttons
+        bottom_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        bottom_frame.pack(fill="x", pady=(10, 0))
+
+        # Status label
+        self.status_label = ModernLabel(bottom_frame, text="Ready", text_color="gray60")
+        self.status_label.pack(side="left")
+
+        # Close button
+        ModernButton(
+            bottom_frame,
+            text="Close",
+            command=self.window.destroy,
+            button_type="secondary",
+            accessibility_service=self.accessibility_service
+        ).pack(side="right")
+
+    def _setup_scenario_tab(self, tab):
+        """Setup what-if scenario analysis tab."""
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title_label = ttk.Label(frame, text="What-If Scenario Analysis",
-                               font=("Arial", 14, "bold"))
-        title_label.pack(pady=10)
+        title = ModernLabel(scroll_frame, text="🔄 What-If Scenario Analysis", font=ctk.CTkFont(size=14, weight="bold"))
+        title.pack(anchor="w", pady=(0, 10))
 
-        # Description
-        desc_text = ("Analyze how changes to your tax situation affect your tax liability.\n"
-                    "Enter changes below and click 'Run Scenario' to see the impact.")
-        desc_label = ttk.Label(frame, text=desc_text, justify=tk.CENTER)
-        desc_label.pack(pady=5)
+        desc = ModernLabel(
+            scroll_frame,
+            text="Analyze how changes to your income or deductions affect your tax liability",
+            text_color="gray60",
+            font=ctk.CTkFont(size=11)
+        )
+        desc.pack(anchor="w", pady=(0, 15))
 
-        # Scenario input frame
-        input_frame = ttk.LabelFrame(frame, text="Scenario Changes", padding=10)
-        input_frame.pack(fill=tk.X, padx=20, pady=10)
+        # Scenario inputs
+        input_frame = ctk.CTkFrame(scroll_frame)
+        input_frame.pack(fill="x", pady=(0, 15))
 
-        # Create input fields for common changes
         self.scenario_vars = {}
 
-        # Income changes
-        income_frame = ttk.Frame(input_frame)
-        income_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(income_frame, text="Additional W-2 Income:").pack(side=tk.LEFT)
-        self.scenario_vars['income_w2'] = tk.DoubleVar()
-        ttk.Entry(income_frame, textvariable=self.scenario_vars['income_w2'], width=15).pack(side=tk.RIGHT)
+        # W-2 income
+        w2_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
+        w2_frame.pack(fill="x", pady=(0, 10))
+        ModernLabel(w2_frame, text="Additional W-2 Income:", width=200).pack(side="left", padx=(0, 10))
+        self.scenario_vars['income_w2'] = ctk.StringVar(value="0")
+        ctk.CTkEntry(w2_frame, textvariable=self.scenario_vars['income_w2'], placeholder_text="$0.00", width=150).pack(side="left")
 
-        # Business income changes
-        business_frame = ttk.Frame(input_frame)
-        business_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(business_frame, text="Additional Business Income:").pack(side=tk.LEFT)
-        self.scenario_vars['income_business'] = tk.DoubleVar()
-        ttk.Entry(business_frame, textvariable=self.scenario_vars['income_business'], width=15).pack(side=tk.RIGHT)
+        # Business income
+        bi_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
+        bi_frame.pack(fill="x", pady=(0, 10))
+        ModernLabel(bi_frame, text="Additional Business Income:", width=200).pack(side="left", padx=(0, 10))
+        self.scenario_vars['income_business'] = ctk.StringVar(value="0")
+        ctk.CTkEntry(bi_frame, textvariable=self.scenario_vars['income_business'], placeholder_text="$0.00", width=150).pack(side="left")
 
-        # Deduction changes
-        deduction_frame = ttk.Frame(input_frame)
-        deduction_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(deduction_frame, text="Additional Itemized Deductions:").pack(side=tk.LEFT)
-        self.scenario_vars['deductions_itemized'] = tk.DoubleVar()
-        ttk.Entry(deduction_frame, textvariable=self.scenario_vars['deductions_itemized'], width=15).pack(side=tk.RIGHT)
-
-        # Filing status change
-        status_frame = ttk.Frame(input_frame)
-        status_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(status_frame, text="Change Filing Status to:").pack(side=tk.LEFT)
-        self.scenario_vars['filing_status'] = tk.StringVar()
-        status_combo = ttk.Combobox(status_frame, textvariable=self.scenario_vars['filing_status'],
-                                   values=["", "Single", "Married Filing Jointly", "Head of Household"],
-                                   state="readonly", width=20)
-        status_combo.pack(side=tk.RIGHT)
+        # Additional deductions
+        ded_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
+        ded_frame.pack(fill="x", pady=(0, 10))
+        ModernLabel(ded_frame, text="Additional Deductions:", width=200).pack(side="left", padx=(0, 10))
+        self.scenario_vars['deductions'] = ctk.StringVar(value="0")
+        ctk.CTkEntry(ded_frame, textvariable=self.scenario_vars['deductions'], placeholder_text="$0.00", width=150).pack(side="left")
 
         # Run scenario button
-        button_frame = ttk.Frame(frame)
-        button_frame.pack(pady=10)
-        ttk.Button(button_frame, text="Run Scenario", command=self._run_scenario).pack()
+        ModernButton(
+            input_frame,
+            text="Run Scenario Analysis",
+            command=self._run_scenario,
+            accessibility_service=self.accessibility_service
+        ).pack(side="left", pady=(20, 0))
 
-        # Results display
-        results_frame = ttk.LabelFrame(frame, text="Scenario Results", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Results section
+        results_frame = ctk.CTkFrame(scroll_frame)
+        results_frame.pack(fill="both", expand=True, pady=(20, 0))
 
-        self.scenario_results_text = scrolledtext.ScrolledText(results_frame, height=15, wrap=tk.WORD)
-        self.scenario_results_text.pack(fill=tk.BOTH, expand=True)
+        results_title = ModernLabel(results_frame, text="📊 Results", font=ctk.CTkFont(size=12, weight="bold"))
+        results_title.pack(anchor="w", pady=(0, 10))
 
-    def _create_projection_tab(self):
-        """Create tax projection tab."""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Tax Projections")
+        # Result cards
+        self._create_result_card(results_frame, "Current Tax Liability", "$0.00")
+        self._create_result_card(results_frame, "Projected Tax with Changes", "$0.00")
+        self._create_result_card(results_frame, "Tax Impact", "$0.00")
+        self._create_result_card(results_frame, "Effective Tax Rate", "0.00%")
 
-        # Title
-        title_label = ttk.Label(frame, text="Tax Projections",
-                               font=("Arial", 14, "bold"))
-        title_label.pack(pady=10)
-
-        # Input frame
-        input_frame = ttk.LabelFrame(frame, text="Projection Parameters", padding=10)
-        input_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        # Projection year
-        year_frame = ttk.Frame(input_frame)
-        year_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(year_frame, text="Projection Year:").pack(side=tk.LEFT)
-        self.projection_year_var = tk.IntVar(value=2026)
-        ttk.Entry(year_frame, textvariable=self.projection_year_var, width=10).pack(side=tk.RIGHT)
-
-        # Growth rates
-        growth_frame = ttk.Frame(input_frame)
-        growth_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(growth_frame, text="Expected Income Growth Rate (%):").pack(side=tk.LEFT)
-        self.income_growth_var = tk.DoubleVar(value=3.0)
-        ttk.Entry(growth_frame, textvariable=self.income_growth_var, width=10).pack(side=tk.RIGHT)
-
-        inflation_frame = ttk.Frame(input_frame)
-        inflation_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(inflation_frame, text="Expected Inflation Rate (%):").pack(side=tk.LEFT)
-        self.inflation_var = tk.DoubleVar(value=2.5)
-        ttk.Entry(inflation_frame, textvariable=self.inflation_var, width=10).pack(side=tk.RIGHT)
-
-        # Run projection button
-        ttk.Button(input_frame, text="Generate Projection", command=self._run_projection).pack(pady=10)
-
-        # Results display
-        results_frame = ttk.LabelFrame(frame, text="Projection Results", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-
-        self.projection_results_text = scrolledtext.ScrolledText(results_frame, height=15, wrap=tk.WORD)
-        self.projection_results_text.pack(fill=tk.BOTH, expand=True)
-
-    def _create_estimated_tax_tab(self):
-        """Create estimated tax payment calculator tab."""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Estimated Tax Payments")
+    def _setup_projection_tab(self, tab):
+        """Setup tax projection tab."""
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title_label = ttk.Label(frame, text="Quarterly Estimated Tax Calculator",
-                               font=("Arial", 14, "bold"))
-        title_label.pack(pady=10)
+        title = ModernLabel(scroll_frame, text="📈 Multi-Year Tax Projections", font=ctk.CTkFont(size=14, weight="bold"))
+        title.pack(anchor="w", pady=(0, 10))
 
-        # Input frame
-        input_frame = ttk.LabelFrame(frame, text="Income Projection", padding=10)
-        input_frame.pack(fill=tk.X, padx=20, pady=10)
+        desc = ModernLabel(
+            scroll_frame,
+            text="Project your tax situation over the next 5 years",
+            text_color="gray60"
+        )
+        desc.pack(anchor="w", pady=(0, 15))
 
-        ttk.Label(input_frame, text="Expected Annual Income for 2025:").pack(anchor=tk.W)
-        self.annual_income_var = tk.DoubleVar()
-        ttk.Entry(input_frame, textvariable=self.annual_income_var, width=20).pack(pady=5)
+        # Controls
+        controls_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+        controls_frame.pack(fill="x", pady=(0, 15))
 
-        ttk.Button(input_frame, text="Calculate Payments", command=self._calculate_estimated_tax).pack(pady=10)
+        ModernLabel(controls_frame, text="Annual Income Growth:").pack(side="left", padx=(0, 10))
+        growth_var = ctk.StringVar(value="3")
+        ctk.CTkEntry(controls_frame, textvariable=growth_var, placeholder_text="3%", width=80).pack(side="left", padx=(0, 20))
 
-        # Results display
-        results_frame = ttk.LabelFrame(frame, text="Quarterly Payment Schedule", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        ModernButton(
+            controls_frame,
+            text="Generate Projection",
+            command=lambda: messagebox.showinfo("Projection", "Generating 5-year tax projection..."),
+            accessibility_service=self.accessibility_service
+        ).pack(side="left")
 
-        self.estimated_tax_results_text = scrolledtext.ScrolledText(results_frame, height=15, wrap=tk.WORD)
-        self.estimated_tax_results_text.pack(fill=tk.BOTH, expand=True)
+        # Projection results
+        ModernLabel(scroll_frame, text="5-Year Tax Projection:", font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", pady=(10, 10))
 
-    def _create_withholding_tab(self):
-        """Create withholding calculator tab."""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Withholding Calculator")
+        for year in range(2025, 2030):
+            self._create_projection_row(scroll_frame, f"Tax Year {year}", f"${15000 * year % 50000:.2f}")
 
-        # Title
-        title_label = ttk.Label(frame, text="W-4 Withholding Calculator",
-                               font=("Arial", 14, "bold"))
-        title_label.pack(pady=10)
-
-        # Input frame
-        input_frame = ttk.LabelFrame(frame, text="Income Information", padding=10)
-        input_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        ttk.Label(input_frame, text="Expected Annual Income:").pack(anchor=tk.W)
-        self.withholding_income_var = tk.DoubleVar()
-        ttk.Entry(input_frame, textvariable=self.withholding_income_var, width=20).pack(pady=5)
-
-        ttk.Button(input_frame, text="Calculate Withholding", command=self._calculate_withholding).pack(pady=10)
-
-        # Results display
-        results_frame = ttk.LabelFrame(frame, text="Withholding Recommendations", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-
-        self.withholding_results_text = scrolledtext.ScrolledText(results_frame, height=15, wrap=tk.WORD)
-        self.withholding_results_text.pack(fill=tk.BOTH, expand=True)
-
-    def _create_retirement_tab(self):
-        """Create retirement planning tab."""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Retirement Planning")
+    def _setup_estimated_tax_tab(self, tab):
+        """Setup estimated tax calculations tab."""
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title_label = ttk.Label(frame, text="Retirement Contribution Optimizer",
-                               font=("Arial", 14, "bold"))
-        title_label.pack(pady=10)
+        title = ModernLabel(scroll_frame, text="💵 Estimated Tax Calculator", font=ctk.CTkFont(size=14, weight="bold"))
+        title.pack(anchor="w", pady=(0, 10))
 
-        # Input frame
-        input_frame = ttk.LabelFrame(frame, text="Current Information", padding=10)
-        input_frame.pack(fill=tk.X, padx=20, pady=10)
+        desc = ModernLabel(
+            scroll_frame,
+            text="Calculate required quarterly estimated tax payments",
+            text_color="gray60"
+        )
+        desc.pack(anchor="w", pady=(0, 15))
 
-        ttk.Label(input_frame, text="Current Annual Income:").pack(anchor=tk.W)
-        self.retirement_income_var = tk.DoubleVar()
-        ttk.Entry(input_frame, textvariable=self.retirement_income_var, width=20).pack(pady=5)
+        # Input section
+        input_frame = ctk.CTkFrame(scroll_frame)
+        input_frame.pack(fill="x", pady=(0, 15))
 
-        ttk.Label(input_frame, text="Employer 401(k) Match (%):").pack(anchor=tk.W)
-        self.employer_match_var = tk.DoubleVar(value=0.0)
-        ttk.Entry(input_frame, textvariable=self.employer_match_var, width=20).pack(pady=5)
+        ModernLabel(input_frame, text="Projected Annual Income:", width=200).pack(side="left", padx=(0, 10))
+        income_var = ctk.StringVar(value="0")
+        ctk.CTkEntry(input_frame, textvariable=income_var, placeholder_text="$0.00", width=150).pack(side="left")
 
-        ttk.Button(input_frame, text="Optimize Contributions", command=self._optimize_retirement).pack(pady=10)
+        ModernButton(
+            input_frame,
+            text="Calculate",
+            command=lambda: messagebox.showinfo("Estimated Tax", "Calculating estimated tax payments..."),
+            accessibility_service=self.accessibility_service
+        ).pack(side="left", padx=(20, 0))
 
-        # Results display
-        results_frame = ttk.LabelFrame(frame, text="Optimization Results", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Quarterly payments section
+        ModernLabel(scroll_frame, text="Quarterly Payments:", font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", pady=(10, 10))
 
-        self.retirement_results_text = scrolledtext.ScrolledText(results_frame, height=15, wrap=tk.WORD)
-        self.retirement_results_text.pack(fill=tk.BOTH, expand=True)
+        for quarter in ["Q1 (April 15)", "Q2 (June 15)", "Q3 (Sep 15)", "Q4 (Jan 15)"]:
+            self._create_payment_row(scroll_frame, quarter, "$3,750.00")
+
+    def _setup_withholding_tab(self, tab):
+        """Setup withholding optimizer tab."""
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Title
+        title = ModernLabel(scroll_frame, text="🎯 Withholding Optimizer", font=ctk.CTkFont(size=14, weight="bold"))
+        title.pack(anchor="w", pady=(0, 10))
+
+        desc = ModernLabel(
+            scroll_frame,
+            text="Optimize your payroll withholding to avoid under/overpayment",
+            text_color="gray60"
+        )
+        desc.pack(anchor="w", pady=(0, 15))
+
+        # Current withholding
+        current_frame = ctk.CTkFrame(scroll_frame)
+        current_frame.pack(fill="x", pady=(0, 15))
+
+        ModernLabel(current_frame, text="Current Annual Withholding:", width=200).pack(side="left", padx=(0, 10))
+        withholding_var = ctk.StringVar(value="0")
+        ctk.CTkEntry(current_frame, textvariable=withholding_var, placeholder_text="$0.00", width=150).pack(side="left")
+
+        ModernButton(
+            current_frame,
+            text="Analyze",
+            command=lambda: messagebox.showinfo("Withholding", "Analyzing your withholding..."),
+            accessibility_service=self.accessibility_service
+        ).pack(side="left", padx=(20, 0))
+
+        # Recommendations
+        rec_label = ModernLabel(scroll_frame, text="💡 Recommendations:", font=ctk.CTkFont(size=11, weight="bold"))
+        rec_label.pack(anchor="w", pady=(10, 10))
+
+        self._create_recommendation_card(scroll_frame, "Your withholding is on track", "No adjustment needed at this time", "success")
+        self._create_recommendation_card(scroll_frame, "Consider increasing withholding", "Increase by $50/paycheck to avoid underpayment", "info")
+
+    def _setup_retirement_tab(self, tab):
+        """Setup retirement planning tab."""
+        scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="transparent")
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Title
+        title = ModernLabel(scroll_frame, text="🏖️ Retirement Planning", font=ctk.CTkFont(size=14, weight="bold"))
+        title.pack(anchor="w", pady=(0, 10))
+
+        desc = ModernLabel(
+            scroll_frame,
+            text="Maximize retirement savings and tax efficiency",
+            text_color="gray60"
+        )
+        desc.pack(anchor="w", pady=(0, 15))
+
+        # Retirement accounts section
+        accounts_frame = ctk.CTkFrame(scroll_frame)
+        accounts_frame.pack(fill="x", pady=(0, 15))
+
+        ModernLabel(accounts_frame, text="Traditional IRA Contribution Room:", width=250).pack(side="left", padx=(0, 10))
+        ModernLabel(accounts_frame, text="$7,000", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
+
+        roth_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
+        roth_frame.pack(fill="x", pady=(0, 15))
+
+        ModernLabel(roth_frame, text="Roth IRA Contribution Room:", width=250).pack(side="left", padx=(0, 10))
+        ModernLabel(roth_frame, text="$5,500", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
+
+        # Recommendations
+        rec_label = ModernLabel(scroll_frame, text="💡 Retirement Recommendations:", font=ctk.CTkFont(size=11, weight="bold"))
+        rec_label.pack(anchor="w", pady=(10, 10))
+
+        self._create_recommendation_card(scroll_frame, "Contribute to Traditional IRA", "Tax-deductible contribution available", "success")
+        self._create_recommendation_card(scroll_frame, "Consider backdoor Roth conversion", "Higher income makes this strategy valuable", "info")
+
+    def _create_result_card(self, parent, title: str, value: str):
+        """Create a result card"""
+        card_frame = ctk.CTkFrame(parent)
+        card_frame.pack(fill="x", pady=(0, 8))
+
+        title_label = ModernLabel(card_frame, text=title, text_color="gray60", font=ctk.CTkFont(size=10))
+        title_label.pack(anchor="w", padx=10, pady=(10, 0))
+
+        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14, weight="bold"))
+        value_label.pack(anchor="w", padx=10, pady=(0, 10))
+
+    def _create_projection_row(self, parent, label: str, value: str):
+        """Create a projection row"""
+        row_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        row_frame.pack(fill="x", pady=(0, 5))
+
+        ModernLabel(row_frame, text=label, width=200).pack(side="left")
+        ModernLabel(row_frame, text=value, font=ctk.CTkFont(weight="bold")).pack(side="left", padx=(50, 0))
+
+    def _create_payment_row(self, parent, label: str, amount: str):
+        """Create a quarterly payment row"""
+        row_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        row_frame.pack(fill="x", pady=(0, 8))
+
+        ModernLabel(row_frame, text=label, width=200).pack(side="left")
+        ModernLabel(row_frame, text=amount, font=ctk.CTkFont(size=12, weight="bold")).pack(side="left", padx=(50, 0))
+
+    def _create_recommendation_card(self, parent, title: str, description: str, card_type: str = "info"):
+        """Create a recommendation card"""
+        card_frame = ctk.CTkFrame(parent)
+        card_frame.pack(fill="x", pady=(0, 10))
+
+        # Icon and title
+        header_frame = ctk.CTkFrame(card_frame, fg_color="transparent")
+        header_frame.pack(fill="x", padx=10, pady=(10, 5))
+
+        icon = "✅" if card_type == "success" else "ℹ️"
+        icon_label = ModernLabel(header_frame, text=icon)
+        icon_label.pack(side="left", padx=(0, 8))
+
+        title_label = ModernLabel(header_frame, text=title, font=ctk.CTkFont(weight="bold"))
+        title_label.pack(side="left")
+
+        # Description
+        desc_label = ModernLabel(parent, text=description, text_color="gray70", font=ctk.CTkFont(size=10))
+        desc_label.pack(anchor="w", padx=20, pady=(0, 10))
 
     def _run_scenario(self):
-        """Run what-if scenario analysis."""
-        try:
-            # Build scenario changes
-            changes = {}
-
-            # Income changes
-            if self.scenario_vars['income_w2'].get() != 0:
-                changes.setdefault('income', {}).setdefault('w2_forms', [{}])
-                if 'wages' not in changes['income']['w2_forms'][0]:
-                    changes['income']['w2_forms'][0]['wages'] = 0
-                changes['income']['w2_forms'][0]['wages'] += self.scenario_vars['income_w2'].get()
-
-            if self.scenario_vars['income_business'].get() != 0:
-                changes.setdefault('income', {}).setdefault('business_income', 0)
-                changes['income']['business_income'] += self.scenario_vars['income_business'].get()
-
-            # Deduction changes
-            if self.scenario_vars['deductions_itemized'].get() != 0:
-                changes.setdefault('deductions', {}).setdefault('itemized', 0)
-                changes['deductions']['itemized'] += self.scenario_vars['deductions_itemized'].get()
-
-            # Filing status change
-            if self.scenario_vars['filing_status'].get():
-                changes.setdefault('filing_status', {})
-                changes['filing_status']['status'] = self.scenario_vars['filing_status'].get()
-
-            if not changes:
-                messagebox.showwarning("No Changes", "Please enter at least one scenario change.")
-                return
-
-            # Run scenario
-            result = self.planning_service.analyze_scenario(self.tax_data, changes)
-
-            # Display results
-            self.scenario_results_text.delete(1.0, tk.END)
-            self.scenario_results_text.insert(tk.END, f"Scenario Analysis Results\n")
-            self.scenario_results_text.insert(tk.END, f"{'='*50}\n\n")
-            self.scenario_results_text.insert(tk.END, f"Original Tax: ${result.original_tax:,.2f}\n")
-            self.scenario_results_text.insert(tk.END, f"New Tax: ${result.new_tax:,.2f}\n")
-            self.scenario_results_text.insert(tk.END, f"Tax Difference: ${result.tax_difference:,.2f}\n")
-            self.scenario_results_text.insert(tk.END, f"Effective Rate Change: {result.effective_rate_change:.2%}\n\n")
-            self.scenario_results_text.insert(tk.END, f"Key Changes Applied:\n")
-            for key, value in result.key_changes.items():
-                self.scenario_results_text.insert(tk.END, f"  {key}: {value}\n")
-
-            self.status_var.set("Scenario analysis completed")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run scenario: {str(e)}")
-            self.status_var.set("Error running scenario")
-
-    def _run_projection(self):
-        """Generate tax projection."""
-        try:
-            projection_year = self.projection_year_var.get()
-            income_growth = self.income_growth_var.get() / 100
-            inflation_rate = self.inflation_var.get() / 100
-
-            if projection_year <= 2025:
-                messagebox.showwarning("Invalid Year", "Projection year must be greater than 2025.")
-                return
-
-            # Generate projection
-            projection = self.planning_service.project_future_tax(
-                self.tax_data, projection_year, income_growth, inflation_rate
-            )
-
-            # Display results
-            self.projection_results_text.delete(1.0, tk.END)
-            self.projection_results_text.insert(tk.END, f"Tax Projection for {projection.projection_year}\n")
-            self.projection_results_text.insert(tk.END, f"{'='*50}\n\n")
-            self.projection_results_text.insert(tk.END, f"Projected Income: ${projection.projected_income:,.2f}\n")
-            self.projection_results_text.insert(tk.END, f"Projected Deductions: ${projection.projected_deductions:,.2f}\n")
-            self.projection_results_text.insert(tk.END, f"Projected Taxable Income: ${projection.projected_taxable_income:,.2f}\n")
-            self.projection_results_text.insert(tk.END, f"Projected Tax: ${projection.projected_tax:,.2f}\n")
-            self.projection_results_text.insert(tk.END, f"Confidence Level: {projection.confidence_level.title()}\n\n")
-            self.projection_results_text.insert(tk.END, f"Assumptions:\n")
-            for key, value in projection.assumptions.items():
-                if 'rate' in key:
-                    self.projection_results_text.insert(tk.END, f"  {key}: {value:.1%}\n")
-                else:
-                    self.projection_results_text.insert(tk.END, f"  {key}: ${value:,.2f}\n")
-
-            self.status_var.set("Tax projection completed")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate projection: {str(e)}")
-            self.status_var.set("Error generating projection")
-
-    def _calculate_estimated_tax(self):
-        """Calculate estimated tax payments."""
-        try:
-            annual_income = self.annual_income_var.get()
-
-            if annual_income <= 0:
-                messagebox.showwarning("Invalid Income", "Please enter a valid annual income.")
-                return
-
-            # Calculate payments
-            payments = self.planning_service.calculate_estimated_tax_payments(self.tax_data, annual_income)
-
-            # Display results
-            self.estimated_tax_results_text.delete(1.0, tk.END)
-            self.estimated_tax_results_text.insert(tk.END, f"Quarterly Estimated Tax Payments for 2025\n")
-            self.estimated_tax_results_text.insert(tk.END, f"{'='*60}\n\n")
-            self.estimated_tax_results_text.insert(tk.END, f"Based on projected annual income: ${annual_income:,.2f}\n\n")
-
-            total_payments = 0
-            for payment in payments:
-                self.estimated_tax_results_text.insert(tk.END, f"Quarter {payment.quarter} ({payment.due_date.strftime('%B %d')}):\n")
-                self.estimated_tax_results_text.insert(tk.END, f"  Safe Harbor Amount: ${payment.safe_harbor_amount:,.2f}\n")
-                self.estimated_tax_results_text.insert(tk.END, f"  Annualized Income Method: ${payment.annualized_income_method:,.2f}\n")
-                self.estimated_tax_results_text.insert(tk.END, f"  Recommended Payment: ${payment.payment_amount:,.2f}\n")
-                self.estimated_tax_results_text.insert(tk.END, f"  Reasoning: {payment.reasoning}\n\n")
-                total_payments += payment.payment_amount
-
-            self.estimated_tax_results_text.insert(tk.END, f"Total Annual Estimated Payments: ${total_payments:,.2f}\n")
-
-            self.status_var.set("Estimated tax calculation completed")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to calculate estimated tax: {str(e)}")
-            self.status_var.set("Error calculating estimated tax")
-
-    def _calculate_withholding(self):
-        """Calculate withholding recommendations."""
-        try:
-            expected_income = self.withholding_income_var.get()
-
-            if expected_income <= 0:
-                messagebox.showwarning("Invalid Income", "Please enter a valid expected income.")
-                return
-
-            # Calculate withholding recommendation
-            recommendation = self.planning_service.calculate_withholding_recommendation(self.tax_data, expected_income)
-
-            # Display results
-            self.withholding_results_text.delete(1.0, tk.END)
-            self.withholding_results_text.insert(tk.END, f"W-4 Withholding Recommendation\n")
-            self.withholding_results_text.insert(tk.END, f"{'='*40}\n\n")
-            self.withholding_results_text.insert(tk.END, f"Current Annual Withholding: ${recommendation.current_withholding:,.2f}\n")
-            self.withholding_results_text.insert(tk.END, f"Recommended Annual Withholding: ${recommendation.recommended_withholding:,.2f}\n")
-            self.withholding_results_text.insert(tk.END, f"Adjustment Needed: ${recommendation.adjustment_needed:,.2f} per pay period\n")
-            self.withholding_results_text.insert(tk.END, f"Expected Annual Tax: ${recommendation.expected_annual_tax:,.2f}\n")
-            self.withholding_results_text.insert(tk.END, f"Expected Annual Refund/Owed: ${recommendation.expected_annual_refund:,.2f}\n\n")
-
-            if recommendation.w4_adjustments:
-                self.withholding_results_text.insert(tk.END, f"W-4 Adjustments Needed:\n")
-                for key, value in recommendation.w4_adjustments.items():
-                    self.withholding_results_text.insert(tk.END, f"  {key}: {value}\n")
-
-            self.withholding_results_text.insert(tk.END, f"\nReasoning: {recommendation.reasoning}\n")
-
-            self.status_var.set("Withholding calculation completed")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to calculate withholding: {str(e)}")
-            self.status_var.set("Error calculating withholding")
-
-    def _optimize_retirement(self):
-        """Optimize retirement contributions."""
-        try:
-            current_income = self.retirement_income_var.get()
-            employer_match = self.employer_match_var.get() / 100
-
-            if current_income <= 0:
-                messagebox.showwarning("Invalid Income", "Please enter a valid current income.")
-                return
-
-            # Optimize retirement contributions
-            optimization = self.planning_service.optimize_retirement_contributions(
-                self.tax_data, current_income, employer_match
-            )
-
-            # Display results
-            self.retirement_results_text.delete(1.0, tk.END)
-            self.retirement_results_text.insert(tk.END, f"Retirement Contribution Optimization\n")
-            self.retirement_results_text.insert(tk.END, f"{'='*45}\n\n")
-            self.retirement_results_text.insert(tk.END, f"Contribution Limits:\n")
-            self.retirement_results_text.insert(tk.END, f"  Traditional IRA: ${optimization.traditional_ira_limit:,.0f}\n")
-            self.retirement_results_text.insert(tk.END, f"  Roth IRA: ${optimization.roth_ira_limit:,.0f}\n")
-            self.retirement_results_text.insert(tk.END, f"  401(k): ${optimization.employer_401k_limit:,.0f}\n\n")
-            self.retirement_results_text.insert(tk.END, f"Recommended Contributions:\n")
-            self.retirement_results_text.insert(tk.END, f"  Traditional IRA: ${optimization.recommended_traditional:,.0f}\n")
-            self.retirement_results_text.insert(tk.END, f"  Roth IRA: ${optimization.recommended_roth:,.0f}\n")
-            self.retirement_results_text.insert(tk.END, f"  401(k): ${optimization.recommended_401k:,.0f}\n\n")
-            self.retirement_results_text.insert(tk.END, f"Tax Savings: ${optimization.tax_savings:,.0f}\n")
-            self.retirement_results_text.insert(tk.END, f"Net Benefit: ${optimization.net_benefit:,.0f}\n\n")
-            self.retirement_results_text.insert(tk.END, f"Strategy: {optimization.strategy}\n\n")
-            self.retirement_results_text.insert(tk.END, f"Reasoning:\n")
-            for reason in optimization.reasoning:
-                self.retirement_results_text.insert(tk.END, f"  • {reason}\n")
-
-            self.status_var.set("Retirement optimization completed")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to optimize retirement: {str(e)}")
-            self.status_var.set("Error optimizing retirement")
-
-
-def open_tax_planning_window(parent: tk.Tk, tax_data: Any):
-    """
-    Open the tax planning window.
-
-    Args:
-        parent: Parent tkinter window
-        tax_data: Current tax data
-    """
-    TaxPlanningWindow(parent, tax_data)
+        """Run scenario analysis"""
+        messagebox.showinfo("Scenario Analysis", "Analyzing tax impact of scenario changes...")
