@@ -58,6 +58,7 @@ from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 from gui.e_filing_window import EFilingWindow
 from gui.amended_return_dialog import AmendedReturnDialog
 from gui.audit_trail_window import AuditTrailWindow
+from gui.plugin_management_window import open_plugin_management_window
 
 
 class ModernMainWindow(ctk.CTk):
@@ -386,6 +387,15 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="🤖 AI Deduction Finder",
             command=self._show_ai_deduction_finder,
+            button_type="secondary",
+            height=32,
+            accessibility_service=self.accessibility_service
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🔌 Plugin Management",
+            command=self._show_plugin_management,
             button_type="secondary",
             height=32,
             accessibility_service=self.accessibility_service
@@ -1218,6 +1228,15 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("AI Deduction Finder Error", f"Failed to open AI deduction finder: {str(e)}")
+
+    def _show_plugin_management(self):
+        """Show plugin management window"""
+        try:
+            # Open plugin management window
+            open_plugin_management_window(self, self.config)
+
+        except Exception as e:
+            show_error_message("Plugin Management Error", f"Failed to open plugin management: {str(e)}")
 
     def _show_cryptocurrency_tax(self):
         """Show cryptocurrency tax reporting window"""

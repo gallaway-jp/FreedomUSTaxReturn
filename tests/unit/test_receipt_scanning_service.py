@@ -200,10 +200,15 @@ Total: $45.99
         assert isinstance(quality_score, float)
         assert 0.0 <= quality_score <= 1.0
 
-    @patch('services.receipt_scanning_service.pytesseract')
-    def test_ocr_text_extraction(self, mock_pytesseract, receipt_service):
+    def test_ocr_text_extraction(self, receipt_service):
         """Test OCR text extraction"""
-        mock_pytesseract.image_to_string.return_value = "WALGREENS PHARMACY\nTotal: $45.99"
+        # Mock the reader
+        mock_reader = Mock()
+        mock_reader.readtext.return_value = [
+            ([[0, 0], [100, 0], [100, 20], [0, 20]], "WALGREENS PHARMACY", 0.95),
+            ([[0, 25], [100, 25], [100, 45], [0, 45]], "Total: $45.99", 0.90)
+        ]
+        receipt_service.reader = mock_reader
         
         mock_image = MagicMock()
         text = receipt_service._extract_text(mock_image)
