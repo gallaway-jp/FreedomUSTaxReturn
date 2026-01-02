@@ -56,6 +56,44 @@ from gui.pages.modern_save_progress_page import ModernSaveProgressPage
 from gui.pages.modern_amended_return_page import ModernAmendedReturnPage
 from gui.pages.modern_tax_interview_page import ModernTaxInterviewPage
 from gui.pages.modern_tax_forms_page import ModernTaxFormsPage
+
+# Phase 1: Foundation Pages
+from gui.pages.state_tax_integration_page import StateTaxIntegrationPage
+
+# Phase 2: Financial & Tax Pages  
+from gui.pages.estate_trust_page import EstateTrustPage
+from gui.pages.partnership_s_corp_page import PartnershipSCorpPage
+from gui.pages.state_tax_page import StateTaxPage
+from gui.pages.state_tax_calculator_page import StateTaxCalculatorPage
+
+# Phase 3: Advanced Feature Pages
+from gui.pages.ai_deduction_finder_page import AiDeductionFinderPage
+from gui.pages.cryptocurrency_tax_page import CryptocurrencyTaxPage
+from gui.pages.audit_trail_page import AuditTrailPage
+from gui.pages.tax_planning_page import TaxPlanningPage
+
+# Phase 4: Comprehensive Feature Pages
+from gui.pages.quickbooks_integration_page import QuickbooksIntegrationPage
+from gui.pages.tax_dashboard_page import TaxDashboardPage
+from gui.pages.receipt_scanning_page import ReceiptScanningPage
+from gui.pages.client_portal_page import ClientPortalPage
+from gui.pages.tax_interview_page import TaxInterviewPage
+from gui.pages.cloud_backup_page import CloudBackupPage
+from gui.pages.ptin_ero_management_page import PTINEROManagementPage
+from gui.pages.tax_analytics_page import TaxAnalyticsPage
+from gui.pages.settings_preferences_page import SettingsPreferencesPage
+from gui.pages.help_documentation_page import HelpDocumentationPage
+
+# Phase 5: Management & Analysis Pages
+from gui.pages.bank_account_linking_page import BankAccountLinkingPage
+from gui.pages.e_filing_page import EFilingPage
+from gui.pages.foreign_income_fbar_page import ForeignIncomeFBARPage
+from gui.pages.plugin_management_page import PluginManagementPage
+from gui.pages.tax_projections_page import TaxProjectionsPage
+from gui.pages.translation_management_page import TranslationManagementPage
+from gui.pages.year_comparison_page import YearComparisonPage
+
+# Legacy window imports (kept for backward compatibility)
 from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
@@ -131,6 +169,13 @@ class ModernMainWindow(ctk.CTk):
         self.settings_page: Optional[ModernSettingsPage] = None
         self.tax_interview_page: Optional[ModernTaxInterviewPage] = None
         self.tax_forms_page: Optional[ModernTaxFormsPage] = None
+
+        # Page registry and caching (Phase 6)
+        self.pages_registry = {}
+        self._page_instances = {}  # Cache for page instances
+        self._current_page = None  # Track current page
+        self._current_page_key = None  # Track current page key
+        self._initialize_page_registry()
 
         # Background calculation system
         self.calculation_thread: Optional[threading.Thread] = None
@@ -2551,10 +2596,255 @@ class ModernMainWindow(ctk.CTk):
             return self.tax_data.calculate_totals()
         return {}
 
+    # ========== PHASE 6: PAGE REGISTRY AND NAVIGATION ==========
+    
+    def _initialize_page_registry(self):
+        """Initialize the page registry with all 27 converted pages."""
+        self.pages_registry = {
+            # Phase 1: Foundation (1 page)
+            'state_tax_integration': {
+                'name': 'State Tax Integration',
+                'icon': '🏛️',
+                'page_class': StateTaxIntegrationPage,
+                'instance': None
+            },
+            
+            # Phase 2: Financial & Tax (4 pages)
+            'estate_trust': {
+                'name': 'Estate & Trust Planning',
+                'icon': '👨‍👩‍👧‍👦',
+                'page_class': EstateTrustPage,
+                'instance': None
+            },
+            'partnership_s_corp': {
+                'name': 'Partnership & S-Corp',
+                'icon': '🏢',
+                'page_class': PartnershipSCorpPage,
+                'instance': None
+            },
+            'state_tax': {
+                'name': 'State Tax Returns',
+                'icon': '📋',
+                'page_class': StateTaxPage,
+                'instance': None
+            },
+            'state_tax_calculator': {
+                'name': 'State Tax Calculator',
+                'icon': '🧮',
+                'page_class': StateTaxCalculatorPage,
+                'instance': None
+            },
+            
+            # Phase 3: Advanced Features (4 pages)
+            'ai_deduction_finder': {
+                'name': 'AI Deduction Finder',
+                'icon': '🤖',
+                'page_class': AiDeductionFinderPage,
+                'instance': None
+            },
+            'cryptocurrency_tax': {
+                'name': 'Cryptocurrency Tax',
+                'icon': '₿',
+                'page_class': CryptocurrencyTaxPage,
+                'instance': None
+            },
+            'audit_trail': {
+                'name': 'Audit Trail',
+                'icon': '📝',
+                'page_class': AuditTrailPage,
+                'instance': None
+            },
+            'tax_planning': {
+                'name': 'Tax Planning',
+                'icon': '💡',
+                'page_class': TaxPlanningPage,
+                'instance': None
+            },
+            
+            # Phase 4: Comprehensive Features (12 pages)
+            'quickbooks_integration': {
+                'name': 'QuickBooks Integration',
+                'icon': '📊',
+                'page_class': QuickbooksIntegrationPage,
+                'instance': None
+            },
+            'tax_dashboard': {
+                'name': 'Tax Dashboard',
+                'icon': '📈',
+                'page_class': TaxDashboardPage,
+                'instance': None
+            },
+            'receipt_scanning': {
+                'name': 'Receipt Scanning',
+                'icon': '📸',
+                'page_class': ReceiptScanningPage,
+                'instance': None
+            },
+            'client_portal': {
+                'name': 'Client Portal',
+                'icon': '👤',
+                'page_class': ClientPortalPage,
+                'instance': None
+            },
+            'tax_interview': {
+                'name': 'Tax Interview',
+                'icon': '💬',
+                'page_class': TaxInterviewPage,
+                'instance': None
+            },
+            'cloud_backup': {
+                'name': 'Cloud Backup',
+                'icon': '☁️',
+                'page_class': CloudBackupPage,
+                'instance': None
+            },
+            'ptin_ero_management': {
+                'name': 'PTIN & ERO Management',
+                'icon': '🔐',
+                'page_class': PTINEROManagementPage,
+                'instance': None
+            },
+            'tax_analytics': {
+                'name': 'Tax Analytics',
+                'icon': '📊',
+                'page_class': TaxAnalyticsPage,
+                'instance': None
+            },
+            'settings_preferences': {
+                'name': 'Settings & Preferences',
+                'icon': '⚙️',
+                'page_class': SettingsPreferencesPage,
+                'instance': None
+            },
+            'help_documentation': {
+                'name': 'Help & Documentation',
+                'icon': '❓',
+                'page_class': HelpDocumentationPage,
+                'instance': None
+            },
+            
+            # Phase 5: Management & Analysis (6 pages)
+            'bank_account_linking': {
+                'name': 'Bank Account Linking',
+                'icon': '🏦',
+                'page_class': BankAccountLinkingPage,
+                'instance': None
+            },
+            'e_filing': {
+                'name': 'E-Filing',
+                'icon': '📮',
+                'page_class': EFilingPage,
+                'instance': None
+            },
+            'foreign_income_fbar': {
+                'name': 'Foreign Income & FBAR',
+                'icon': '🌍',
+                'page_class': ForeignIncomeFBARPage,
+                'instance': None
+            },
+            'plugin_management': {
+                'name': 'Plugin Management',
+                'icon': '🔌',
+                'page_class': PluginManagementPage,
+                'instance': None
+            },
+            'tax_projections': {
+                'name': 'Tax Projections',
+                'icon': '🔮',
+                'page_class': TaxProjectionsPage,
+                'instance': None
+            },
+            'translation_management': {
+                'name': 'Translation Management',
+                'icon': '🌐',
+                'page_class': TranslationManagementPage,
+                'instance': None
+            },
+            'year_comparison': {
+                'name': 'Year Comparison',
+                'icon': '📊',
+                'page_class': YearComparisonPage,
+                'instance': None
+            },
+        }
+
+    def _get_or_create_page(self, page_key: str):
+        """
+        Get or create a page instance using lazy loading.
+        
+        Args:
+            page_key: Key of page in registry
+            
+        Returns:
+            Page instance (CTkScrollableFrame)
+        """
+        if page_key not in self.pages_registry:
+            print(f"Unknown page: {page_key}")
+            return None
+        
+        page_info = self.pages_registry[page_key]
+        
+        # Return cached instance if available
+        if page_info['instance'] is not None:
+            return page_info['instance']
+        
+        # Create new instance
+        try:
+            page_instance = page_info['page_class'](
+                self.content_frame,
+                config=self.config,
+                tax_data=self.tax_data,
+                accessibility_service=self.accessibility_service
+            )
+            
+            # Cache the instance
+            self.pages_registry[page_key]['instance'] = page_instance
+            
+            return page_instance
+        except Exception as e:
+            print(f"Error creating page {page_key}: {e}")
+            return None
+
+    def _switch_to_page(self, page_key: str):
+        """
+        Switch the main content area to a different page.
+        
+        Args:
+            page_key: Key of page to switch to
+        """
+        if page_key not in self.pages_registry:
+            print(f"Unknown page: {page_key}")
+            return
+        
+        # Hide current page
+        if self._current_page is not None:
+            self._current_page.pack_forget()
+        
+        # Get/create new page
+        new_page = self._get_or_create_page(page_key)
+        if new_page is None:
+            return
+        
+        new_page.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Update tracking
+        self._current_page = new_page
+        self._current_page_key = page_key
+        
+        # Update status
+        page_info = self.pages_registry[page_key]
+        self._update_status_text(f"Viewing: {page_info['name']}")
+
+    def _update_status_text(self, message: str):
+        """Update the status bar label."""
+        if self.status_label:
+            self.status_label.configure(text=message)
+
     def destroy(self):
         """Clean up resources before destroying window"""
         # Stop background calculations
         self._stop_background_calculations()
+
 
         # Call parent destroy
         super().destroy()
