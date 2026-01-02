@@ -77,10 +77,14 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
     def _start_interview(self):
         """Initialize the interview with starting questions"""
         try:
-            self.current_questions = self.interview_service.load_questions()
-            if not self.current_questions:
+            # Get initial questions from service
+            initial_questions = self.interview_service.start_interview()
+            if not initial_questions:
                 show_error_message("Error", "Failed to load interview questions")
                 return
+            
+            # Convert to list for navigation
+            self.current_questions = list(initial_questions)
         except Exception as e:
             show_error_message("Error", f"Failed to start interview: {str(e)}")
 
@@ -299,6 +303,11 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
     def _update_answer(self, question_id: str, answer: Any, var=None):
         """Update the answer for a question"""
         self.answers[question_id] = answer
+        # Also record in the service
+        try:
+            self.interview_service.answer_question(question_id, answer)
+        except Exception as e:
+            print(f"Error recording answer: {e}")
         if var:
             var.set(answer)
 
@@ -317,8 +326,26 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
             show_error_message("Required Field", f"Please answer this question to continue")
             return
 
-        self.current_question_index += 1
-        self._display_question()
+        # Record the answer and get next questions
+        try:
+            result = self.interview_service.answer_question(question.id, self.answers.get(question.id))
+            next_questions = result.get('next_questions', [])
+            
+            # If there are next questions, add them to our list
+            if next_questions:
+                # Replace remaining questions with new ones
+                self.current_questions = self.current_questions[:self.current_question_index + 1]
+                self.current_questions.extend(next_questions)
+            
+            # Check if interview is completed
+            if result.get('completed', False):
+                self.current_question_index = len(self.current_questions)  # Go past last question
+                self._show_recommendations()
+            else:
+                self.current_question_index += 1
+                self._display_question()
+        except Exception as e:
+            show_error_message("Error", f"Failed to process answer: {str(e)}")
 
     def _skip_interview(self):
         """Skip the interview and go to form selection"""
@@ -349,7 +376,7 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
         """Show interview recommendations"""
         # Get recommendations from service
         try:
-            self.form_recommendations = self.interview_service.get_recommendations(self.answers)
+            self.form_recommendations = self.interview_service.recommendations
         except Exception as e:
             show_error_message("Error", f"Failed to generate recommendations: {str(e)}")
             self.form_recommendations = []
@@ -385,8 +412,8 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
             forms_label.pack(anchor="w", pady=(0, 10))
 
             for rec in self.form_recommendations[:10]:
-                form_name = rec.get('form', 'Unknown')
-                reason = rec.get('reason', '')
+                form_name = rec.form_name
+                reason = rec.reason
                 form_text = f"• {form_name}"
                 if reason:
                     form_text += f" - {reason}"
@@ -415,4 +442,13 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
     def _finish_interview(self):
         """Finish the interview and call completion callback"""
         if self.on_complete:
-            self.on_complete(self.form_recommendations)
+            # Convert FormRecommendation objects to dict format for callback
+            recommendations_list = []
+            for rec in self.form_recommendations:
+                recommendations_list.append({
+                    'form': rec.form_name,
+                    'reason': rec.reason,
+                    'priority': rec.priority,
+                    'estimated_time': rec.estimated_time
+                })
+            self.on_complete(recommendations_list)
