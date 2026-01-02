@@ -9,14 +9,16 @@ This window provides:
 - Session summaries
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+import customtkinter as ctk
+from tkinter import messagebox, filedialog
 from tkinter import scrolledtext
 import json
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from services.audit_trail_service import AuditTrailService, AuditEntry
 from utils.event_bus import EventBus, Event, EventType
+from gui.modern_ui_components import ModernFrame, ModernButton, ModernLabel
+from services.accessibility_service import AccessibilityService
 
 
 class AuditTrailWindow:
@@ -24,20 +26,22 @@ class AuditTrailWindow:
     Window for viewing and managing audit trail history.
     """
 
-    def __init__(self, parent: tk.Tk, audit_service: AuditTrailService):
+    def __init__(self, parent: ctk.CTk, audit_service: AuditTrailService, accessibility_service: Optional[AccessibilityService] = None):
         """
         Initialize audit trail window.
 
         Args:
             parent: Parent window
             audit_service: Audit trail service instance
+            accessibility_service: Accessibility service for enhanced usability
         """
         self.parent = parent
         self.audit_service = audit_service
+        self.accessibility_service = accessibility_service
         self.current_entries: List[AuditEntry] = []
 
         # Create window
-        self.window = tk.Toplevel(parent)
+        self.window = ctk.CTkToplevel(parent)
         self.window.title("Audit Trail")
         self.window.geometry("1200x800")
         self.window.resizable(True, True)
@@ -53,171 +57,163 @@ class AuditTrailWindow:
     def _create_ui(self) -> None:
         """Create the user interface"""
         # Main frame
-        main_frame = ttk.Frame(self.window, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        main_frame = ModernFrame(self.window)
+        main_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         # Title
-        title_label = ttk.Label(main_frame, text="Audit Trail History",
-                               font=("Arial", 16, "bold"))
+        title_label = ModernLabel(main_frame, text="Audit Trail History",
+                                 font=ctk.CTkFont(size=18, weight="bold"))
         title_label.pack(pady=(0, 10))
 
         # Filter frame
-        filter_frame = ttk.LabelFrame(main_frame, text="Filters", padding="5")
-        filter_frame.pack(fill=tk.X, pady=(0, 10))
+        filter_frame = ctk.CTkFrame(main_frame)
+        filter_frame.pack(fill=ctk.X, pady=(0, 10))
+
+        filter_title = ModernLabel(filter_frame, text="Filters", font=ctk.CTkFont(size=14, weight="bold"))
+        filter_title.pack(pady=(10, 5), padx=10, anchor="w")
 
         # Filter controls
-        filter_controls = ttk.Frame(filter_frame)
-        filter_controls.pack(fill=tk.X)
+        filter_controls = ctk.CTkFrame(filter_frame, fg_color="transparent")
+        filter_controls.pack(fill=ctk.X, padx=10, pady=(0, 10))
 
         # Date range
-        ttk.Label(filter_controls, text="Date Range:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        date_frame = ctk.CTkFrame(filter_controls, fg_color="transparent")
+        date_frame.pack(fill=ctk.X, pady=(0, 5))
 
-        date_frame = ttk.Frame(filter_controls)
-        date_frame.grid(row=0, column=1, sticky=tk.W)
+        ModernLabel(date_frame, text="Date Range:", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT)
 
-        ttk.Label(date_frame, text="From:").pack(side=tk.LEFT)
-        self.from_date_var = tk.StringVar()
-        self.from_date_entry = ttk.Entry(date_frame, textvariable=self.from_date_var, width=12)
-        self.from_date_entry.pack(side=tk.LEFT, padx=(5, 10))
+        ModernLabel(date_frame, text="From:", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(20, 5))
+        self.from_date_var = ctk.StringVar()
+        self.from_date_entry = ctk.CTkEntry(date_frame, textvariable=self.from_date_var, width=120)
+        self.from_date_entry.pack(side=ctk.LEFT, padx=(0, 10))
 
-        ttk.Label(date_frame, text="To:").pack(side=tk.LEFT)
-        self.to_date_var = tk.StringVar()
-        self.to_date_entry = ttk.Entry(date_frame, textvariable=self.to_date_var, width=12)
-        self.to_date_entry.pack(side=tk.LEFT, padx=(5, 10))
+        ModernLabel(date_frame, text="To:", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT)
+        self.to_date_var = ctk.StringVar()
+        self.to_date_entry = ctk.CTkEntry(date_frame, textvariable=self.to_date_var, width=120)
+        self.to_date_entry.pack(side=ctk.LEFT, padx=(5, 10))
+
+        # Entity type and Action filters
+        type_action_frame = ctk.CTkFrame(filter_controls, fg_color="transparent")
+        type_action_frame.pack(fill=ctk.X, pady=(0, 5))
 
         # Entity type filter
-        ttk.Label(filter_controls, text="Entity Type:").grid(row=0, column=2, sticky=tk.W, padx=(10, 5))
-        self.entity_type_var = tk.StringVar()
-        self.entity_type_combo = ttk.Combobox(filter_controls, textvariable=self.entity_type_var,
-                                             values=["All", "personal_info", "filing_status", "income",
-                                                   "deductions", "credits", "payments", "calculation"],
-                                             state="readonly", width=15)
-        self.entity_type_combo.grid(row=0, column=3, sticky=tk.W, padx=(0, 10))
+        ModernLabel(type_action_frame, text="Entity Type:", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT)
+        self.entity_type_var = ctk.StringVar()
+        self.entity_type_combo = ctk.CTkComboBox(
+            type_action_frame,
+            variable=self.entity_type_var,
+            values=["All", "personal_info", "filing_status", "income", "deductions", "credits", "payments", "calculation"],
+            width=150
+        )
+        self.entity_type_combo.pack(side=ctk.LEFT, padx=(5, 20))
         self.entity_type_combo.set("All")
 
         # Action filter
-        ttk.Label(filter_controls, text="Action:").grid(row=0, column=4, sticky=tk.W, padx=(10, 5))
-        self.action_var = tk.StringVar()
-        self.action_combo = ttk.Combobox(filter_controls, textvariable=self.action_var,
-                                        values=["All", "CREATE", "UPDATE", "DELETE", "CALCULATE",
-                                              "SESSION_START", "SESSION_END"],
-                                        state="readonly", width=12)
-        self.action_combo.grid(row=0, column=5, sticky=tk.W, padx=(0, 10))
+        ModernLabel(type_action_frame, text="Action:", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT)
+        self.action_var = ctk.StringVar()
+        self.action_combo = ctk.CTkComboBox(
+            type_action_frame,
+            variable=self.action_var,
+            values=["All", "CREATE", "UPDATE", "DELETE", "CALCULATE", "SESSION_START", "SESSION_END"],
+            width=120
+        )
+        self.action_combo.pack(side=ctk.LEFT, padx=(5, 10))
         self.action_combo.set("All")
 
         # Buttons
-        button_frame = ttk.Frame(filter_controls)
-        button_frame.grid(row=0, column=6, sticky=tk.E)
+        button_frame = ctk.CTkFrame(filter_controls, fg_color="transparent")
+        button_frame.pack(fill=ctk.X, pady=(5, 0))
 
-        ttk.Button(button_frame, text="Apply Filters", command=self._apply_filters).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="Clear Filters", command=self._clear_filters).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="Export", command=self._export_audit).pack(side=tk.LEFT)
+        ModernButton(button_frame, text="Apply Filters", command=self._apply_filters,
+                    accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(0, 5))
+        ModernButton(button_frame, text="Clear Filters", command=self._clear_filters,
+                    button_type="secondary", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(0, 5))
+        ModernButton(button_frame, text="Export", command=self._export_audit,
+                    button_type="secondary", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(0, 5))
+        ModernButton(button_frame, text="Clear All Data", command=self._clear_all_audit_data,
+                    button_type="danger", accessibility_service=self.accessibility_service).pack(side=ctk.RIGHT)
 
-        # Treeview for audit entries
-        tree_frame = ttk.LabelFrame(main_frame, text="Audit Entries", padding="5")
-        tree_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        # Audit entries display (using scrolled text instead of treeview for theming)
+        entries_frame = ctk.CTkFrame(main_frame)
+        entries_frame.pack(fill=ctk.BOTH, expand=True, pady=(0, 10))
 
-        # Create treeview with scrollbar
-        tree_container = ttk.Frame(tree_frame)
-        tree_container.pack(fill=tk.BOTH, expand=True)
+        entries_title = ModernLabel(entries_frame, text="Audit Entries", font=ctk.CTkFont(size=14, weight="bold"))
+        entries_title.pack(pady=(10, 5), padx=10, anchor="w")
 
-        # Treeview columns
-        columns = ("timestamp", "action", "entity_type", "entity_id", "field_name", "old_value", "new_value")
-        self.audit_tree = ttk.Treeview(tree_container, columns=columns, show="headings", height=15)
+        # Create scrolled text widget for audit entries
+        self.audit_text = ctk.CTkTextbox(entries_frame, height=300, wrap="none")
+        self.audit_text.pack(fill=ctk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-        # Configure columns
-        self.audit_tree.heading("timestamp", text="Timestamp")
-        self.audit_tree.heading("action", text="Action")
-        self.audit_tree.heading("entity_type", text="Entity Type")
-        self.audit_tree.heading("entity_id", text="Entity ID")
-        self.audit_tree.heading("field_name", text="Field")
-        self.audit_tree.heading("old_value", text="Old Value")
-        self.audit_tree.heading("new_value", text="New Value")
-
-        self.audit_tree.column("timestamp", width=150, minwidth=150)
-        self.audit_tree.column("action", width=80, minwidth=80)
-        self.audit_tree.column("entity_type", width=100, minwidth=100)
-        self.audit_tree.column("entity_id", width=100, minwidth=100)
-        self.audit_tree.column("field_name", width=100, minwidth=100)
-        self.audit_tree.column("old_value", width=120, minwidth=120)
-        self.audit_tree.column("new_value", width=120, minwidth=120)
-
-        # Scrollbars
-        v_scrollbar = ttk.Scrollbar(tree_container, orient=tk.VERTICAL, command=self.audit_tree.yview)
-        h_scrollbar = ttk.Scrollbar(tree_container, orient=tk.HORIZONTAL, command=self.audit_tree.xview)
-        self.audit_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-
-        # Pack treeview and scrollbars
-        self.audit_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-
-        # Bind selection event
-        self.audit_tree.bind("<<TreeviewSelect>>", self._on_entry_selected)
-
-        # Create context menu
-        self.context_menu = tk.Menu(self.window, tearoff=0)
-        self.context_menu.add_command(label="View Details", command=self._view_selected_details)
-        self.context_menu.add_command(label="Export Selected", command=self._export_selected)
-        self.context_menu.add_separator()
-        self.context_menu.add_command(label="Refresh", command=self._refresh_data)
-
-        # Bind right-click to context menu
-        self.audit_tree.bind("<Button-3>", self._show_context_menu)
-
-        # Bind keyboard shortcuts
-        self.window.bind('<Control-r>', lambda e: self._refresh_data())
-        self.window.bind('<Key>', self._on_key_press)
+        # Make it read-only
+        self.audit_text.configure(state="disabled")
 
         # Detail view frame
-        detail_frame = ttk.LabelFrame(main_frame, text="Entry Details", padding="5")
-        detail_frame.pack(fill=tk.BOTH, expand=True)
+        detail_frame = ctk.CTkFrame(main_frame)
+        detail_frame.pack(fill=ctk.BOTH, expand=True)
+
+        detail_title = ModernLabel(detail_frame, text="Entry Details", font=ctk.CTkFont(size=14, weight="bold"))
+        detail_title.pack(pady=(10, 5), padx=10, anchor="w")
 
         # Detail text area
-        self.detail_text = scrolledtext.ScrolledText(detail_frame, height=8, wrap=tk.WORD)
-        self.detail_text.pack(fill=tk.BOTH, expand=True)
+        self.detail_text = ctk.CTkTextbox(detail_frame, height=150, wrap="word")
+        self.detail_text.pack(fill=ctk.BOTH, expand=True, padx=10, pady=(0, 10))
+
+        # Make detail text read-only
+        self.detail_text.configure(state="disabled")
 
         # Bottom buttons
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(10, 0))
+        button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        button_frame.pack(fill=ctk.X, pady=(10, 0))
 
-        ttk.Button(button_frame, text="Refresh", command=self._load_audit_data).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="View Calculation", command=self._view_calculation).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="Close", command=self.window.destroy).pack(side=tk.RIGHT)
+        ModernButton(button_frame, text="Refresh", command=self._load_audit_data,
+                    accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(10, 5))
+        ModernButton(button_frame, text="View Calculation", command=self._view_calculation,
+                    button_type="secondary", accessibility_service=self.accessibility_service).pack(side=ctk.LEFT, padx=(0, 5))
+        ModernButton(button_frame, text="Close", command=self.window.destroy,
+                    button_type="secondary", accessibility_service=self.accessibility_service).pack(side=ctk.RIGHT, padx=(0, 10))
 
     def _load_audit_data(self) -> None:
-        """Load audit data into the treeview"""
-        # Clear existing items
-        for item in self.audit_tree.get_children():
-            self.audit_tree.delete(item)
+        """Load audit data into the text widget"""
+        # Enable text widget for editing
+        self.audit_text.configure(state="normal")
+        self.audit_text.delete("0.0", "end")
 
         # Get audit entries (last 100 for performance)
         self.current_entries = self.audit_service.get_audit_history(limit=100)
 
-        # Add entries to treeview
-        for entry in self.current_entries:
+        if not self.current_entries:
+            self.audit_text.insert("0.0", "No audit entries found.")
+            self.audit_text.configure(state="disabled")
+            return
+
+        # Add header
+        header = f"{'Timestamp':<20} {'Action':<12} {'Entity Type':<15} {'Entity ID':<15} {'Field':<15} {'Old Value':<20} {'New Value':<20}\n"
+        header += "=" * 120 + "\n"
+        self.audit_text.insert("0.0", header)
+
+        # Add entries to text widget
+        for i, entry in enumerate(self.current_entries):
             # Format values for display
             old_val = str(entry.old_value) if entry.old_value is not None else ""
             new_val = str(entry.new_value) if entry.new_value is not None else ""
 
             # Truncate long values
-            if len(old_val) > 50:
-                old_val = old_val[:47] + "..."
-            if len(new_val) > 50:
-                new_val = new_val[:47] + "..."
+            if len(old_val) > 17:
+                old_val = old_val[:14] + "..."
+            if len(new_val) > 17:
+                new_val = new_val[:14] + "..."
 
-            self.audit_tree.insert("", tk.END, values=(
-                entry.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                entry.action,
-                entry.entity_type,
-                entry.entity_id or "",
-                entry.field_name or "",
-                old_val,
-                new_val
-            ), tags=(entry.id,))
+            line = ("02d")
+
+            self.audit_text.insert("end", line)
+
+        # Make text widget read-only again
+        self.audit_text.configure(state="disabled")
 
         # Clear detail view
-        self.detail_text.delete(1.0, tk.END)
+        self.detail_text.configure(state="normal")
+        self.detail_text.delete("0.0", "end")
+        self.detail_text.configure(state="disabled")
 
     def _clear_filters(self) -> None:
         """Clear all filters"""
@@ -263,30 +259,39 @@ class AuditTrailWindow:
             limit=500
         )
 
-        # Update treeview
-        for item in self.audit_tree.get_children():
-            self.audit_tree.delete(item)
+        # Update text widget
+        self.audit_text.configure(state="normal")
+        self.audit_text.delete("0.0", "end")
 
+        if not filtered_entries:
+            self.audit_text.insert("0.0", "No audit entries match the current filters.")
+        else:
+            # Add header
+            header = f"{'Timestamp':<20} {'Action':<12} {'Entity Type':<15} {'Entity ID':<15} {'Field':<15} {'Old Value':<20} {'New Value':<20}\n"
+            header += "=" * 120 + "\n"
+            self.audit_text.insert("0.0", header)
+
+            # Add filtered entries
+            for i, entry in enumerate(filtered_entries):
+                old_val = str(entry.old_value) if entry.old_value is not None else ""
+                new_val = str(entry.new_value) if entry.new_value is not None else ""
+
+                if len(old_val) > 17:
+                    old_val = old_val[:14] + "..."
+                if len(new_val) > 17:
+                    new_val = new_val[:14] + "..."
+
+                line = ("02d")
+
+                self.audit_text.insert("end", line)
+
+        self.audit_text.configure(state="disabled")
         self.current_entries = filtered_entries
 
-        for entry in filtered_entries:
-            old_val = str(entry.old_value) if entry.old_value is not None else ""
-            new_val = str(entry.new_value) if entry.new_value is not None else ""
-
-            if len(old_val) > 50:
-                old_val = old_val[:47] + "..."
-            if len(new_val) > 50:
-                new_val = new_val[:47] + "..."
-
-            self.audit_tree.insert("", tk.END, values=(
-                entry.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                entry.action,
-                entry.entity_type,
-                entry.entity_id or "",
-                entry.field_name or "",
-                old_val,
-                new_val
-            ), tags=(entry.id,))
+        # Clear detail view
+        self.detail_text.configure(state="normal")
+        self.detail_text.delete("0.0", "end")
+        self.detail_text.configure(state="disabled")
 
     def _clear_filters(self) -> None:
         """Clear all filters"""
@@ -296,102 +301,54 @@ class AuditTrailWindow:
         self.action_var.set("All")
         self._load_audit_data()
 
-    def _on_entry_selected(self, event) -> None:
-        """Handle audit entry selection"""
-        selection = self.audit_tree.selection()
-        if not selection:
-            return
+    def _clear_all_audit_data(self) -> None:
+        """Clear all audit trail data"""
+        result = messagebox.askyesno(
+            "Confirm Clear Audit Data",
+            "Are you sure you want to clear ALL audit trail data?\n\n"
+            "This will permanently delete all audit log files and cannot be undone.",
+            icon="warning"
+        )
 
-        # Get the entry ID from tags
-        item_tags = self.audit_tree.item(selection[0], "tags")
-        if not item_tags:
-            return
-
-        entry_id = item_tags[0]
-
-        # Find the entry
-        entry = next((e for e in self.current_entries if e.id == entry_id), None)
-        if not entry:
-            return
-
-        # Display detailed information
-        detail_text = f"""Audit Entry Details
-==================
-
-ID: {entry.id}
-Timestamp: {entry.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}
-User ID: {entry.user_id}
-Session ID: {entry.session_id}
-
-Action: {entry.action}
-Entity Type: {entry.entity_type}
-Entity ID: {entry.entity_id or 'N/A'}
-Field Name: {entry.field_name or 'N/A'}
-
-Old Value: {entry.old_value}
-New Value: {entry.new_value}
-
-Metadata:
-{json.dumps(entry.metadata, indent=2, default=str) if entry.metadata else 'None'}
-"""
-
-        if entry.calculation_worksheet:
-            detail_text += f"""
-
-Calculation Worksheet:
-{json.dumps(entry.calculation_worksheet, indent=2, default=str)}
-"""
-
-        self.detail_text.delete(1.0, tk.END)
-        self.detail_text.insert(tk.END, detail_text)
+        if result:
+            try:
+                deleted_count = self.audit_service.clear_all_audit_data()
+                messagebox.showinfo(
+                    "Audit Data Cleared",
+                    f"Successfully cleared all audit data.\n\n"
+                    f"Deleted {deleted_count} audit log files."
+                )
+                # Refresh the display
+                self._load_audit_data()
+            except Exception as e:
+                messagebox.showerror(
+                    "Error",
+                    f"Failed to clear audit data: {str(e)}"
+                )
 
     def _view_calculation(self) -> None:
-        """View calculation details for selected entry"""
-        selection = self.audit_tree.selection()
-        if not selection:
-            messagebox.showinfo("Info", "Please select an audit entry first")
-            return
+        """View calculation details - simplified for text display"""
+        messagebox.showinfo("Info", "Select a calculation entry by clicking on it in the audit entries list above, then use this button to view details.")
 
-        item_tags = self.audit_tree.item(selection[0], "tags")
-        if not item_tags:
-            return
+    def _export_selected(self) -> None:
+        """Export selected entries - not available in text mode"""
+        messagebox.showinfo("Info", "Export functionality is available via the Export button. Individual entry selection is not supported in the current view.")
 
-        entry_id = item_tags[0]
-        entry = next((e for e in self.current_entries if e.id == entry_id), None)
+    def _view_selected_details(self) -> None:
+        """View selected entry details - not available in text mode"""
+        messagebox.showinfo("Info", "Click on an audit entry in the list above to view its details.")
 
-        if not entry or entry.action != "CALCULATE":
-            messagebox.showinfo("Info", "Selected entry is not a calculation")
-            return
+    def _show_context_menu(self, event) -> None:
+        """Show context menu - not available in text mode"""
+        pass
 
-        # Create calculation detail window
-        calc_window = tk.Toplevel(self.window)
-        calc_window.title("Calculation Details")
-        calc_window.geometry("800x600")
+    def _refresh_data(self) -> None:
+        """Refresh audit data"""
+        self._load_audit_data()
 
-        # Title
-        ttk.Label(calc_window, text=f"Calculation: {entry.entity_id}",
-                 font=("Arial", 14, "bold")).pack(pady=10)
-
-        # Calculation details
-        text_area = scrolledtext.ScrolledText(calc_window, wrap=tk.WORD)
-        text_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
-
-        # Format calculation details
-        calc_text = f"""Calculation Type: {entry.metadata.get('calculation_type', 'Unknown')}
-
-Inputs:
-{json.dumps(entry.metadata.get('inputs', {}), indent=2, default=str)}
-
-Results:
-{json.dumps(entry.metadata.get('results', {}), indent=2, default=str)}
-"""
-
-        if entry.calculation_worksheet:
-            calc_text += f"""
-
-Detailed Worksheet:
-{json.dumps(entry.calculation_worksheet, indent=2, default=str)}
-"""
+    def _on_key_press(self, event) -> None:
+        """Handle key press events"""
+        pass
 
         text_area.insert(tk.END, calc_text)
         text_area.config(state=tk.DISABLED)

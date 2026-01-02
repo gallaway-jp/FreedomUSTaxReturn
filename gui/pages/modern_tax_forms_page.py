@@ -75,6 +75,13 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
         # Load available forms
         self._load_forms()
 
+        # Pre-select required forms
+        for form in self.all_forms:
+            if form.get('required', False):
+                form_name = form.get('form', '')
+                if form_name:
+                    self.selected_forms[form_name] = form
+
         # Pre-select recommended forms
         for rec in self.initial_recommendations:
             form_name = rec.get('form')
@@ -484,23 +491,27 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
 
     def _toggle_form(self, form_name: str, var: ctk.StringVar):
         """Toggle form selection"""
+        # Find the form data
+        form_data = None
+        for form in self.all_forms:
+            if form.get('form') == form_name:
+                form_data = form
+                break
+        
+        if not form_data:
+            return
+            
         if var.get() == "on":
-            # Find the form and add to selected
-            for form in self.all_forms:
-                if form.get('form') == form_name:
-                    self.selected_forms[form_name] = form
-                    break
+            # Add to selected
+            self.selected_forms[form_name] = form_data
         else:
-            # Remove from selected (if not required)
-            if form_name in self.selected_forms:
-                form_data = self.selected_forms[form_name]
-                if not form_data.get('required', False):
+            # Only allow unchecking if not required
+            if not form_data.get('required', False):
+                if form_name in self.selected_forms:
                     del self.selected_forms[form_name]
-                    # Reset checkbox
-                    var.set("off")
-                else:
-                    # Force it back on
-                    var.set("on")
+            else:
+                # Force required forms back to checked
+                var.set("on")
 
         # Update count
         self._update_count()
@@ -554,10 +565,5 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
 
     def _continue(self):
         """Continue with selected forms"""
-        # Validate at least Form 1040 is selected
-        if '1040' not in self.selected_forms:
-            show_error_message("Required Form", "Form 1040 is required for all tax returns.")
-            return
-
         if self.on_forms_selected:
             self.on_forms_selected(list(self.selected_forms.values()))

@@ -157,10 +157,19 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
             command=self._export_audit,
             height=32,
             width=100
+        ).pack(side="left", padx=(0, 5))
+
+        ModernButton(
+            button_frame,
+            text="Clear All Data",
+            command=self._clear_all_audit_data,
+            button_type="danger",
+            height=32,
+            width=120
         ).pack(side="left")
 
     def _create_tree_view(self):
-        """Create the audit entries tree view"""
+        """Create the audit entries display using CustomTkinter textbox"""
         tree_frame = ModernFrame(self)
         tree_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -171,45 +180,12 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
         )
         tree_title.pack(anchor="w", pady=(0, 10))
 
-        # Tree view container with CustomTkinter frame
-        tree_container = ctk.CTkFrame(tree_frame)
-        tree_container.pack(fill="both", expand=True)
+        # Use CustomTkinter textbox instead of ttk.Treeview for proper theming
+        self.audit_textbox = ctk.CTkTextbox(tree_frame, height=400, wrap="none")
+        self.audit_textbox.pack(fill="both", expand=True)
 
-        # Create treeview
-        columns = ("timestamp", "action", "entity_type", "entity_id", "field_name", "old_value", "new_value")
-        style = ttk.Style()
-
-        self.audit_tree = ttk.Treeview(tree_container, columns=columns, show="headings", height=15)
-
-        # Configure columns
-        self.audit_tree.heading("timestamp", text="Timestamp")
-        self.audit_tree.heading("action", text="Action")
-        self.audit_tree.heading("entity_type", text="Entity Type")
-        self.audit_tree.heading("entity_id", text="Entity ID")
-        self.audit_tree.heading("field_name", text="Field")
-        self.audit_tree.heading("old_value", text="Old Value")
-        self.audit_tree.heading("new_value", text="New Value")
-
-        self.audit_tree.column("timestamp", width=150, minwidth=150)
-        self.audit_tree.column("action", width=80, minwidth=80)
-        self.audit_tree.column("entity_type", width=100, minwidth=100)
-        self.audit_tree.column("entity_id", width=100, minwidth=100)
-        self.audit_tree.column("field_name", width=100, minwidth=100)
-        self.audit_tree.column("old_value", width=120, minwidth=120)
-        self.audit_tree.column("new_value", width=120, minwidth=120)
-
-        # Scrollbars
-        v_scrollbar = ttk.Scrollbar(tree_container, orient=tk.VERTICAL, command=self.audit_tree.yview)
-        h_scrollbar = ttk.Scrollbar(tree_container, orient=tk.HORIZONTAL, command=self.audit_tree.xview)
-        self.audit_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-
-        # Grid layout
-        self.audit_tree.grid(row=0, column=0, sticky="nsew")
-        v_scrollbar.grid(row=0, column=1, sticky="ns")
-        h_scrollbar.grid(row=1, column=0, sticky="ew")
-
-        tree_container.grid_columnconfigure(0, weight=1)
-        tree_container.grid_rowconfigure(0, weight=1)
+        # Make it read-only
+        self.audit_textbox.configure(state="disabled")
 
     def _load_audit_data(self):
         """Load audit trail data from service"""
@@ -221,25 +197,36 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
             show_error_message("Audit Trail Error", f"Failed to load audit data: {str(e)}")
 
     def _refresh_tree_view(self):
-        """Refresh the tree view with current entries"""
-        # Clear existing entries
-        for item in self.audit_tree.get_children():
-            self.audit_tree.delete(item)
+        """Refresh the textbox display with current entries"""
+        # Enable textbox for editing
+        self.audit_textbox.configure(state="normal")
+        self.audit_textbox.delete("0.0", "end")
 
         # Add entries from filtered list or all entries if no filter applied
         entries_to_display = self.filtered_entries if self.filtered_entries else self.current_entries
 
-        for entry in entries_to_display:
-            values = (
-                entry.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hasattr(entry.timestamp, 'strftime') else str(entry.timestamp),
-                entry.action,
-                entry.entity_type,
-                entry.entity_id or "",
-                entry.field_name or "",
-                self._truncate_value(entry.old_value),
-                self._truncate_value(entry.new_value)
-            )
-            self.audit_tree.insert("", "end", values=values)
+        if not entries_to_display:
+            self.audit_textbox.insert("0.0", "No audit entries found.")
+            self.audit_textbox.configure(state="disabled")
+            return
+
+        # Add header
+        header = f"{'Timestamp':<20} {'Action':<12} {'Entity Type':<15} {'Entity ID':<15} {'Field':<15} {'Old Value':<20} {'New Value':<20}\n"
+        header += "=" * 120 + "\n"
+        self.audit_textbox.insert("0.0", header)
+
+        # Add entries
+        for i, entry in enumerate(entries_to_display):
+            timestamp_str = entry.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hasattr(entry.timestamp, 'strftime') else str(entry.timestamp)
+            old_val = self._truncate_value(entry.old_value, 17)
+            new_val = self._truncate_value(entry.new_value, 17)
+
+            line = ("02d")
+
+            self.audit_textbox.insert("end", line)
+
+        # Make textbox read-only again
+        self.audit_textbox.configure(state="disabled")
 
     def _truncate_value(self, value: Any, max_length: int = 50) -> str:
         """Truncate long values for display"""
@@ -340,3 +327,28 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
 
         except Exception as e:
             show_error_message("Export Error", f"Failed to export audit data: {str(e)}")
+
+    def _clear_all_audit_data(self):
+        """Clear all audit trail data"""
+        result = messagebox.askyesno(
+            "Confirm Clear Audit Data",
+            "Are you sure you want to clear ALL audit trail data?\n\n"
+            "This will permanently delete all audit log files and cannot be undone.",
+            icon="warning"
+        )
+
+        if result:
+            try:
+                deleted_count = self.audit_service.clear_all_audit_data()
+                show_info_message(
+                    "Audit Data Cleared",
+                    f"Successfully cleared all audit data.\n\n"
+                    f"Deleted {deleted_count} audit log files."
+                )
+                # Refresh the display
+                self._load_audit_data()
+            except Exception as e:
+                show_error_message(
+                    "Error",
+                    f"Failed to clear audit data: {str(e)}"
+                )

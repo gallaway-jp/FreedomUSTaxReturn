@@ -313,6 +313,10 @@ class ModernProgressBar(ctk.CTkProgressBar):
         super().__init__(self.frame, **kwargs)
         self.pack(fill="x", padx=5, pady=(0, 5))
 
+    def set_progress(self, value: float):
+        """Set progress value (0.0 to 1.0)"""
+        self.set(value)
+
 
 class ModernScrollableFrame(ctk.CTkScrollableFrame):
     """Modern scrollable frame with consistent styling"""

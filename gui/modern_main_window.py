@@ -234,7 +234,7 @@ class ModernMainWindow(ctk.CTk):
         # Skip interview button
         skip_interview_button = ModernButton(
             sidebar_scroll,
-            text="📋 Skip to Tax Forms",
+            text="📋 Select Tax Forms",
             command=lambda: self._show_tax_forms_page([]),
             button_type="secondary",
             height=35,
@@ -256,7 +256,19 @@ class ModernMainWindow(ctk.CTk):
 
         self.form_buttons_frame = ctk.CTkFrame(sidebar_scroll, fg_color="transparent")
         self.form_buttons_frame.pack(fill="x", padx=5, pady=5)
-        self.form_buttons_frame.pack_forget()  # Initially hidden
+        # Don't hide initially - always show TAX FORMS section
+
+        # Always add Income button first (maps to 1040)
+        self.income_button = ModernButton(
+            self.form_buttons_frame,
+            text="💰 Income",
+            command=lambda: self._navigate_to_form({"form": "Income"}),
+            button_type="secondary",
+            height=35,
+            anchor="w",
+            accessibility_service=self.accessibility_service
+        )
+        self.income_button.pack(fill="x", pady=(0, 2))
 
         # Separator
         self._create_separator(sidebar_scroll)
@@ -528,11 +540,6 @@ class ModernMainWindow(ctk.CTk):
                 first_form = selected_forms[0]
                 self._navigate_to_form(first_form)
 
-            show_info_message(
-                "Forms Selected",
-                f"You've selected {len(selected_forms)} forms. Let's get started!"
-            )
-
         # Clear content and show forms page
         for widget in self.content_frame.winfo_children():
             widget.destroy()
@@ -552,21 +559,20 @@ class ModernMainWindow(ctk.CTk):
         self.interview_button.pack_forget()
 
         # Show form buttons
-        self.form_buttons_frame.pack(fill="x", padx=10, pady=5)
-
-        # Add form section buttons based on recommendations
+        # Add other form section buttons based on recommendations (excluding 1040/Income)
         for rec in self.form_recommendations[:8]:  # Show top 8
-            button_text = f"{rec['form'][:20]}..." if len(rec['form']) > 20 else rec['form']
+            if rec['form'] != '1040':  # Skip 1040 since we have Income button
+                button_text = f"{rec['form'][:20]}..." if len(rec['form']) > 20 else rec['form']
 
-            ModernButton(
-                self.form_buttons_frame,
-                text=f"📄 {button_text}",
-                command=lambda r=rec: self._navigate_to_form(r),
-                button_type="secondary",
-                height=35,
-                anchor="w",
-                accessibility_service=self.accessibility_service
-            ).pack(fill="x", pady=(0, 2))
+                ModernButton(
+                    self.form_buttons_frame,
+                    text=f"📄 {button_text}",
+                    command=lambda r=rec: self._navigate_to_form(r),
+                    button_type="secondary",
+                    height=35,
+                    anchor="w",
+                    accessibility_service=self.accessibility_service
+                ).pack(fill="x", pady=(0, 2))
 
         # Update status
         self.status_label.configure(
@@ -670,7 +676,7 @@ class ModernMainWindow(ctk.CTk):
         form_name = recommendation.get('form', '')
 
         # Route to specific form pages
-        if 'income' in form_name.lower() or form_name in ['1040', 'W-2', '1099-INT', '1099-DIV', 'Schedule C', '1099-R', 'SSA-1099', 'Schedule D', 'Schedule E']:
+        if 'income' in form_name.lower() or form_name in ['Income', '1040', 'W-2', '1099-INT', '1099-DIV', 'Schedule C', '1099-R', 'SSA-1099', 'Schedule D', 'Schedule E']:
             self._show_income_page()
         elif 'deduction' in form_name.lower() or form_name in ['Schedule A']:
             self._show_deductions_page()
@@ -968,6 +974,84 @@ class ModernMainWindow(ctk.CTk):
         # Navigate to form viewer for summary
         self._show_form_viewer_page()
 
+    def _show_summary_placeholder(self):
+        """Show placeholder page for tax return summary when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="📊 Tax Return Summary",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📈",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your tax interview and enter income information to view your tax return summary.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to view your complete tax return summary"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="Tax summary requires completed federal tax interview")
+
     def _show_settings(self):
         """Show settings dialog with accessibility options"""
         try:
@@ -1188,8 +1272,90 @@ class ModernMainWindow(ctk.CTk):
             self._show_analytics_placeholder()
             return
 
-        # Show analytics page
-        self._show_analytics_page()
+        # Show analytics window
+        try:
+            analytics_window = TaxAnalyticsWindow(self, self.tax_data)
+            analytics_window.show()
+        except Exception as e:
+            show_error_message("Analytics Error", f"Failed to open tax analytics: {str(e)}")
+
+    def _show_analytics_placeholder(self):
+        """Show placeholder page for tax analytics when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="📊 Tax Analytics & Tools",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📈",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your federal tax interview first to access advanced analytics and tax planning tools.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to access powerful tax analytics and planning tools"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="Tax analytics requires completed federal tax interview")
 
     def _show_tax_projections(self):
         """Show tax projections window"""

@@ -349,28 +349,24 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
 
     def _skip_interview(self):
         """Skip the interview and go to form selection"""
-        if show_confirmation(
-            "Skip Interview",
-            "Skip the interview and go directly to form selection?"
-        ):
-            # Clear question display and show message
-            for widget in self.question_container.winfo_children():
-                widget.destroy()
+        # Clear question display and show message
+        for widget in self.question_container.winfo_children():
+            widget.destroy()
 
-            skip_label = ModernLabel(
-                self.question_container,
-                text="Interview skipped. You can now select tax forms to file.",
-                font=ctk.CTkFont(size=14),
-                wraplength=500
-            )
-            skip_label.pack(pady=20)
+        skip_label = ModernLabel(
+            self.question_container,
+            text="Interview skipped. You can now select tax forms to file.",
+            font=ctk.CTkFont(size=14),
+            wraplength=500
+        )
+        skip_label.pack(pady=20)
 
-            # Hide navigation buttons
-            self.button_container.pack_forget()
+        # Hide navigation buttons
+        self.button_container.pack_forget()
 
-            # Call callback
-            if self.on_skip:
-                self.on_skip()
+        # Call callback
+        if self.on_skip:
+            self.on_skip()
 
     def _show_recommendations(self):
         """Show interview recommendations"""

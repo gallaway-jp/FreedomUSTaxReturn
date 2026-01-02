@@ -250,7 +250,6 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
     def _create_income_card(self, parent, income_type: Dict[str, Any]):
         """Create an income type card"""
         card_frame = ctk.CTkFrame(parent, border_width=1)
-        card_frame.configure(border_color="transparent")
 
         # Header with icon and title
         header_frame = ctk.CTkFrame(card_frame, fg_color="transparent", height=50)
@@ -418,6 +417,11 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
             command=self._save_and_continue,
             button_type="primary"
         ).pack(side="right")
+
+    def load_data(self, tax_data: Dict[str, Any]):
+        """Load tax data into the income page"""
+        self.tax_data = tax_data
+        self._load_existing_data()
 
     def _load_existing_data(self):
         """Load existing income data"""

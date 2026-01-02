@@ -540,3 +540,32 @@ class AuditTrailService:
 
         logger.info(f"Cleaned up {deleted_count} old audit log files")
         return deleted_count
+
+    def clear_all_audit_data(self) -> int:
+        """
+        Clear all audit trail data including all log files and in-memory data.
+
+        Returns:
+            Number of files deleted
+        """
+        deleted_count = 0
+
+        # Clear in-memory audit log
+        self.audit_log.clear()
+
+        # Delete all audit log files
+        for filepath in self.audit_dir.glob("*.json"):
+            try:
+                filepath.unlink()
+                deleted_count += 1
+            except Exception as e:
+                logger.error(f"Failed to delete audit log file {filepath}: {e}")
+
+        # Reset current session if any
+        if self.current_session:
+            self.current_session.actions_count = 0
+            self.current_session.entities_modified.clear()
+            self.current_session.calculations_performed.clear()
+
+        logger.info(f"Cleared all audit data, deleted {deleted_count} files")
+        return deleted_count
