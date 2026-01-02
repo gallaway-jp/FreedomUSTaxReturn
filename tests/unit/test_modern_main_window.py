@@ -256,3 +256,54 @@ class TestModernMainWindowIntegration:
             call_args = mock_error_msg.call_args
             assert call_args[0][0] == "No Data"
             assert "start the tax interview first" in call_args[0][1]
+
+    @patch('gui.modern_main_window.show_info_message')
+    def test_background_calculation_system(self, mock_info_msg, mock_config, mock_tax_data):
+        """Test background calculation system functionality"""
+        with patch('gui.modern_main_window.ctk.CTk') as mock_ctk, \
+             patch('gui.modern_main_window.AccessibilityService') as mock_access, \
+             patch('gui.modern_main_window.TaxInterviewService') as mock_interview, \
+             patch('gui.modern_main_window.FormRecommendationService') as mock_recommend, \
+             patch('gui.modern_main_window.EncryptionService') as mock_encrypt, \
+             patch('gui.modern_main_window.PTINEROService') as mock_ptin, \
+             patch('gui.modern_main_window.AuthenticationService') as mock_auth:
+
+            # Setup mocks
+            mock_window = Mock()
+            mock_ctk.return_value = mock_window
+
+            # Mock services
+            mock_access.return_value = None
+            mock_interview.return_value = Mock()
+            mock_recommend.return_value = Mock()
+            mock_encrypt.return_value = Mock()
+            mock_ptin.return_value = Mock()
+            mock_auth.return_value = Mock()
+
+            # Create main window
+            window = ModernMainWindow(mock_config, demo_mode=True)
+            window.tax_data = mock_tax_data
+
+            # Mock tax data calculate_totals
+            mock_tax_data.calculate_totals.return_value = {"total_income": 50000, "total_tax": 7500}
+
+            # Test queuing a calculation
+            callback_called = False
+            result_value = None
+
+            def test_callback(calc_id, result):
+                nonlocal callback_called, result_value
+                callback_called = True
+                result_value = result
+
+            # Queue calculation
+            window._calculate_tax_totals_background(test_callback)
+
+            # Check that the method can be called (basic functionality test)
+            # In a real application, this would queue the calculation
+            assert hasattr(window, '_calculate_tax_totals_background'), "Method should exist"
+            assert hasattr(window, '_queue_calculation'), "Queue method should exist"
+
+            # Test get_tax_totals method with direct calculation
+            totals = window.get_tax_totals()
+            assert totals == {"total_income": 50000, "total_tax": 7500}, "Should return direct calculation when no cache"

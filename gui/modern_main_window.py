@@ -28,6 +28,7 @@ import time
 import sys
 import os
 import datetime
+import queue
 
 from config.app_config import AppConfig
 from models.tax_data import TaxData
@@ -120,6 +121,14 @@ class ModernMainWindow(ctk.CTk):
         self.payments_page: Optional[ModernPaymentsPage] = None
         self.foreign_income_page: Optional[ModernForeignIncomePage] = None
         self.form_viewer_page: Optional[ModernFormViewerPage] = None
+
+        # Background calculation system
+        self.calculation_thread: Optional[threading.Thread] = None
+        self.calculation_queue = queue.Queue()
+        self.calculation_lock = threading.Lock()
+        self.calculation_results = {}
+        self.calculation_callbacks = {}
+        self.calculation_running = False
 
         # Check authentication
         if not self._check_authentication():
@@ -604,6 +613,14 @@ class ModernMainWindow(ctk.CTk):
             """Handle interview completion"""
             self.interview_completed = True
             self.form_recommendations = summary.get('recommendations', [])
+
+            # Create initial tax data if not exists
+            if not self.tax_data:
+                from models.tax_data import TaxData
+                self.tax_data = TaxData(self.config)
+
+            # Start background calculations
+            self._calculate_form_recommendations_background(self._on_form_recommendations_calculated)
 
             # Update UI
             self._update_sidebar_after_interview()
@@ -1513,6 +1530,177 @@ class ModernMainWindow(ctk.CTk):
             else:
                 self.progress_bar.set(0.1)
                 self.progress_bar.label.configure(text="Progress: No forms recommended")
+
+    def _start_background_calculations(self):
+        """Start the background calculation thread"""
+        if self.calculation_thread and self.calculation_thread.is_alive():
+            return  # Already running
+
+        self.calculation_running = True
+        self.calculation_thread = threading.Thread(
+            target=self._background_calculation_worker,
+            daemon=True,
+            name="TaxCalculationWorker"
+        )
+        self.calculation_thread.start()
+
+    def _stop_background_calculations(self):
+        """Stop the background calculation thread"""
+        self.calculation_running = False
+        if self.calculation_thread:
+            self.calculation_thread.join(timeout=1.0)
+
+    def _queue_calculation(self, calculation_id: str, calculation_func, callback=None):
+        """
+        Queue a calculation to run in the background
+
+        Args:
+            calculation_id: Unique identifier for this calculation
+            calculation_func: Function to execute (should return result)
+            callback: Function to call with result when complete
+        """
+        with self.calculation_lock:
+            # Remove any existing calculation with same ID
+            if calculation_id in self.calculation_callbacks:
+                # Cancel existing callback
+                pass
+
+            self.calculation_callbacks[calculation_id] = callback
+            self.calculation_queue.put((calculation_id, calculation_func))
+
+        # Start worker if not running
+        self._start_background_calculations()
+
+    def _get_calculation_result(self, calculation_id: str):
+        """Get result of a background calculation if available"""
+        with self.calculation_lock:
+            return self.calculation_results.pop(calculation_id, None)
+
+    def _background_calculation_worker(self):
+        """Background worker thread for calculations"""
+        while self.calculation_running:
+            try:
+                # Get next calculation (with timeout to allow shutdown)
+                calculation_item = self.calculation_queue.get(timeout=0.1)
+                calculation_id, calculation_func = calculation_item
+
+                try:
+                    # Execute calculation
+                    result = calculation_func()
+
+                    # Store result
+                    with self.calculation_lock:
+                        self.calculation_results[calculation_id] = result
+                        callback = self.calculation_callbacks.pop(calculation_id, None)
+
+                    # Execute callback on main thread
+                    if callback:
+                        self.after(0, lambda: callback(calculation_id, result))
+
+                except Exception as e:
+                    # Store error result
+                    with self.calculation_lock:
+                        self.calculation_results[calculation_id] = e
+                        callback = self.calculation_callbacks.pop(calculation_id, None)
+
+                    # Execute error callback on main thread
+                    if callback:
+                        self.after(0, lambda: callback(calculation_id, e))
+
+                finally:
+                    self.calculation_queue.task_done()
+
+            except queue.Empty:
+                continue  # No work, check again
+            except Exception as e:
+                # Log unexpected errors but keep thread running
+                print(f"Background calculation error: {e}")
+                continue
+
+    def _calculate_tax_totals_background(self, callback=None):
+        """Calculate tax totals in background"""
+        if not self.tax_data:
+            if callback:
+                self.after(0, lambda: callback("tax_totals", None))
+            return
+
+        def calculation():
+            return self.tax_data.calculate_totals()
+
+        self._queue_calculation("tax_totals", calculation, callback)
+
+    def _calculate_form_recommendations_background(self, callback=None):
+        """Calculate form recommendations in background"""
+        if not self.tax_data:
+            if callback:
+                self.after(0, lambda: callback("form_recommendations", []))
+            return
+
+        def calculation():
+            return self.recommendation_service.get_recommendations(self.tax_data)
+
+        self._queue_calculation("form_recommendations", calculation, callback)
+
+    def _on_tax_totals_calculated(self, calculation_id, result):
+        """Handle completion of tax totals calculation"""
+        if isinstance(result, Exception):
+            print(f"Tax totals calculation failed: {result}")
+            return
+
+        # Update cached totals
+        self._cached_totals = result
+
+        # Update UI if currently showing relevant page
+        if hasattr(self, '_update_current_page_totals'):
+            self._update_current_page_totals()
+
+    def _on_form_recommendations_calculated(self, calculation_id, result):
+        """Handle completion of form recommendations calculation"""
+        if isinstance(result, Exception):
+            print(f"Form recommendations calculation failed: {result}")
+            return
+
+        # Update cached recommendations
+        self.form_recommendations = result
+        self._recommendations_cache = None  # Invalidate summary cache
+
+        # Update progress bar
+        self._update_progress()
+
+    def _trigger_tax_calculations(self):
+        """Trigger background tax calculations when data changes"""
+        if self.tax_data:
+            self._calculate_tax_totals_background(self._on_tax_totals_calculated)
+
+    def _is_calculation_ready(self, calculation_id: str) -> bool:
+        """Check if a background calculation result is ready"""
+        with self.calculation_lock:
+            return calculation_id in self.calculation_results
+
+    def _get_cached_calculation(self, calculation_id: str):
+        """Get cached calculation result if available"""
+        if self._is_calculation_ready(calculation_id):
+            return self._get_calculation_result(calculation_id)
+        return None
+
+    def get_tax_totals(self):
+        """Get tax totals, using cached result if available"""
+        cached = self._get_cached_calculation("tax_totals")
+        if cached is not None:
+            return cached
+
+        # Fallback to direct calculation if no cache
+        if self.tax_data:
+            return self.tax_data.calculate_totals()
+        return {}
+
+    def destroy(self):
+        """Clean up resources before destroying window"""
+        # Stop background calculations
+        self._stop_background_calculations()
+
+        # Call parent destroy
+        super().destroy()
 
     def run(self):
         """Run the application"""
