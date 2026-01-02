@@ -38,6 +38,7 @@ from services.accessibility_service import AccessibilityService
 from services.authentication_service import AuthenticationService
 from services.encryption_service import EncryptionService
 from services.translation_service import TranslationService
+from services.ptin_ero_service import PTINEROService
 from gui.modern_ui_components import (
     ModernFrame, ModernLabel, ModernButton, ModernProgressBar,
     show_info_message, show_error_message, show_confirmation

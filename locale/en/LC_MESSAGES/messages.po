@@ -1,0 +1,757 @@
+# English translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-01-02 10:01+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: data/translations/en.json:1
+msgid "app.name"
+msgstr "Freedom US Tax Return"
+
+#: data/translations/en.json:1
+msgid "app.version"
+msgstr "Version {version}"
+
+#: data/translations/en.json:1
+msgid "app.description"
+msgstr "Professional tax preparation software"
+
+#: data/translations/en.json:1
+msgid "menu.file"
+msgstr "File"
+
+#: data/translations/en.json:1
+msgid "menu.view"
+msgstr "View"
+
+#: data/translations/en.json:1
+msgid "menu.tools"
+msgstr "Tools"
+
+#: data/translations/en.json:1
+msgid "menu.security"
+msgstr "Security"
+
+#: data/translations/en.json:1
+msgid "menu.e_filing"
+msgstr "E-Filing"
+
+#: data/translations/en.json:1
+msgid "menu.collaboration"
+msgstr "Collaboration"
+
+#: data/translations/en.json:1
+msgid "menu.year"
+msgstr "Tax Year"
+
+#: data/translations/en.json:1
+msgid "menu.help"
+msgstr "Help"
+
+#: data/translations/en.json:1
+msgid "buttons.ok"
+msgstr "OK"
+
+#: data/translations/en.json:1
+msgid "buttons.cancel"
+msgstr "Cancel"
+
+#: data/translations/en.json:1
+msgid "buttons.save"
+msgstr "Save"
+
+#: data/translations/en.json:1
+msgid "buttons.load"
+msgstr "Load"
+
+#: data/translations/en.json:1
+msgid "buttons.new"
+msgstr "New"
+
+#: data/translations/en.json:1
+msgid "buttons.open"
+msgstr "Open"
+
+#: data/translations/en.json:1
+msgid "buttons.close"
+msgstr "Close"
+
+#: data/translations/en.json:1
+msgid "buttons.delete"
+msgstr "Delete"
+
+#: data/translations/en.json:1
+msgid "buttons.edit"
+msgstr "Edit"
+
+#: data/translations/en.json:1
+msgid "buttons.add"
+msgstr "Add"
+
+#: data/translations/en.json:1
+msgid "buttons.remove"
+msgstr "Remove"
+
+#: data/translations/en.json:1
+msgid "buttons.import"
+msgstr "Import"
+
+#: data/translations/en.json:1
+msgid "buttons.export"
+msgstr "Export"
+
+#: data/translations/en.json:1
+msgid "buttons.print"
+msgstr "Print"
+
+#: data/translations/en.json:1
+msgid "buttons.preview"
+msgstr "Preview"
+
+#: data/translations/en.json:1
+msgid "buttons.next"
+msgstr "Next"
+
+#: data/translations/en.json:1
+msgid "buttons.previous"
+msgstr "Previous"
+
+#: data/translations/en.json:1
+msgid "buttons.finish"
+msgstr "Finish"
+
+#: data/translations/en.json:1
+msgid "buttons.start"
+msgstr "Start"
+
+#: data/translations/en.json:1
+msgid "buttons.stop"
+msgstr "Stop"
+
+#: data/translations/en.json:1
+msgid "buttons.refresh"
+msgstr "Refresh"
+
+#: data/translations/en.json:1
+msgid "buttons.search"
+msgstr "Search"
+
+#: data/translations/en.json:1
+msgid "buttons.filter"
+msgstr "Filter"
+
+#: data/translations/en.json:1
+msgid "buttons.clear"
+msgstr "Clear"
+
+#: data/translations/en.json:1
+msgid "buttons.select_all"
+msgstr "Select All"
+
+#: data/translations/en.json:1
+msgid "buttons.deselect_all"
+msgstr "Deselect All"
+
+#: data/translations/en.json:1
+msgid "labels.name"
+msgstr "Name"
+
+#: data/translations/en.json:1
+msgid "labels.description"
+msgstr "Description"
+
+#: data/translations/en.json:1
+msgid "labels.type"
+msgstr "Type"
+
+#: data/translations/en.json:1
+msgid "labels.amount"
+msgstr "Amount"
+
+#: data/translations/en.json:1
+msgid "labels.date"
+msgstr "Date"
+
+#: data/translations/en.json:1
+msgid "labels.status"
+msgstr "Status"
+
+#: data/translations/en.json:1
+msgid "labels.total"
+msgstr "Total"
+
+#: data/translations/en.json:1
+msgid "labels.subtotal"
+msgstr "Subtotal"
+
+#: data/translations/en.json:1
+msgid "labels.tax"
+msgstr "Tax"
+
+#: data/translations/en.json:1
+msgid "labels.net"
+msgstr "Net"
+
+#: data/translations/en.json:1
+msgid "labels.gross"
+msgstr "Gross"
+
+#: data/translations/en.json:1
+msgid "labels.balance"
+msgstr "Balance"
+
+#: data/translations/en.json:1
+msgid "labels.due"
+msgstr "Due"
+
+#: data/translations/en.json:1
+msgid "labels.paid"
+msgstr "Paid"
+
+#: data/translations/en.json:1
+msgid "labels.remaining"
+msgstr "Remaining"
+
+#: data/translations/en.json:1
+msgid "labels.percentage"
+msgstr "Percentage"
+
+#: data/translations/en.json:1
+msgid "labels.rate"
+msgstr "Rate"
+
+#: data/translations/en.json:1
+msgid "labels.quantity"
+msgstr "Quantity"
+
+#: data/translations/en.json:1
+msgid "labels.price"
+msgstr "Price"
+
+#: data/translations/en.json:1
+msgid "labels.cost"
+msgstr "Cost"
+
+#: data/translations/en.json:1
+msgid "labels.value"
+msgstr "Value"
+
+#: data/translations/en.json:1
+msgid "labels.income"
+msgstr "Income"
+
+#: data/translations/en.json:1
+msgid "labels.expense"
+msgstr "Expense"
+
+#: data/translations/en.json:1
+msgid "labels.deduction"
+msgstr "Deduction"
+
+#: data/translations/en.json:1
+msgid "labels.credit"
+msgstr "Credit"
+
+#: data/translations/en.json:1
+msgid "labels.payment"
+msgstr "Payment"
+
+#: data/translations/en.json:1
+msgid "labels.refund"
+msgstr "Refund"
+
+#: data/translations/en.json:1
+msgid "labels.penalty"
+msgstr "Penalty"
+
+#: data/translations/en.json:1
+msgid "labels.interest"
+msgstr "Interest"
+
+#: data/translations/en.json:1
+msgid "messages.loading"
+msgstr "Loading..."
+
+#: data/translations/en.json:1
+msgid "messages.saving"
+msgstr "Saving..."
+
+#: data/translations/en.json:1
+msgid "messages.processing"
+msgstr "Processing..."
+
+#: data/translations/en.json:1
+msgid "messages.success"
+msgstr "Success"
+
+#: data/translations/en.json:1
+msgid "messages.error"
+msgstr "Error"
+
+#: data/translations/en.json:1
+msgid "messages.warning"
+msgstr "Warning"
+
+#: data/translations/en.json:1
+msgid "messages.information"
+msgstr "Information"
+
+#: data/translations/en.json:1
+msgid "messages.confirmation"
+msgstr "Confirmation"
+
+#: data/translations/en.json:1
+msgid "messages.question"
+msgstr "Question"
+
+#: data/translations/en.json:1
+msgid "messages.no_data"
+msgstr "No data available"
+
+#: data/translations/en.json:1
+msgid "messages.no_results"
+msgstr "No results found"
+
+#: data/translations/en.json:1
+msgid "messages.invalid_input"
+msgstr "Invalid input"
+
+#: data/translations/en.json:1
+msgid "messages.required_field"
+msgstr "This field is required"
+
+#: data/translations/en.json:1
+msgid "messages.file_not_found"
+msgstr "File not found"
+
+#: data/translations/en.json:1
+msgid "messages.permission_denied"
+msgstr "Permission denied"
+
+#: data/translations/en.json:1
+msgid "messages.network_error"
+msgstr "Network error"
+
+#: data/translations/en.json:1
+msgid "messages.timeout"
+msgstr "Operation timed out"
+
+#: data/translations/en.json:1
+msgid "messages.unknown_error"
+msgstr "An unknown error occurred"
+
+#: data/translations/en.json:1
+msgid "tax.interview"
+msgstr "Tax Interview"
+
+#: data/translations/en.json:1
+msgid "tax.return"
+msgstr "Tax Return"
+
+#: data/translations/en.json:1
+msgid "tax.forms"
+msgstr "Tax Forms"
+
+#: data/translations/en.json:1
+msgid "tax.preparation"
+msgstr "Tax Preparation"
+
+#: data/translations/en.json:1
+msgid "tax.filing"
+msgstr "Tax Filing"
+
+#: data/translations/en.json:1
+msgid "tax.deadline"
+msgstr "Tax Deadline"
+
+#: data/translations/en.json:1
+msgid "tax.season"
+msgstr "Tax Season"
+
+#: data/translations/en.json:1
+msgid "tax.year"
+msgstr "Tax Year"
+
+#: data/translations/en.json:1
+msgid "tax.federal"
+msgstr "Federal"
+
+#: data/translations/en.json:1
+msgid "tax.state"
+msgstr "State"
+
+#: data/translations/en.json:1
+msgid "tax.local"
+msgstr "Local"
+
+#: data/translations/en.json:1
+msgid "tax.income"
+msgstr "Income"
+
+#: data/translations/en.json:1
+msgid "tax.deductions"
+msgstr "Deductions"
+
+#: data/translations/en.json:1
+msgid "tax.credits"
+msgstr "Credits"
+
+#: data/translations/en.json:1
+msgid "tax.payments"
+msgstr "Payments"
+
+#: data/translations/en.json:1
+msgid "tax.withholding"
+msgstr "Withholding"
+
+#: data/translations/en.json:1
+msgid "tax.estimated"
+msgstr "Estimated"
+
+#: data/translations/en.json:1
+msgid "tax.amended"
+msgstr "Amended"
+
+#: data/translations/en.json:1
+msgid "tax.extension"
+msgstr "Extension"
+
+#: data/translations/en.json:1
+msgid "tax.audit"
+msgstr "Audit"
+
+#: data/translations/en.json:1
+msgid "tax.refund"
+msgstr "Refund"
+
+#: data/translations/en.json:1
+msgid "tax.owed"
+msgstr "Amount Owed"
+
+#: data/translations/en.json:1
+msgid "navigation.home"
+msgstr "Home"
+
+#: data/translations/en.json:1
+msgid "navigation.dashboard"
+msgstr "Dashboard"
+
+#: data/translations/en.json:1
+msgid "navigation.summary"
+msgstr "Summary"
+
+#: data/translations/en.json:1
+msgid "navigation.details"
+msgstr "Details"
+
+#: data/translations/en.json:1
+msgid "navigation.settings"
+msgstr "Settings"
+
+#: data/translations/en.json:1
+msgid "navigation.preferences"
+msgstr "Preferences"
+
+#: data/translations/en.json:1
+msgid "navigation.profile"
+msgstr "Profile"
+
+#: data/translations/en.json:1
+msgid "navigation.account"
+msgstr "Account"
+
+#: data/translations/en.json:1
+msgid "navigation.logout"
+msgstr "Logout"
+
+#: data/translations/en.json:1
+msgid "navigation.login"
+msgstr "Login"
+
+#: data/translations/en.json:1
+msgid "navigation.register"
+msgstr "Register"
+
+#: data/translations/en.json:1
+msgid "navigation.forgot_password"
+msgstr "Forgot Password"
+
+#: data/translations/en.json:1
+msgid "accessibility.screen_reader"
+msgstr "Screen Reader"
+
+#: data/translations/en.json:1
+msgid "accessibility.high_contrast"
+msgstr "High Contrast"
+
+#: data/translations/en.json:1
+msgid "accessibility.large_text"
+msgstr "Large Text"
+
+#: data/translations/en.json:1
+msgid "accessibility.keyboard_navigation"
+msgstr "Keyboard Navigation"
+
+#: data/translations/en.json:1
+msgid "accessibility.font_size"
+msgstr "Font Size"
+
+#: data/translations/en.json:1
+msgid "accessibility.color_scheme"
+msgstr "Color Scheme"
+
+#: data/translations/en.json:1
+msgid "accessibility.language"
+msgstr "Language"
+
+#: data/translations/en.json:1
+msgid "accessibility.accessibility_options"
+msgstr "Accessibility Options"
+
+#: data/translations/en.json:1
+msgid "validation.required"
+msgstr "This field is required"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_email"
+msgstr "Invalid email address"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_phone"
+msgstr "Invalid phone number"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_date"
+msgstr "Invalid date"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_number"
+msgstr "Invalid number"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_amount"
+msgstr "Invalid amount"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_ssn"
+msgstr "Invalid Social Security Number"
+
+#: data/translations/en.json:1
+msgid "validation.invalid_zip"
+msgstr "Invalid ZIP code"
+
+#: data/translations/en.json:1
+msgid "validation.min_length"
+msgstr "Minimum length is {min} characters"
+
+#: data/translations/en.json:1
+msgid "validation.max_length"
+msgstr "Maximum length is {max} characters"
+
+#: data/translations/en.json:1
+msgid "validation.min_value"
+msgstr "Minimum value is {min}"
+
+#: data/translations/en.json:1
+msgid "validation.max_value"
+msgstr "Maximum value is {max}"
+
+#: data/translations/en.json:1
+msgid "validation.pattern_mismatch"
+msgstr "Value does not match required pattern"
+
+#: data/translations/en.json:1
+msgid "dialogs.save_changes"
+msgstr "Do you want to save your changes?"
+
+#: data/translations/en.json:1
+msgid "dialogs.discard_changes"
+msgstr "Discard changes?"
+
+#: data/translations/en.json:1
+msgid "dialogs.delete_item"
+msgstr "Delete {item}?"
+
+#: data/translations/en.json:1
+msgid "dialogs.confirm_action"
+msgstr "Confirm Action"
+
+#: data/translations/en.json:1
+msgid "dialogs.unsaved_changes"
+msgstr "You have unsaved changes"
+
+#: data/translations/en.json:1
+msgid "dialogs.exit_application"
+msgstr "Exit Application?"
+
+#: data/translations/en.json:1
+msgid "dialogs.close_window"
+msgstr "Close Window?"
+
+#: data/translations/en.json:1
+msgid "status.ready"
+msgstr "Ready"
+
+#: data/translations/en.json:1
+msgid "status.busy"
+msgstr "Busy"
+
+#: data/translations/en.json:1
+msgid "status.completed"
+msgstr "Completed"
+
+#: data/translations/en.json:1
+msgid "status.failed"
+msgstr "Failed"
+
+#: data/translations/en.json:1
+msgid "status.pending"
+msgstr "Pending"
+
+#: data/translations/en.json:1
+msgid "status.processing"
+msgstr "Processing"
+
+#: data/translations/en.json:1
+msgid "status.cancelled"
+msgstr "Cancelled"
+
+#: data/translations/en.json:1
+msgid "status.paused"
+msgstr "Paused"
+
+#: data/translations/en.json:1
+msgid "status.resumed"
+msgstr "Resumed"
+
+#: data/translations/en.json:1
+msgid "units.currency"
+msgstr "$"
+
+#: data/translations/en.json:1
+msgid "units.percentage"
+msgstr "%"
+
+#: data/translations/en.json:1
+msgid "units.dollars"
+msgstr "dollars"
+
+#: data/translations/en.json:1
+msgid "units.cents"
+msgstr "cents"
+
+#: data/translations/en.json:1
+msgid "units.thousand"
+msgstr "thousand"
+
+#: data/translations/en.json:1
+msgid "units.million"
+msgstr "million"
+
+#: data/translations/en.json:1
+msgid "units.billion"
+msgstr "billion"
+
+#: data/translations/en.json:1
+msgid "dates.today"
+msgstr "Today"
+
+#: data/translations/en.json:1
+msgid "dates.yesterday"
+msgstr "Yesterday"
+
+#: data/translations/en.json:1
+msgid "dates.tomorrow"
+msgstr "Tomorrow"
+
+#: data/translations/en.json:1
+msgid "dates.this_week"
+msgstr "This Week"
+
+#: data/translations/en.json:1
+msgid "dates.this_month"
+msgstr "This Month"
+
+#: data/translations/en.json:1
+msgid "dates.this_year"
+msgstr "This Year"
+
+#: data/translations/en.json:1
+msgid "dates.last_week"
+msgstr "Last Week"
+
+#: data/translations/en.json:1
+msgid "dates.last_month"
+msgstr "Last Month"
+
+#: data/translations/en.json:1
+msgid "dates.last_year"
+msgstr "Last Year"
+
+#: data/translations/en.json:1
+msgid "dates.next_week"
+msgstr "Next Week"
+
+#: data/translations/en.json:1
+msgid "dates.next_month"
+msgstr "Next Month"
+
+#: data/translations/en.json:1
+msgid "dates.next_year"
+msgstr "Next Year"
+
+#: data/translations/en.json:1
+msgid "time.now"
+msgstr "Now"
+
+#: data/translations/en.json:1
+msgid "time.ago"
+msgstr "{time} ago"
+
+#: data/translations/en.json:1
+msgid "time.in_future"
+msgstr "in {time}"
+
+#: data/translations/en.json:1
+msgid "time.seconds"
+msgstr "seconds"
+
+#: data/translations/en.json:1
+msgid "time.minutes"
+msgstr "minutes"
+
+#: data/translations/en.json:1
+msgid "time.hours"
+msgstr "hours"
+
+#: data/translations/en.json:1
+msgid "time.days"
+msgstr "days"
+
+#: data/translations/en.json:1
+msgid "time.weeks"
+msgstr "weeks"
+
+#: data/translations/en.json:1
+msgid "time.months"
+msgstr "months"
+
+#: data/translations/en.json:1
+msgid "time.years"
+msgstr "years"
+

@@ -24,8 +24,8 @@ class TestTranslationService:
         """Test service initialization"""
         service = TranslationService(self.config)
         assert service.current_language == 'en'
-        assert 'en' in service.translations
-        assert 'es' in service.translations
+        assert 'en' in service._translators
+        assert 'es' in service._translators
 
     def test_set_language(self):
         """Test language setting"""
@@ -99,19 +99,12 @@ class TestTranslationService:
         assert service.get_language_name('invalid') == 'invalid'
 
     def test_add_translation(self):
-        """Test adding translations"""
+        """Test adding translations - not supported in Babel implementation"""
         service = TranslationService(self.config)
 
-        # Add new translation
-        result = service.add_translation('es', 'test.key', 'Texto de prueba')
-        assert result == True
-
-        # Verify it was added (nested structure)
-        assert service.translations['es']['test']['key'] == 'Texto de prueba'
-
-        # Try invalid language
-        result = service.add_translation('invalid', 'test.key', 'text')
-        assert result == False
+        # Babel implementation doesn't support programmatic addition of translations
+        # Translations are managed through .po files
+        assert not hasattr(service, 'add_translation')
 
     def test_get_missing_translations(self):
         """Test identifying missing translations"""
@@ -150,37 +143,30 @@ class TestTranslationService:
     @patch('builtins.open', new_callable=mock_open)
     @patch('pathlib.Path.exists')
     def test_save_translations(self, mock_exists, mock_file):
-        """Test saving translations to file"""
-        mock_exists.return_value = True
-
+        """Test saving translations - not supported in Babel implementation"""
         service = TranslationService(self.config)
 
-        # Add a test translation
-        service.add_translation('es', 'test.key', 'test value')
-
-        # Save translations
-        result = service.save_translations('es')
-        assert result == True
-
-        # Verify file was written
-        mock_file.assert_called()
+        # Babel implementation doesn't support programmatic saving of translations
+        # Translations are managed through .po files
+        assert not hasattr(service, 'save_translations')
 
     def test_save_translations_invalid_language(self):
-        """Test saving translations for invalid language"""
+        """Test saving translations for invalid language - not supported in Babel implementation"""
         service = TranslationService(self.config)
 
-        result = service.save_translations('invalid')
-        assert result == False
+        # Babel implementation doesn't support programmatic saving of translations
+        assert not hasattr(service, 'save_translations')
 
     def test_translation_file_loading(self):
         """Test loading translation files"""
         # This test verifies that the service can load existing translation files
         service = TranslationService(self.config)
 
-        # Check that English translations were loaded
-        assert 'buttons' in service.translations['en']
-        assert 'ok' in service.translations['en']['buttons']
+        # Check that translators were loaded
+        assert 'en' in service._translators
+        assert 'es' in service._translators
 
-        # Check that Spanish translations were loaded
-        assert 'buttons' in service.translations['es']
-        assert 'ok' in service.translations['es']['buttons']
+        # Check that English translator has translations
+        en_translator = service._translators['en']
+        assert en_translator is not None
+        assert en_translator.gettext('app.name') == 'Freedom US Tax Return'

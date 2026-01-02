@@ -38,8 +38,16 @@ def main():
         session_token = auth_service.authenticate_master_password(demo_password)
         print("Authenticated successfully")
     except Exception as e:
-        print(f"Warning: Could not authenticate: {e}")
-        session_token = None
+        print(f"Warning: Could not authenticate with demo password: {e}")
+        print("Resetting demo password...")
+        try:
+            # Reset the master password
+            auth_service.create_master_password(demo_password)
+            session_token = auth_service.authenticate_master_password(demo_password)
+            print("Demo password reset and authentication successful")
+        except Exception as reset_error:
+            print(f"Failed to reset password: {reset_error}")
+            session_token = None
     
     # Initialize accessibility service for modern UI
     accessibility_service = AccessibilityService(config, encryption_service)

@@ -6,6 +6,7 @@ qrcode>=7.0.0,<8.0.0         # QR code generation for sharing features
 Pillow>=10.0.0,<11.0.0       # Image processing for QR codes
 pyotp>=2.8.0,<3.0.0          # TOTP (Time-based One-Time Password) for 2FA
 matplotlib>=3.8.0,<4.0.0     # Data visualization for tax analytics
+Babel>=2.12.0,<3.0.0         # Internationalization and localization support
 
 # OCR and Document Processing
 easyocr>=1.7.0,<2.0.0         # OCR text extraction from images (no external dependencies)

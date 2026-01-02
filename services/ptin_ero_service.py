@@ -186,10 +186,13 @@ class PTINEROService:
                     self._ptin_cache[record.ptin] = record
 
         except Exception as e:
+            # Log the error but don't crash - just start with empty cache
             self.error_tracker.track_error(
                 error=e,
-                context={"file": str(self.ptin_file)}
+                context={"file": str(self.ptin_file), "action": "loading PTIN records"}
             )
+            # Clear any partial data and start fresh
+            self._ptin_cache.clear()
 
     def _save_ptin_records(self) -> None:
         """Save PTIN records to encrypted storage"""
@@ -226,10 +229,13 @@ class PTINEROService:
                     self._ero_cache[record.ero_number] = record
 
         except Exception as e:
+            # Log the error but don't crash - just start with empty cache
             self.error_tracker.track_error(
                 error=e,
-                context={"file": str(self.ero_file)}
+                context={"file": str(self.ero_file), "action": "loading ERO records"}
             )
+            # Clear any partial data and start fresh
+            self._ero_cache.clear()
 
     def _save_ero_records(self) -> None:
         """Save ERO records to encrypted storage"""

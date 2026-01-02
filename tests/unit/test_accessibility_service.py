@@ -119,7 +119,7 @@ class TestAccessibilityService(unittest.TestCase):
         self.service.profile.high_contrast = True
         self.service.profile.level = AccessibilityLevel.AAA
 
-        # Configure mock to return the saved data
+        # Configure mock to return the profile data when loading
         self.encryption.decrypt_dict.return_value = {
             'level': 'aaa',
             'color_scheme': 'default',
@@ -139,8 +139,9 @@ class TestAccessibilityService(unittest.TestCase):
         # Save profile
         self.service.save_profile()
 
-        # Create new service instance (simulates restart)
-        new_service = AccessibilityService(self.config, self.encryption)
+        # Mock _is_encrypted_data to return True and create new service instance (simulates restart)
+        with patch('services.accessibility_service.AccessibilityService._is_encrypted_data', return_value=True):
+            new_service = AccessibilityService(self.config, self.encryption)
 
         # Verify profile was loaded
         self.assertEqual(new_service.profile.font_size, 16)
@@ -406,12 +407,14 @@ class TestAccessibilityService(unittest.TestCase):
         # Setup encryption mock
         self.encryption.decrypt_dict.return_value = '{"font_size": 20, "high_contrast": true}'
 
-        # Create a file with "encrypted" data
+        # Create a file with data
         with open(self.service.profile_file, 'w') as f:
             json.dump({"dummy": "data"}, f)
 
-        # Create new service (should load and decrypt)
-        new_service = AccessibilityService(self.config, self.encryption)
+        # Mock _is_encrypted_data to return True
+        with patch('services.accessibility_service.AccessibilityService._is_encrypted_data', return_value=True):
+            # Create new service (should load and decrypt)
+            new_service = AccessibilityService(self.config, self.encryption)
 
         # Verify decryption was called
         self.encryption.decrypt_dict.assert_called_once()

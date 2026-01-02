@@ -1,0 +1,757 @@
+# French translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-01-02 10:01+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: data/translations/fr.json:1
+msgid "app.name"
+msgstr "Freedom US Tax Return"
+
+#: data/translations/fr.json:1
+msgid "app.version"
+msgstr "Version {version}"
+
+#: data/translations/fr.json:1
+msgid "app.description"
+msgstr "Logiciel professionnel de préparation fiscale"
+
+#: data/translations/fr.json:1
+msgid "menu.file"
+msgstr "Fichier"
+
+#: data/translations/fr.json:1
+msgid "menu.view"
+msgstr "Affichage"
+
+#: data/translations/fr.json:1
+msgid "menu.tools"
+msgstr "Outils"
+
+#: data/translations/fr.json:1
+msgid "menu.security"
+msgstr "Sécurité"
+
+#: data/translations/fr.json:1
+msgid "menu.e_filing"
+msgstr "Déclaration Électronique"
+
+#: data/translations/fr.json:1
+msgid "menu.collaboration"
+msgstr "Collaboration"
+
+#: data/translations/fr.json:1
+msgid "menu.year"
+msgstr "Année Fiscale"
+
+#: data/translations/fr.json:1
+msgid "menu.help"
+msgstr "Aide"
+
+#: data/translations/fr.json:1
+msgid "buttons.ok"
+msgstr "OK"
+
+#: data/translations/fr.json:1
+msgid "buttons.cancel"
+msgstr "Annuler"
+
+#: data/translations/fr.json:1
+msgid "buttons.save"
+msgstr "Enregistrer"
+
+#: data/translations/fr.json:1
+msgid "buttons.load"
+msgstr "Charger"
+
+#: data/translations/fr.json:1
+msgid "buttons.new"
+msgstr "Nouveau"
+
+#: data/translations/fr.json:1
+msgid "buttons.open"
+msgstr "Ouvrir"
+
+#: data/translations/fr.json:1
+msgid "buttons.close"
+msgstr "Fermer"
+
+#: data/translations/fr.json:1
+msgid "buttons.delete"
+msgstr "Supprimer"
+
+#: data/translations/fr.json:1
+msgid "buttons.edit"
+msgstr "Modifier"
+
+#: data/translations/fr.json:1
+msgid "buttons.add"
+msgstr "Ajouter"
+
+#: data/translations/fr.json:1
+msgid "buttons.remove"
+msgstr "Retirer"
+
+#: data/translations/fr.json:1
+msgid "buttons.import"
+msgstr "Importer"
+
+#: data/translations/fr.json:1
+msgid "buttons.export"
+msgstr "Exporter"
+
+#: data/translations/fr.json:1
+msgid "buttons.print"
+msgstr "Imprimer"
+
+#: data/translations/fr.json:1
+msgid "buttons.preview"
+msgstr "Aperçu"
+
+#: data/translations/fr.json:1
+msgid "buttons.next"
+msgstr "Suivant"
+
+#: data/translations/fr.json:1
+msgid "buttons.previous"
+msgstr "Précédent"
+
+#: data/translations/fr.json:1
+msgid "buttons.finish"
+msgstr "Terminer"
+
+#: data/translations/fr.json:1
+msgid "buttons.start"
+msgstr "Démarrer"
+
+#: data/translations/fr.json:1
+msgid "buttons.stop"
+msgstr "Arrêter"
+
+#: data/translations/fr.json:1
+msgid "buttons.refresh"
+msgstr "Actualiser"
+
+#: data/translations/fr.json:1
+msgid "buttons.search"
+msgstr "Rechercher"
+
+#: data/translations/fr.json:1
+msgid "buttons.filter"
+msgstr "Filtrer"
+
+#: data/translations/fr.json:1
+msgid "buttons.clear"
+msgstr "Effacer"
+
+#: data/translations/fr.json:1
+msgid "buttons.select_all"
+msgstr "Tout Sélectionner"
+
+#: data/translations/fr.json:1
+msgid "buttons.deselect_all"
+msgstr "Tout Désélectionner"
+
+#: data/translations/fr.json:1
+msgid "labels.name"
+msgstr "Nom"
+
+#: data/translations/fr.json:1
+msgid "labels.description"
+msgstr "Description"
+
+#: data/translations/fr.json:1
+msgid "labels.type"
+msgstr "Type"
+
+#: data/translations/fr.json:1
+msgid "labels.amount"
+msgstr "Montant"
+
+#: data/translations/fr.json:1
+msgid "labels.date"
+msgstr "Date"
+
+#: data/translations/fr.json:1
+msgid "labels.status"
+msgstr "Statut"
+
+#: data/translations/fr.json:1
+msgid "labels.total"
+msgstr "Total"
+
+#: data/translations/fr.json:1
+msgid "labels.subtotal"
+msgstr "Sous-total"
+
+#: data/translations/fr.json:1
+msgid "labels.tax"
+msgstr "Taxe"
+
+#: data/translations/fr.json:1
+msgid "labels.net"
+msgstr "Net"
+
+#: data/translations/fr.json:1
+msgid "labels.gross"
+msgstr "Brut"
+
+#: data/translations/fr.json:1
+msgid "labels.balance"
+msgstr "Solde"
+
+#: data/translations/fr.json:1
+msgid "labels.due"
+msgstr "Dû"
+
+#: data/translations/fr.json:1
+msgid "labels.paid"
+msgstr "Payé"
+
+#: data/translations/fr.json:1
+msgid "labels.remaining"
+msgstr "Restant"
+
+#: data/translations/fr.json:1
+msgid "labels.percentage"
+msgstr "Pourcentage"
+
+#: data/translations/fr.json:1
+msgid "labels.rate"
+msgstr "Taux"
+
+#: data/translations/fr.json:1
+msgid "labels.quantity"
+msgstr "Quantité"
+
+#: data/translations/fr.json:1
+msgid "labels.price"
+msgstr "Prix"
+
+#: data/translations/fr.json:1
+msgid "labels.cost"
+msgstr "Coût"
+
+#: data/translations/fr.json:1
+msgid "labels.value"
+msgstr "Valeur"
+
+#: data/translations/fr.json:1
+msgid "labels.income"
+msgstr "Revenus"
+
+#: data/translations/fr.json:1
+msgid "labels.expense"
+msgstr "Dépense"
+
+#: data/translations/fr.json:1
+msgid "labels.deduction"
+msgstr "Déduction"
+
+#: data/translations/fr.json:1
+msgid "labels.credit"
+msgstr "Crédit"
+
+#: data/translations/fr.json:1
+msgid "labels.payment"
+msgstr "Paiement"
+
+#: data/translations/fr.json:1
+msgid "labels.refund"
+msgstr "Remboursement"
+
+#: data/translations/fr.json:1
+msgid "labels.penalty"
+msgstr "Pénalité"
+
+#: data/translations/fr.json:1
+msgid "labels.interest"
+msgstr "Intérêt"
+
+#: data/translations/fr.json:1
+msgid "messages.loading"
+msgstr "Chargement..."
+
+#: data/translations/fr.json:1
+msgid "messages.saving"
+msgstr "Enregistrement..."
+
+#: data/translations/fr.json:1
+msgid "messages.processing"
+msgstr "Traitement..."
+
+#: data/translations/fr.json:1
+msgid "messages.success"
+msgstr "Succès"
+
+#: data/translations/fr.json:1
+msgid "messages.error"
+msgstr "Erreur"
+
+#: data/translations/fr.json:1
+msgid "messages.warning"
+msgstr "Avertissement"
+
+#: data/translations/fr.json:1
+msgid "messages.information"
+msgstr "Information"
+
+#: data/translations/fr.json:1
+msgid "messages.confirmation"
+msgstr "Confirmation"
+
+#: data/translations/fr.json:1
+msgid "messages.question"
+msgstr "Question"
+
+#: data/translations/fr.json:1
+msgid "messages.no_data"
+msgstr "Aucune donnée disponible"
+
+#: data/translations/fr.json:1
+msgid "messages.no_results"
+msgstr "Aucun résultat trouvé"
+
+#: data/translations/fr.json:1
+msgid "messages.invalid_input"
+msgstr "Entrée invalide"
+
+#: data/translations/fr.json:1
+msgid "messages.required_field"
+msgstr "Ce champ est obligatoire"
+
+#: data/translations/fr.json:1
+msgid "messages.file_not_found"
+msgstr "Fichier non trouvé"
+
+#: data/translations/fr.json:1
+msgid "messages.permission_denied"
+msgstr "Permission refusée"
+
+#: data/translations/fr.json:1
+msgid "messages.network_error"
+msgstr "Erreur réseau"
+
+#: data/translations/fr.json:1
+msgid "messages.timeout"
+msgstr "Délai d'attente dépassé"
+
+#: data/translations/fr.json:1
+msgid "messages.unknown_error"
+msgstr "Une erreur inconnue s'est produite"
+
+#: data/translations/fr.json:1
+msgid "tax.interview"
+msgstr "Entretien Fiscal"
+
+#: data/translations/fr.json:1
+msgid "tax.return"
+msgstr "Déclaration d'Impôts"
+
+#: data/translations/fr.json:1
+msgid "tax.forms"
+msgstr "Formulaires Fiscaux"
+
+#: data/translations/fr.json:1
+msgid "tax.preparation"
+msgstr "Préparation Fiscale"
+
+#: data/translations/fr.json:1
+msgid "tax.filing"
+msgstr "Déclaration Fiscale"
+
+#: data/translations/fr.json:1
+msgid "tax.deadline"
+msgstr "Date Limite"
+
+#: data/translations/fr.json:1
+msgid "tax.season"
+msgstr "Saison Fiscale"
+
+#: data/translations/fr.json:1
+msgid "tax.year"
+msgstr "Année Fiscale"
+
+#: data/translations/fr.json:1
+msgid "tax.federal"
+msgstr "Fédéral"
+
+#: data/translations/fr.json:1
+msgid "tax.state"
+msgstr "État"
+
+#: data/translations/fr.json:1
+msgid "tax.local"
+msgstr "Local"
+
+#: data/translations/fr.json:1
+msgid "tax.income"
+msgstr "Revenus"
+
+#: data/translations/fr.json:1
+msgid "tax.deductions"
+msgstr "Déductions"
+
+#: data/translations/fr.json:1
+msgid "tax.credits"
+msgstr "Crédits"
+
+#: data/translations/fr.json:1
+msgid "tax.payments"
+msgstr "Paiements"
+
+#: data/translations/fr.json:1
+msgid "tax.withholding"
+msgstr "Retenue"
+
+#: data/translations/fr.json:1
+msgid "tax.estimated"
+msgstr "Estimé"
+
+#: data/translations/fr.json:1
+msgid "tax.amended"
+msgstr "Modifié"
+
+#: data/translations/fr.json:1
+msgid "tax.extension"
+msgstr "Prolongation"
+
+#: data/translations/fr.json:1
+msgid "tax.audit"
+msgstr "Audit"
+
+#: data/translations/fr.json:1
+msgid "tax.refund"
+msgstr "Remboursement"
+
+#: data/translations/fr.json:1
+msgid "tax.owed"
+msgstr "Montant Dû"
+
+#: data/translations/fr.json:1
+msgid "navigation.home"
+msgstr "Accueil"
+
+#: data/translations/fr.json:1
+msgid "navigation.dashboard"
+msgstr "Tableau de Bord"
+
+#: data/translations/fr.json:1
+msgid "navigation.summary"
+msgstr "Résumé"
+
+#: data/translations/fr.json:1
+msgid "navigation.details"
+msgstr "Détails"
+
+#: data/translations/fr.json:1
+msgid "navigation.settings"
+msgstr "Paramètres"
+
+#: data/translations/fr.json:1
+msgid "navigation.preferences"
+msgstr "Préférences"
+
+#: data/translations/fr.json:1
+msgid "navigation.profile"
+msgstr "Profil"
+
+#: data/translations/fr.json:1
+msgid "navigation.account"
+msgstr "Compte"
+
+#: data/translations/fr.json:1
+msgid "navigation.logout"
+msgstr "Déconnexion"
+
+#: data/translations/fr.json:1
+msgid "navigation.login"
+msgstr "Connexion"
+
+#: data/translations/fr.json:1
+msgid "navigation.register"
+msgstr "S'inscrire"
+
+#: data/translations/fr.json:1
+msgid "navigation.forgot_password"
+msgstr "Mot de Passe Oublié"
+
+#: data/translations/fr.json:1
+msgid "accessibility.screen_reader"
+msgstr "Lecteur d'Écran"
+
+#: data/translations/fr.json:1
+msgid "accessibility.high_contrast"
+msgstr "Contraste Élevé"
+
+#: data/translations/fr.json:1
+msgid "accessibility.large_text"
+msgstr "Texte Agrandi"
+
+#: data/translations/fr.json:1
+msgid "accessibility.keyboard_navigation"
+msgstr "Navigation Clavier"
+
+#: data/translations/fr.json:1
+msgid "accessibility.font_size"
+msgstr "Taille de Police"
+
+#: data/translations/fr.json:1
+msgid "accessibility.color_scheme"
+msgstr "Schéma de Couleur"
+
+#: data/translations/fr.json:1
+msgid "accessibility.language"
+msgstr "Langue"
+
+#: data/translations/fr.json:1
+msgid "accessibility.accessibility_options"
+msgstr "Options d'Accessibilité"
+
+#: data/translations/fr.json:1
+msgid "validation.required"
+msgstr "Ce champ est obligatoire"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_email"
+msgstr "Adresse e-mail invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_phone"
+msgstr "Numéro de téléphone invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_date"
+msgstr "Date invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_number"
+msgstr "Nombre invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_amount"
+msgstr "Montant invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_ssn"
+msgstr "Numéro de Sécurité Sociale invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.invalid_zip"
+msgstr "Code postal invalide"
+
+#: data/translations/fr.json:1
+msgid "validation.min_length"
+msgstr "La longueur minimale est {min} caractères"
+
+#: data/translations/fr.json:1
+msgid "validation.max_length"
+msgstr "La longueur maximale est {max} caractères"
+
+#: data/translations/fr.json:1
+msgid "validation.min_value"
+msgstr "La valeur minimale est {min}"
+
+#: data/translations/fr.json:1
+msgid "validation.max_value"
+msgstr "La valeur maximale est {max}"
+
+#: data/translations/fr.json:1
+msgid "validation.pattern_mismatch"
+msgstr "La valeur ne correspond pas au modèle requis"
+
+#: data/translations/fr.json:1
+msgid "dialogs.save_changes"
+msgstr "Voulez-vous enregistrer vos modifications ?"
+
+#: data/translations/fr.json:1
+msgid "dialogs.discard_changes"
+msgstr "Annuler les modifications ?"
+
+#: data/translations/fr.json:1
+msgid "dialogs.delete_item"
+msgstr "Supprimer {item} ?"
+
+#: data/translations/fr.json:1
+msgid "dialogs.confirm_action"
+msgstr "Confirmer l'Action"
+
+#: data/translations/fr.json:1
+msgid "dialogs.unsaved_changes"
+msgstr "Vous avez des modifications non enregistrées"
+
+#: data/translations/fr.json:1
+msgid "dialogs.exit_application"
+msgstr "Quitter l'Application ?"
+
+#: data/translations/fr.json:1
+msgid "dialogs.close_window"
+msgstr "Fermer la Fenêtre ?"
+
+#: data/translations/fr.json:1
+msgid "status.ready"
+msgstr "Prêt"
+
+#: data/translations/fr.json:1
+msgid "status.busy"
+msgstr "Occupé"
+
+#: data/translations/fr.json:1
+msgid "status.completed"
+msgstr "Terminé"
+
+#: data/translations/fr.json:1
+msgid "status.failed"
+msgstr "Échoué"
+
+#: data/translations/fr.json:1
+msgid "status.pending"
+msgstr "En Attente"
+
+#: data/translations/fr.json:1
+msgid "status.processing"
+msgstr "Traitement"
+
+#: data/translations/fr.json:1
+msgid "status.cancelled"
+msgstr "Annulé"
+
+#: data/translations/fr.json:1
+msgid "status.paused"
+msgstr "En Pause"
+
+#: data/translations/fr.json:1
+msgid "status.resumed"
+msgstr "Repris"
+
+#: data/translations/fr.json:1
+msgid "units.currency"
+msgstr "$"
+
+#: data/translations/fr.json:1
+msgid "units.percentage"
+msgstr "%"
+
+#: data/translations/fr.json:1
+msgid "units.dollars"
+msgstr "dollars"
+
+#: data/translations/fr.json:1
+msgid "units.cents"
+msgstr "cents"
+
+#: data/translations/fr.json:1
+msgid "units.thousand"
+msgstr "mille"
+
+#: data/translations/fr.json:1
+msgid "units.million"
+msgstr "million"
+
+#: data/translations/fr.json:1
+msgid "units.billion"
+msgstr "milliard"
+
+#: data/translations/fr.json:1
+msgid "dates.today"
+msgstr "Aujourd'hui"
+
+#: data/translations/fr.json:1
+msgid "dates.yesterday"
+msgstr "Hier"
+
+#: data/translations/fr.json:1
+msgid "dates.tomorrow"
+msgstr "Demain"
+
+#: data/translations/fr.json:1
+msgid "dates.this_week"
+msgstr "Cette Semaine"
+
+#: data/translations/fr.json:1
+msgid "dates.this_month"
+msgstr "Ce Mois"
+
+#: data/translations/fr.json:1
+msgid "dates.this_year"
+msgstr "Cette Année"
+
+#: data/translations/fr.json:1
+msgid "dates.last_week"
+msgstr "Semaine Dernière"
+
+#: data/translations/fr.json:1
+msgid "dates.last_month"
+msgstr "Mois Dernier"
+
+#: data/translations/fr.json:1
+msgid "dates.last_year"
+msgstr "Année Dernière"
+
+#: data/translations/fr.json:1
+msgid "dates.next_week"
+msgstr "Semaine Prochaine"
+
+#: data/translations/fr.json:1
+msgid "dates.next_month"
+msgstr "Mois Prochain"
+
+#: data/translations/fr.json:1
+msgid "dates.next_year"
+msgstr "Année Prochaine"
+
+#: data/translations/fr.json:1
+msgid "time.now"
+msgstr "Maintenant"
+
+#: data/translations/fr.json:1
+msgid "time.ago"
+msgstr "il y a {time}"
+
+#: data/translations/fr.json:1
+msgid "time.in_future"
+msgstr "dans {time}"
+
+#: data/translations/fr.json:1
+msgid "time.seconds"
+msgstr "secondes"
+
+#: data/translations/fr.json:1
+msgid "time.minutes"
+msgstr "minutes"
+
+#: data/translations/fr.json:1
+msgid "time.hours"
+msgstr "heures"
+
+#: data/translations/fr.json:1
+msgid "time.days"
+msgstr "jours"
+
+#: data/translations/fr.json:1
+msgid "time.weeks"
+msgstr "semaines"
+
+#: data/translations/fr.json:1
+msgid "time.months"
+msgstr "mois"
+
+#: data/translations/fr.json:1
+msgid "time.years"
+msgstr "années"
+

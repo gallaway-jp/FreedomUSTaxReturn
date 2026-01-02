@@ -2,10 +2,11 @@
 Translation and Localization Service
 
 Provides internationalization (i18n) support for the Freedom US Tax Return application.
-Supports multiple languages with fallback to English for missing translations.
+Uses Babel library for professional translation management with .po/.mo files.
 """
 
-import json
+import gettext
+import locale
 import os
 from typing import Dict, Optional, Any
 from pathlib import Path
@@ -14,28 +15,27 @@ from config.app_config import AppConfig
 
 class TranslationService:
     """
-    Service for managing translations and localization.
+    Service for managing translations and localization using Babel.
 
     Features:
-    - Multiple language support
+    - Multiple language support using Babel
     - Fallback to English for missing translations
     - Dynamic language switching
-    - Translation key management
-    - JSON-based translation files
+    - Professional .po/.mo file management
     """
 
-    # Supported languages
+    # Supported languages with Babel locale codes
     SUPPORTED_LANGUAGES = {
-        'en': 'English',
-        'es': 'Español',
-        'fr': 'Français',
-        'de': 'Deutsch',
-        'zh': '中文',
-        'ja': '日本語',
-        'ko': '한국어',
-        'pt': 'Português',
-        'it': 'Italiano',
-        'ru': 'Русский'
+        'en': ('en', 'English'),
+        'es': ('es', 'Español'),
+        'fr': ('fr', 'Français'),
+        'de': ('de', 'Deutsch'),
+        'zh': ('zh', '中文'),
+        'ja': ('ja', '日本語'),
+        'ko': ('ko', '한국어'),
+        'pt': ('pt', 'Português'),
+        'it': ('it', 'Italiano'),
+        'ru': ('ru', 'Русский')
     }
 
     def __init__(self, config: AppConfig):
@@ -47,28 +47,25 @@ class TranslationService:
         """
         self.config = config
         self.current_language = 'en'  # Default to English
-        self.translations: Dict[str, Dict[str, str]] = {}
-        self._load_translations()
+        self._translators: Dict[str, Optional[gettext.GNUTranslations]] = {}
+        self._load_translators()
 
-    def _load_translations(self):
-        """Load all available translation files"""
-        translations_dir = Path(__file__).parent.parent / 'data' / 'translations'
+    def _load_translators(self):
+        """Load translation files for all supported languages"""
+        locale_dir = Path(__file__).parent.parent / 'locale'
 
-        # Ensure translations directory exists
-        translations_dir.mkdir(parents=True, exist_ok=True)
-
-        # Load each language file
-        for lang_code in self.SUPPORTED_LANGUAGES.keys():
-            translation_file = translations_dir / f'{lang_code}.json'
-            if translation_file.exists():
-                try:
-                    with open(translation_file, 'r', encoding='utf-8') as f:
-                        self.translations[lang_code] = json.load(f)
-                except Exception as e:
-                    print(f"Error loading translation file {translation_file}: {e}")
-                    self.translations[lang_code] = {}
-            else:
-                self.translations[lang_code] = {}
+        for lang_code, (babel_locale, _) in self.SUPPORTED_LANGUAGES.items():
+            try:
+                translator = gettext.translation(
+                    'messages',
+                    localedir=str(locale_dir),
+                    languages=[babel_locale],
+                    fallback=True
+                )
+                self._translators[lang_code] = translator
+            except FileNotFoundError:
+                # No translation file found, use null translator
+                self._translators[lang_code] = None
 
     def set_language(self, language_code: str) -> bool:
         """
@@ -100,42 +97,39 @@ class TranslationService:
             Display name of the language
         """
         code = language_code or self.current_language
-        return self.SUPPORTED_LANGUAGES.get(code, code)
+        if code in self.SUPPORTED_LANGUAGES:
+            return self.SUPPORTED_LANGUAGES[code][1]
+        return code
 
-    def translate(self, key: str, fallback: Optional[str] = None, **kwargs) -> str:
+    def translate(self, key: str, fallback: Optional[str] = None, language_code: Optional[str] = None, **kwargs) -> str:
         """
-        Translate a key to the current language.
+        Translate a key to the specified or current language.
 
         Args:
-            key: Translation key (supports dot notation for nested keys)
+            key: Translation key
             fallback: Fallback text if translation not found
+            language_code: Specific language code to translate to, or None for current language
             **kwargs: Format arguments for the translation
 
         Returns:
             Translated text
         """
-        def get_nested_value(data: dict, key_path: str):
-            """Get nested value using dot notation"""
-            keys = key_path.split('.')
-            current = data
-            for k in keys:
-                if isinstance(current, dict) and k in current:
-                    current = current[k]
-                else:
-                    return None
-            return current
+        target_language = language_code or self.current_language
+        translator = self._translators.get(target_language)
 
-        # Try current language first
-        if self.current_language in self.translations:
-            translation = get_nested_value(self.translations[self.current_language], key)
-            if translation:
-                return translation.format(**kwargs) if kwargs else translation
+        if translator:
+            # Try to translate
+            translated = translator.gettext(key)
+            if translated != key:  # Translation found
+                return translated.format(**kwargs) if kwargs else translated
 
-        # Try English fallback
-        if 'en' in self.translations and self.current_language != 'en':
-            translation = get_nested_value(self.translations['en'], key)
-            if translation:
-                return translation.format(**kwargs) if kwargs else translation
+        # Try English fallback if not already using English
+        if target_language != 'en':
+            english_translator = self._translators.get('en')
+            if english_translator:
+                translated = english_translator.gettext(key)
+                if translated != key:  # Translation found
+                    return translated.format(**kwargs) if kwargs else translated
 
         # Use fallback or key itself
         text = fallback or key
@@ -143,62 +137,7 @@ class TranslationService:
 
     def get_available_languages(self) -> Dict[str, str]:
         """Get dictionary of available language codes and names"""
-        return self.SUPPORTED_LANGUAGES.copy()
-
-    def add_translation(self, language_code: str, key: str, text: str) -> bool:
-        """
-        Add or update a translation.
-
-        Args:
-            language_code: Language code
-            key: Translation key (supports dot notation for nested keys)
-            text: Translated text
-
-        Returns:
-            True if translation was added successfully
-        """
-        if language_code not in self.SUPPORTED_LANGUAGES:
-            return False
-
-        if language_code not in self.translations:
-            self.translations[language_code] = {}
-
-        def set_nested_value(data: dict, key_path: str, value: str):
-            """Set nested value using dot notation"""
-            keys = key_path.split('.')
-            current = data
-            for k in keys[:-1]:  # All keys except the last
-                if k not in current or not isinstance(current[k], dict):
-                    current[k] = {}
-                current = current[k]
-            current[keys[-1]] = value
-
-        set_nested_value(self.translations[language_code], key, text)
-        return True
-
-    def save_translations(self, language_code: str) -> bool:
-        """
-        Save translations for a language to file.
-
-        Args:
-            language_code: Language code to save
-
-        Returns:
-            True if saved successfully
-        """
-        if language_code not in self.translations:
-            return False
-
-        translations_dir = Path(__file__).parent.parent / 'data' / 'translations'
-        translation_file = translations_dir / f'{language_code}.json'
-
-        try:
-            with open(translation_file, 'w', encoding='utf-8') as f:
-                json.dump(self.translations[language_code], f, ensure_ascii=False, indent=2)
-            return True
-        except Exception as e:
-            print(f"Error saving translation file {translation_file}: {e}")
-            return False
+        return {code: name for code, (_, name) in self.SUPPORTED_LANGUAGES.items()}
 
     def get_missing_translations(self, language_code: str) -> list:
         """
@@ -210,13 +149,29 @@ class TranslationService:
         Returns:
             List of missing translation keys
         """
-        if language_code not in self.translations or 'en' not in self.translations:
+        if language_code not in self.SUPPORTED_LANGUAGES:
             return []
 
-        english_keys = set(self.translations['en'].keys())
-        language_keys = set(self.translations[language_code].keys())
+        english_translator = self._translators.get('en')
+        target_translator = self._translators.get(language_code)
 
-        return list(english_keys - language_keys)
+        if not english_translator or not target_translator:
+            return []
+
+        if not hasattr(english_translator, '_catalog') or not hasattr(target_translator, '_catalog'):
+            return []
+
+        # Get all English keys
+        english_keys = set(k for k in english_translator._catalog.keys() if k and k.strip())
+
+        # Get translated keys in target language (where msgstr != msgid)
+        translated_keys = set(k for k, v in target_translator._catalog.items()
+                            if k and k.strip() and v and v != k)
+
+        # Missing keys are those in English but not properly translated in target language
+        missing_keys = english_keys - translated_keys
+
+        return sorted(list(missing_keys))
 
     def get_translation_stats(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -227,27 +182,36 @@ class TranslationService:
         """
         stats = {}
 
-        if 'en' in self.translations:
-            english_count = len(self.translations['en'])
+        # Get total keys from English (assuming English has all keys)
+        english_translator = self._translators.get('en')
+        total_keys = 0
+        if english_translator and hasattr(english_translator, '_catalog'):
+            # Count all non-empty msgid entries (excluding header)
+            total_keys = len([k for k in english_translator._catalog.keys()
+                            if k and k.strip()])
 
-            for lang_code, lang_name in self.SUPPORTED_LANGUAGES.items():
-                if lang_code in self.translations:
-                    lang_count = len(self.translations[lang_code])
-                    completion = (lang_count / english_count * 100) if english_count > 0 else 0
-                    missing = english_count - lang_count
+        for lang_code, (_, lang_name) in self.SUPPORTED_LANGUAGES.items():
+            translator = self._translators.get(lang_code)
 
-                    stats[lang_code] = {
-                        'name': lang_name,
-                        'total_keys': lang_count,
-                        'completion_percentage': round(completion, 1),
-                        'missing_keys': missing
-                    }
-                else:
-                    stats[lang_code] = {
-                        'name': lang_name,
-                        'total_keys': 0,
-                        'completion_percentage': 0.0,
-                        'missing_keys': english_count
-                    }
+            if translator and hasattr(translator, '_catalog'):
+                # Count translated entries (where msgstr is different from msgid)
+                translated_keys = len([k for k, v in translator._catalog.items()
+                                     if k and k.strip() and v and v != k])
+                completion = (translated_keys / total_keys * 100) if total_keys > 0 else 0
+                missing = total_keys - translated_keys
+
+                stats[lang_code] = {
+                    'name': lang_name,
+                    'total_keys': translated_keys,
+                    'completion_percentage': round(completion, 1),
+                    'missing_keys': missing
+                }
+            else:
+                stats[lang_code] = {
+                    'name': lang_name,
+                    'total_keys': 0,
+                    'completion_percentage': 0.0,
+                    'missing_keys': total_keys
+                }
 
         return stats

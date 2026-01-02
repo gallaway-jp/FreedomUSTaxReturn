@@ -119,8 +119,9 @@ class AccessibilityService:
             if os.path.exists(self.profile_file):
                 with open(self.profile_file, 'r') as f:
                     data = json.load(f)
-                    # Decrypt if encrypted
-                    if self.encryption:
+                    
+                    # Try to decrypt if data appears to be encrypted
+                    if self.encryption and self._is_encrypted_data(data):
                         data = self.encryption.decrypt_dict(data)
 
                     # Update profile with loaded data
@@ -137,6 +138,21 @@ class AccessibilityService:
         except Exception as e:
             self.logger.error(f"Failed to load accessibility profile: {e}")
             # Use defaults if loading fails
+
+    def _is_encrypted_data(self, data: dict) -> bool:
+        """Check if the data appears to be encrypted"""
+        # Simple heuristic: if any string value looks like base64 (contains non-printable chars or specific patterns)
+        for key, value in data.items():
+            if isinstance(value, str) and len(value) > 50:
+                # Check if it looks like base64 encoded data
+                try:
+                    # Try to decode as base64
+                    import base64
+                    base64.b64decode(value, validate=True)
+                    return True
+                except Exception:
+                    pass
+        return False
 
     def save_profile(self):
         """Save user accessibility profile"""

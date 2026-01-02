@@ -177,6 +177,7 @@ class TranslationManagementWindow:
 Language Settings:
 • Changes take effect immediately
 • Some UI elements may require restart
+• Translations are managed using Babel (.po/.mo files)
 • All supported languages include full translations
 • English is used as fallback for missing translations
         """
@@ -234,6 +235,22 @@ Translation Statistics:
         """Create the missing translations tab"""
         tab = ModernFrame(self.notebook)
         self.notebook.add(tab, text="Missing Translations")
+
+        # Info about Babel
+        info_frame = ModernFrame(tab)
+        info_frame.pack(fill="x", padx=10, pady=(10, 5))
+
+        info_text = """
+Note: Translations are managed using Babel (.po/.mo files).
+To add new translations, edit the .po files in the locale/ directory.
+        """
+
+        ModernLabel(
+            info_frame,
+            text=info_text.strip(),
+            justify="left",
+            font=ctk.CTkFont(size=10)
+        ).pack(anchor="w")
 
         # Language selection for missing translations
         select_frame = ModernFrame(tab)
