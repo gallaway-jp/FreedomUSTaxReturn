@@ -49,10 +49,18 @@ class AppConfig:
     cache_calculations: bool = True
     cache_size: int = 128
     
+    # Internationalization
+    default_language: str = "en"
+    supported_languages: list = None  # Will be set in __post_init__
+    
     def __post_init__(self):
         """Set default log directory if not specified"""
         if self.log_dir is None:
             self.log_dir = self.safe_dir / "logs"
+        
+        # Set supported languages if not specified
+        if self.supported_languages is None:
+            self.supported_languages = ['en', 'es', 'fr', 'de', 'zh', 'ja', 'ko', 'pt', 'it', 'ru']
     
     @classmethod
     def from_env(cls) -> 'AppConfig':
@@ -75,6 +83,7 @@ class AppConfig:
             window_width=int(os.getenv("WINDOW_WIDTH", cls.window_width)),
             window_height=int(os.getenv("WINDOW_HEIGHT", cls.window_height)),
             theme=os.getenv("APP_THEME", cls.theme),
+            default_language=os.getenv("APP_LANGUAGE", cls.default_language),
             encryption_enabled=os.getenv("ENCRYPTION_ENABLED", "true").lower() == "true"
         )
     

@@ -37,7 +37,7 @@ from services.form_recommendation_service import FormRecommendationService
 from services.accessibility_service import AccessibilityService
 from services.authentication_service import AuthenticationService
 from services.encryption_service import EncryptionService
-from services.ptin_ero_service import PTINEROService
+from services.translation_service import TranslationService
 from gui.modern_ui_components import (
     ModernFrame, ModernLabel, ModernButton, ModernProgressBar,
     show_info_message, show_error_message, show_confirmation
@@ -58,7 +58,7 @@ from gui.tax_planning_window import TaxPlanningWindow
 from gui.receipt_scanning_window import ReceiptScanningWindow
 from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 from gui.e_filing_window import EFilingWindow
-from gui.amended_return_dialog import AmendedReturnDialog
+from gui.translation_management_window import TranslationManagementWindow
 from gui.audit_trail_window import AuditTrailWindow
 from gui.plugin_management_window import open_plugin_management_window
 
@@ -105,6 +105,7 @@ class ModernMainWindow(ctk.CTk):
         self.encryption_service = EncryptionService(config.key_file)
         self.ptin_ero_service = PTINEROService(config, self.encryption_service)
         self.auth_service = AuthenticationService(config, self.ptin_ero_service)
+        self.translation_service = TranslationService(config)
         self.session_token = None
         self.is_mocked = False
 
@@ -367,6 +368,15 @@ class ModernMainWindow(ctk.CTk):
             sidebar_scroll,
             text="⚙️ Settings",
             command=self._show_settings,
+            button_type="secondary",
+            height=32,
+            accessibility_service=self.accessibility_service
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
+            text="🌐 Language",
+            command=self._show_translation_management,
             button_type="secondary",
             height=32,
             accessibility_service=self.accessibility_service
@@ -1301,6 +1311,20 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Cryptocurrency Tax Error", f"Failed to open cryptocurrency tax window: {str(e)}")
+
+    def _show_translation_management(self):
+        """Show translation management window"""
+        try:
+            # Create and show translation management window
+            translation_window = TranslationManagementWindow(
+                self,
+                self.config,
+                self.translation_service
+            )
+            translation_window.show()
+            
+        except Exception as e:
+            show_error_message("Translation Management Error", f"Failed to open translation management window: {str(e)}")
 
     def _show_estate_trust(self):
         """Show estate and trust tax returns window"""
