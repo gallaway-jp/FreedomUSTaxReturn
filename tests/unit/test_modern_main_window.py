@@ -176,8 +176,83 @@ class TestModernMainWindowIntegration:
             # Call the method
             window._show_tax_analytics()
 
+    @patch('gui.modern_main_window.show_info_message')
+    @patch('gui.modern_main_window.show_error_message')
+    def test_save_progress_with_data(self, mock_error_msg, mock_info_msg, mock_config, mock_tax_data):
+        """Test _save_progress method with valid tax data"""
+        with patch('gui.modern_main_window.ctk.CTk') as mock_ctk, \
+             patch('gui.modern_main_window.AccessibilityService') as mock_access, \
+             patch('gui.modern_main_window.TaxInterviewService') as mock_interview, \
+             patch('gui.modern_main_window.FormRecommendationService') as mock_recommend, \
+             patch('gui.modern_main_window.EncryptionService') as mock_encrypt, \
+             patch('gui.modern_main_window.PTINEROService') as mock_ptin, \
+             patch('gui.modern_main_window.AuthenticationService') as mock_auth:
+
+            # Setup mocks
+            mock_window = Mock()
+            mock_ctk.return_value = mock_window
+
+            # Mock services
+            mock_access.return_value = None
+            mock_interview.return_value = Mock()
+            mock_recommend.return_value = Mock()
+            mock_encrypt.return_value = Mock()
+            mock_ptin.return_value = Mock()
+            mock_auth.return_value = Mock()
+
+            # Create main window
+            window = ModernMainWindow(mock_config, demo_mode=True)
+            window.tax_data = mock_tax_data
+
+            # Mock the save_to_file method
+            mock_tax_data.save_to_file.return_value = "/path/to/saved/file.enc"
+
+            # Call the method
+            window._save_progress()
+
+            # Verify save_to_file was called
+            mock_tax_data.save_to_file.assert_called_once()
+            call_args = mock_tax_data.save_to_file.call_args
+            assert call_args[0][0].startswith("progress_2026_")  # Should start with progress_2026_
+            assert call_args[0][0].endswith(".enc")  # Should end with .enc
+
+            # Verify success message was shown
+            mock_info_msg.assert_called_once()
+            call_args = mock_info_msg.call_args
+            assert call_args[0][0] == "Progress Saved"
+            assert "has been saved successfully" in call_args[0][1]
+
+    @patch('gui.modern_main_window.show_error_message')
+    def test_save_progress_no_data(self, mock_error_msg, mock_config):
+        """Test _save_progress method with no tax data"""
+        with patch('gui.modern_main_window.ctk.CTk') as mock_ctk, \
+             patch('gui.modern_main_window.AccessibilityService') as mock_access, \
+             patch('gui.modern_main_window.TaxInterviewService') as mock_interview, \
+             patch('gui.modern_main_window.FormRecommendationService') as mock_recommend, \
+             patch('gui.modern_main_window.EncryptionService') as mock_encrypt, \
+             patch('gui.modern_main_window.PTINEROService') as mock_ptin, \
+             patch('gui.modern_main_window.AuthenticationService') as mock_auth:
+
+            # Setup mocks
+            mock_window = Mock()
+            mock_ctk.return_value = mock_window
+
+            # Mock services
+            mock_access.return_value = None
+            mock_interview.return_value = Mock()
+            mock_recommend.return_value = Mock()
+            mock_encrypt.return_value = Mock()
+            mock_ptin.return_value = Mock()
+            mock_auth.return_value = Mock()
+
+            # Create main window (no tax_data set)
+            window = ModernMainWindow(mock_config, demo_mode=True)
+
+            # Call the method
+            window._save_progress()
+
             # Verify error message was shown
             mock_error_msg.assert_called_once()
             call_args = mock_error_msg.call_args
-            assert call_args[0][0] == "Analytics Error"
-            assert "Test error" in call_args[0][1]
+            assert call_args[0][0] == "No Data"
+            assert "start the tax interview first" in call_args[0][1]

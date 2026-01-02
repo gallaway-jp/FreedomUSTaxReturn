@@ -27,6 +27,7 @@ import threading
 import time
 import sys
 import os
+import datetime
 
 from config.app_config import AppConfig
 from models.tax_data import TaxData
@@ -949,7 +950,30 @@ class ModernMainWindow(ctk.CTk):
 
     def _save_progress(self):
         """Save current progress"""
-        show_info_message("Save Progress", "Progress saving will be implemented in the next phase.")
+        if not self.tax_data:
+            show_error_message("No Data", "Please start the tax interview first before saving progress.")
+            return
+
+        try:
+            # Generate progress filename with timestamp
+            import datetime
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            tax_year = self.tax_data.get_current_year() if hasattr(self.tax_data, 'get_current_year') else 2026
+            filename = f"progress_{tax_year}_{timestamp}.enc"
+
+            # Save the tax data
+            saved_path = self.tax_data.save_to_file(filename)
+
+            show_info_message("Progress Saved",
+                            f"Your tax return progress has been saved successfully!\n\n"
+                            f"File: {os.path.basename(saved_path)}\n"
+                            f"Location: {os.path.dirname(saved_path)}\n\n"
+                            f"You can load this file later to continue where you left off.")
+
+        except Exception as e:
+            show_error_message("Save Failed",
+                            f"Failed to save progress: {str(e)}\n\n"
+                            f"Please check that you have write permissions and sufficient disk space.")
 
     def _show_summary(self):
         """Show tax return summary"""
@@ -1455,10 +1479,6 @@ class ModernMainWindow(ctk.CTk):
             
         except Exception as e:
             show_error_message("Web Interface Error", f"Failed to launch web interface: {str(e)}")
-
-    def _open_audit_trail(self):
-        """Open audit trail window (placeholder)"""
-        show_info_message("Audit Trail", "Audit trail will be implemented in the next phase.")
 
     def _open_state_tax_window(self):
         """Open the state tax returns window"""
