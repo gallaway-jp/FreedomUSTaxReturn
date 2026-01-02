@@ -67,13 +67,13 @@ from gui.pages.state_tax_page import StateTaxPage
 from gui.pages.state_tax_calculator_page import StateTaxCalculatorPage
 
 # Phase 3: Advanced Feature Pages
-from gui.pages.ai_deduction_finder_page import AiDeductionFinderPage
+from gui.pages.ai_deduction_finder_page import AIDeductionFinderPage
 from gui.pages.cryptocurrency_tax_page import CryptocurrencyTaxPage
 from gui.pages.audit_trail_page import AuditTrailPage
 from gui.pages.tax_planning_page import TaxPlanningPage
 
 # Phase 4: Comprehensive Feature Pages
-from gui.pages.quickbooks_integration_page import QuickbooksIntegrationPage
+from gui.pages.quickbooks_integration_page import QuickBooksIntegrationPage
 from gui.pages.tax_dashboard_page import TaxDashboardPage
 from gui.pages.receipt_scanning_page import ReceiptScanningPage
 from gui.pages.client_portal_page import ClientPortalPage
@@ -94,7 +94,7 @@ from gui.pages.translation_management_page import TranslationManagementPage
 from gui.pages.year_comparison_page import YearComparisonPage
 
 # Legacy window imports (kept for backward compatibility)
-from gui.state_tax_window import open_state_tax_window
+# from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
 from gui.estate_trust_window import EstateTrustWindow
@@ -2556,7 +2556,7 @@ class ModernMainWindow(ctk.CTk):
             'ai_deduction_finder': {
                 'name': 'AI Deduction Finder',
                 'icon': '🤖',
-                'page_class': AiDeductionFinderPage,
+                'page_class': AIDeductionFinderPage,
                 'instance': None
             },
             'cryptocurrency_tax': {
@@ -2582,7 +2582,7 @@ class ModernMainWindow(ctk.CTk):
             'quickbooks_integration': {
                 'name': 'QuickBooks Integration',
                 'icon': '📊',
-                'page_class': QuickbooksIntegrationPage,
+                'page_class': QuickBooksIntegrationPage,
                 'instance': None
             },
             'tax_dashboard': {
