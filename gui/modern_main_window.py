@@ -50,6 +50,10 @@ from gui.pages.modern_credits_page import ModernCreditsPage
 from gui.pages.modern_payments_page import ModernPaymentsPage
 from gui.pages.modern_foreign_income_page import ModernForeignIncomePage
 from gui.pages.modern_form_viewer_page import ModernFormViewerPage
+from gui.pages.modern_settings_page import ModernSettingsPage
+from gui.pages.modern_audit_trail_page import ModernAuditTrailPage
+from gui.pages.modern_save_progress_page import ModernSaveProgressPage
+from gui.pages.modern_amended_return_page import ModernAmendedReturnPage
 from gui.state_tax_window import open_state_tax_window
 from gui.tax_analytics_window import TaxAnalyticsWindow
 from gui.cryptocurrency_tax_window import CryptocurrencyTaxWindow
@@ -60,7 +64,6 @@ from gui.receipt_scanning_window import ReceiptScanningWindow
 from gui.foreign_income_fbar_window import ForeignIncomeFBARWindow
 from gui.e_filing_window import EFilingWindow
 from gui.translation_management_window import TranslationManagementWindow
-from gui.audit_trail_window import AuditTrailWindow
 from gui.plugin_management_window import open_plugin_management_window
 
 
@@ -123,6 +126,7 @@ class ModernMainWindow(ctk.CTk):
         self.payments_page: Optional[ModernPaymentsPage] = None
         self.foreign_income_page: Optional[ModernForeignIncomePage] = None
         self.form_viewer_page: Optional[ModernFormViewerPage] = None
+        self.settings_page: Optional[ModernSettingsPage] = None
 
         # Background calculation system
         self.calculation_thread: Optional[threading.Thread] = None
@@ -147,8 +151,8 @@ class ModernMainWindow(ctk.CTk):
         self.geometry("1200x800")
         self.resizable(True, True)
 
-        # Set theme
-        ctk.set_appearance_mode("system")  # Modes: "System" (standard), "Dark", "Light"
+        # Set theme from config
+        ctk.set_appearance_mode(self.config.theme)  # Use saved theme: "System", "Dark", "Light"
         ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
         # Apply accessibility to main window
@@ -290,15 +294,6 @@ class ModernMainWindow(ctk.CTk):
             accessibility_service=self.accessibility_service
         ).pack(fill="x", padx=5, pady=2)
 
-        ModernButton(
-            sidebar_scroll,
-            text="🌙 Toggle Theme",
-            command=self._toggle_theme,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
         # Separator
         self._create_separator(sidebar_scroll)
 
@@ -349,16 +344,7 @@ class ModernMainWindow(ctk.CTk):
 
         ModernButton(
             sidebar_scroll,
-            text="🔑 Change Password",
-            command=self._change_password,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📋 Audit Trail",
+            text="� Audit Trail",
             command=self._show_audit_trail,
             button_type="secondary",
             height=32,
@@ -368,16 +354,7 @@ class ModernMainWindow(ctk.CTk):
         ModernButton(
             sidebar_scroll,
             text="⚙️ Settings",
-            command=self._show_settings,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🌐 Language",
-            command=self._show_translation_management,
+            command=self._show_settings_page,
             button_type="secondary",
             height=32,
             accessibility_service=self.accessibility_service
@@ -386,157 +363,18 @@ class ModernMainWindow(ctk.CTk):
         # Separator
         self._create_separator(sidebar_scroll)
 
-        # ===== ANALYTICS & REPORTING =====
-        analytics_header = ModernLabel(
+        # ===== SESSION =====
+        session_header = ModernLabel(
             sidebar_scroll,
-            text="📊 ANALYTICS",
+            text="🔐 SESSION",
             font=ctk.CTkFont(size=10, weight="bold"),
             text_color="gray60"
         )
-        analytics_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
+        session_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
 
         ModernButton(
             sidebar_scroll,
-            text="📈 Tax Analytics",
-            command=self._show_tax_analytics,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🔮 Tax Projections",
-            command=self._show_tax_projections,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🤖 AI Deduction Finder",
-            command=self._show_ai_deduction_finder,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🔌 Plugin Management",
-            command=self._show_plugin_management,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="₿ Cryptocurrency Tax",
-            command=self._show_cryptocurrency_tax,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🏛️ Estate & Trust Returns",
-            command=self._show_estate_trust,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🤝 Partnership & S-Corp Returns",
-            command=self._show_partnership_s_corp,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📊 Tax Planning Tools",
-            command=self._show_tax_planning,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="📄 Receipt Scanning",
-            command=self._show_receipt_scanning,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="🌍 Foreign Income & FBAR",
-            command=self._show_foreign_income_fbar,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== E-FILING =====
-        efiling_header = ModernLabel(
-            sidebar_scroll,
-            text="📡 E-FILING",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        efiling_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="🚀 IRS E-Filing",
-            command=self._show_e_filing,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        # Separator
-        self._create_separator(sidebar_scroll)
-
-        # ===== HELP & INFO =====
-        help_header = ModernLabel(
-            sidebar_scroll,
-            text="❓ HELP",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="gray60"
-        )
-        help_header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
-
-        ModernButton(
-            sidebar_scroll,
-            text="ℹ️ About",
-            command=self._show_about,
-            button_type="secondary",
-            height=32,
-            accessibility_service=self.accessibility_service
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="� Mobile/Web Interface",
-            command=self._launch_web_interface,
-            button_type="secondary",
-            height=32
-        ).pack(fill="x", padx=5, pady=2)
-
-        ModernButton(
-            sidebar_scroll,
-            text="�🚪 Logout",
+            text="🚪 Logout",
             command=self._logout,
             button_type="secondary",
             height=32
@@ -791,11 +629,10 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize income page if not already done
-        if self.income_page is None:
-            self.income_page = ModernIncomePage(self.content_frame, self.config, on_complete=self._handle_income_complete)
-            if self.tax_data:
-                self.income_page.load_data(self.tax_data)
+        # Always recreate income page to avoid widget path errors
+        self.income_page = ModernIncomePage(self.content_frame, self.config, on_complete=self._handle_income_complete)
+        if self.tax_data:
+            self.income_page.load_data(self.tax_data)
 
         # Show the income page
         self.income_page.pack(fill="both", expand=True)
@@ -812,11 +649,10 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize deductions page if not already done
-        if self.deductions_page is None:
-            self.deductions_page = ModernDeductionsPage(self.content_frame, self.config, on_complete=self._handle_deductions_complete)
-            if self.tax_data:
-                self.deductions_page.load_data(self.tax_data)
+        # Always recreate deductions page to avoid widget path errors
+        self.deductions_page = ModernDeductionsPage(self.content_frame, self.config, on_complete=self._handle_deductions_complete)
+        if self.tax_data:
+            self.deductions_page.load_data(self.tax_data)
 
         # Show the deductions page
         self.deductions_page.pack(fill="both", expand=True)
@@ -833,11 +669,10 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize credits page if not already done
-        if self.credits_page is None:
-            self.credits_page = ModernCreditsPage(self.content_frame, self.config, on_complete=self._handle_credits_complete)
-            if self.tax_data:
-                self.credits_page.load_data(self.tax_data)
+        # Always recreate credits page to avoid widget path errors
+        self.credits_page = ModernCreditsPage(self.content_frame, self.config, on_complete=self._handle_credits_complete)
+        if self.tax_data:
+            self.credits_page.load_data(self.tax_data)
 
         # Show the credits page
         self.credits_page.pack(fill="both", expand=True)
@@ -854,11 +689,10 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize payments page if not already done
-        if self.payments_page is None:
-            self.payments_page = ModernPaymentsPage(self.content_frame, self.config, on_complete=self._handle_payments_complete)
-            if self.tax_data:
-                self.payments_page.load_data(self.tax_data)
+        # Always recreate payments page to avoid widget path errors
+        self.payments_page = ModernPaymentsPage(self.content_frame, self.config, on_complete=self._handle_payments_complete)
+        if self.tax_data:
+            self.payments_page.load_data(self.tax_data)
 
         # Show the payments page
         self.payments_page.pack(fill="both", expand=True)
@@ -875,14 +709,13 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize foreign income page if not already done
-        if self.foreign_income_page is None:
-            self.foreign_income_page = ModernForeignIncomePage(
-                self.content_frame,
-                self.tax_data,
-                self.config,
-                on_complete_callback=self._handle_foreign_income_complete
-            )
+        # Always recreate foreign income page to avoid widget path errors
+        self.foreign_income_page = ModernForeignIncomePage(
+            self.content_frame,
+            self.tax_data,
+            self.config,
+            on_complete_callback=self._handle_foreign_income_complete
+        )
 
         # Show the foreign income page
         self.foreign_income_page.pack(fill="both", expand=True)
@@ -899,14 +732,13 @@ class ModernMainWindow(ctk.CTk):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
 
-        # Initialize form viewer page if not already done
-        if self.form_viewer_page is None:
-            self.form_viewer_page = ModernFormViewerPage(
-                self.content_frame,
-                self.tax_data,
-                self.config,
-                on_back_callback=self._handle_form_viewer_back
-            )
+        # Always recreate form viewer page to avoid widget path errors
+        self.form_viewer_page = ModernFormViewerPage(
+            self.content_frame,
+            self.tax_data,
+            self.config,
+            on_back_callback=self._handle_form_viewer_back
+        )
 
         # Show the form viewer page
         self.form_viewer_page.pack(fill="both", expand=True)
@@ -916,6 +748,67 @@ class ModernMainWindow(ctk.CTk):
 
         # Update progress
         self._update_progress()
+
+    def _show_settings_page(self):
+        """Show the settings page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Always recreate settings page to avoid widget path errors
+        self.settings_page = ModernSettingsPage(
+            self.content_frame,
+            self.config,
+            self.translation_service,
+            self.auth_service,
+            on_theme_changed=self._handle_theme_changed,
+            on_language_changed=self._handle_language_changed
+        )
+
+        # Show the settings page
+        self.settings_page.pack(fill="both", expand=True)
+
+        # Update status
+        self.status_label.configure(text="Settings - Customize your application preferences")
+
+        # Update progress
+        self._update_progress()
+
+    def _handle_theme_changed(self, new_theme: str):
+        """Handle theme change from settings page"""
+        try:
+            # Set the appearance mode using CustomTkinter
+            ctk.set_appearance_mode(new_theme)
+
+            # Save theme setting to config
+            self.config.theme = new_theme
+            self.config.save_user_settings()
+
+            # Refresh the UI to apply theme changes
+            self._refresh_ui_theme()
+        except Exception as e:
+            show_error_message("Theme Error", f"Failed to change theme: {str(e)}")
+
+    def _handle_language_changed(self, new_language: str):
+        """Handle language change from settings page"""
+        # Save language setting to config
+        self.config.default_language = new_language
+        self.config.save_user_settings()
+
+        # Refresh translations in the UI
+        self._refresh_translations()
+
+    def _refresh_ui_theme(self):
+        """Refresh UI elements to apply theme changes"""
+        # This would refresh any theme-dependent UI elements
+        # For now, CustomTkinter handles most theme changes automatically
+        pass
+
+    def _refresh_translations(self):
+        """Refresh UI text with new language settings"""
+        # This would update all UI text elements with new translations
+        # For now, the translation service handles most updates
+        pass
 
     def _handle_page_complete(self, page_name: str, tax_data, action="continue"):
         """Generic handler for page completion with navigation logic"""
@@ -977,36 +870,37 @@ class ModernMainWindow(ctk.CTk):
         self._show_income_page()
 
     def _save_progress(self):
-        """Save current progress"""
-        if not self.tax_data:
-            show_error_message("No Data", "Please start the tax interview first before saving progress.")
-            return
+        """Show save progress page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
 
-        try:
-            # Generate progress filename with timestamp
-            import datetime
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            tax_year = self.tax_data.get_current_year() if hasattr(self.tax_data, 'get_current_year') else 2026
-            filename = f"progress_{tax_year}_{timestamp}.enc"
+        # Create and show save progress page
+        self.save_progress_page = ModernSaveProgressPage(
+            self.content_frame,
+            tax_data=self.tax_data,
+            on_progress_saved=self._handle_progress_saved
+        )
 
-            # Save the tax data
-            saved_path = self.tax_data.save_to_file(filename)
+        # Show the save progress page
+        self.save_progress_page.pack(fill="both", expand=True)
 
-            show_info_message("Progress Saved",
-                            f"Your tax return progress has been saved successfully!\n\n"
-                            f"File: {os.path.basename(saved_path)}\n"
-                            f"Location: {os.path.dirname(saved_path)}\n\n"
-                            f"You can load this file later to continue where you left off.")
+        # Update status
+        self.status_label.configure(text="Save Progress - Back up your tax return")
 
-        except Exception as e:
-            show_error_message("Save Failed",
-                            f"Failed to save progress: {str(e)}\n\n"
-                            f"Please check that you have write permissions and sufficient disk space.")
+        # Update progress
+        self._update_progress()
+
+    def _handle_progress_saved(self):
+        """Handle progress saved callback"""
+        # Could refresh UI or update status here if needed
+        pass
 
     def _show_summary(self):
         """Show tax return summary"""
-        if not self.interview_completed:
-            show_error_message("No Data", "Please complete the tax interview first.")
+        # Check if tax data exists and has basic personal info
+        if not self.tax_data or not self.tax_data.get('personal_info.first_name', '').strip():
+            self._show_summary_placeholder()
             return
 
         # Navigate to form viewer for summary
@@ -1098,7 +992,10 @@ class ModernMainWindow(ctk.CTk):
         current_mode = ctk.get_appearance_mode()
         new_mode = "Light" if current_mode == "Dark" else "Dark"
         ctk.set_appearance_mode(new_mode)
-        show_info_message("Theme Changed", f"Theme changed to {new_mode} mode.")
+
+        # Save theme setting to config
+        self.config.theme = new_mode
+        self.config.save_user_settings()
 
     def _toggle_high_contrast(self):
         """Toggle high contrast mode for accessibility"""
@@ -1223,27 +1120,14 @@ class ModernMainWindow(ctk.CTk):
             self._update_widget_fonts(child)
 
     def _show_tax_analytics(self):
-        """Show tax analytics window"""
-        if not self.tax_data:
-            show_error_message("No Tax Data", "Please complete the tax interview first to view analytics.")
+        """Show tax analytics page with grid of analytics features"""
+        # Check if tax data exists and has basic personal info
+        if not self.tax_data or not self.tax_data.get('personal_info.first_name', '').strip():
+            self._show_analytics_placeholder()
             return
 
-        try:
-            # Import required services
-            from services.tax_calculation_service import TaxCalculationService
-            
-            # Create analytics window
-            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
-            tax_calc_service = TaxCalculationService(tax_year)
-            analytics_window = TaxAnalyticsWindow(
-                self,  # parent window
-                self.config, 
-                self.tax_data
-            )
-            analytics_window.show()
-            
-        except Exception as e:
-            show_error_message("Analytics Error", f"Failed to open analytics: {str(e)}")
+        # Show analytics page
+        self._show_analytics_page()
 
     def _show_tax_projections(self):
         """Show tax projections window"""
@@ -1368,6 +1252,755 @@ class ModernMainWindow(ctk.CTk):
         except Exception as e:
             show_error_message("Tax Planning Error", f"Failed to open tax planning window: {str(e)}")
 
+    def _open_state_tax_window(self):
+        """Open state tax returns page or show placeholder"""
+        if not self.tax_data:
+            # Show placeholder page instead of dialog
+            self._show_state_tax_placeholder()
+            return
+
+        try:
+            # Open state tax window
+            open_state_tax_window(self, self.tax_data)
+            
+        except Exception as e:
+            show_error_message("State Tax Error", f"Failed to open state tax tools: {str(e)}")
+
+    def _show_state_tax_placeholder(self):
+        """Show placeholder page for state tax returns when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="🏛️ State Tax Returns",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📋",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your federal tax interview first to access state tax preparation tools.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to prepare your state tax returns"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="State tax preparation requires completed federal tax interview")
+
+    def _show_summary_placeholder(self):
+        """Show placeholder page for tax summary when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="📊 Tax Return Summary",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📈",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your federal tax interview first to view your tax return summary.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to view your complete tax return summary"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="Tax summary requires completed federal tax interview")
+
+    def _show_analytics_placeholder(self):
+        """Show placeholder page for analytics when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="📊 Tax Analytics & Tools",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📈",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your federal tax interview first to access advanced analytics and tax planning tools.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to access powerful tax analytics and planning tools"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="Tax analytics requires completed federal tax interview")
+
+    def _show_e_filing_placeholder(self):
+        """Show placeholder page for IRS e-filing when no data exists"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create placeholder content
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text="🚀 IRS E-Filing",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Icon
+        icon_label = ModernLabel(
+            placeholder_frame,
+            text="📄",
+            font=ctk.CTkFont(size=48)
+        )
+        icon_label.pack(pady=(20, 30))
+
+        # Message
+        message_label = ModernLabel(
+            placeholder_frame,
+            text="Complete your federal tax interview first to access IRS e-filing capabilities.",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70",
+            wraplength=500,
+            justify="center"
+        )
+        message_label.pack(pady=(0, 30))
+
+        # Instructions
+        instructions_frame = ctk.CTkFrame(placeholder_frame, fg_color="transparent")
+        instructions_frame.pack(pady=(0, 30))
+
+        instructions_title = ModernLabel(
+            instructions_frame,
+            text="To get started:",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        instructions_title.pack(anchor="w", pady=(0, 10))
+
+        steps = [
+            "1. Complete the tax interview using the 'Start Tax Interview' button",
+            "2. Enter your personal information and income details",
+            "3. Review your tax calculations and form recommendations",
+            "4. Return here to electronically file your tax return with the IRS"
+        ]
+
+        for step in steps:
+            step_label = ModernLabel(
+                instructions_frame,
+                text=step,
+                font=ctk.CTkFont(size=12),
+                text_color="gray60",
+                anchor="w"
+            )
+            step_label.pack(anchor="w", pady=2)
+
+        # Action button
+        action_button = ModernButton(
+            placeholder_frame,
+            text="🚀 Start Tax Interview",
+            command=self._start_interview,
+            button_type="primary",
+            height=40
+        )
+        action_button.pack(pady=(20, 0))
+
+        # Update status
+        self.status_label.configure(text="IRS e-filing requires completed federal tax interview")
+
+    def _show_e_filing_page(self):
+        """Show IRS e-filing page"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create main content frame
+        main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Title
+        title_label = ModernLabel(
+            main_frame,
+            text="🚀 IRS E-Filing Center",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 10))
+
+        # Subtitle
+        subtitle_label = ModernLabel(
+            main_frame,
+            text="Electronically file your tax return with the IRS",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70"
+        )
+        subtitle_label.pack(pady=(0, 30))
+
+        # Create scrollable frame for content
+        scrollable_frame = ctk.CTkScrollableFrame(main_frame, fg_color="transparent")
+        scrollable_frame.pack(fill="both", expand=True)
+
+        # Status section
+        status_frame = ctk.CTkFrame(scrollable_frame, fg_color="transparent", border_width=1, border_color="gray75")
+        status_frame.pack(fill="x", padx=10, pady=10)
+
+        status_title = ModernLabel(
+            status_frame,
+            text="📋 Filing Status",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        status_title.pack(pady=(15, 10))
+
+        # Check if return is ready for filing
+        tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+        year_data = self.tax_data.get_year_data(tax_year) if self.tax_data else None
+
+        if year_data and year_data.get('personal_info', {}).get('first_name'):
+            status_text = "✅ Your tax return is ready for e-filing"
+            status_color = "green"
+        else:
+            status_text = "⏳ Complete your tax interview to prepare for e-filing"
+            status_color = "orange"
+
+        status_label = ModernLabel(
+            status_frame,
+            text=status_text,
+            font=ctk.CTkFont(size=12),
+            text_color=status_color
+        )
+        status_label.pack(pady=(0, 15))
+
+        # Federal e-filing section
+        federal_frame = ctk.CTkFrame(scrollable_frame, fg_color="transparent", border_width=1, border_color="gray75")
+        federal_frame.pack(fill="x", padx=10, pady=10)
+
+        federal_title = ModernLabel(
+            federal_frame,
+            text="🇺🇸 Federal Tax Return E-Filing",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        federal_title.pack(pady=(15, 10))
+
+        federal_desc = ModernLabel(
+            federal_frame,
+            text="Prepare and electronically submit your federal tax return to the IRS",
+            font=ctk.CTkFont(size=12),
+            text_color="gray70",
+            wraplength=400
+        )
+        federal_desc.pack(pady=(0, 15))
+
+        # Federal e-filing buttons
+        federal_buttons_frame = ctk.CTkFrame(federal_frame, fg_color="transparent")
+        federal_buttons_frame.pack(pady=(0, 15))
+
+        prepare_button = ModernButton(
+            federal_buttons_frame,
+            text="📝 Prepare Federal Return",
+            command=self._prepare_federal_e_filing,
+            button_type="secondary",
+            height=35,
+            width=180
+        )
+        prepare_button.pack(side="left", padx=5)
+
+        submit_button = ModernButton(
+            federal_buttons_frame,
+            text="📤 Submit to IRS",
+            command=self._submit_federal_e_filing,
+            button_type="primary",
+            height=35,
+            width=180
+        )
+        submit_button.pack(side="left", padx=5)
+
+        # State e-filing section
+        state_frame = ctk.CTkFrame(scrollable_frame, fg_color="transparent", border_width=1, border_color="gray75")
+        state_frame.pack(fill="x", padx=10, pady=10)
+
+        state_title = ModernLabel(
+            state_frame,
+            text="🏛️ State Tax Return E-Filing",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        state_title.pack(pady=(15, 10))
+
+        state_desc = ModernLabel(
+            state_frame,
+            text="File your state tax returns electronically with state tax authorities",
+            font=ctk.CTkFont(size=12),
+            text_color="gray70",
+            wraplength=400
+        )
+        state_desc.pack(pady=(0, 15))
+
+        # State e-filing buttons
+        state_buttons_frame = ctk.CTkFrame(state_frame, fg_color="transparent")
+        state_buttons_frame.pack(pady=(0, 15))
+
+        state_prepare_button = ModernButton(
+            state_buttons_frame,
+            text="📋 Prepare State Returns",
+            command=self._prepare_state_e_filing,
+            button_type="secondary",
+            height=35,
+            width=180
+        )
+        state_prepare_button.pack(side="left", padx=5)
+
+        state_submit_button = ModernButton(
+            state_buttons_frame,
+            text="📤 Submit to States",
+            command=self._submit_state_e_filing,
+            button_type="primary",
+            height=35,
+            width=180
+        )
+        state_submit_button.pack(side="left", padx=5)
+
+        # Filing history section
+        history_frame = ctk.CTkFrame(scrollable_frame, fg_color="transparent", border_width=1, border_color="gray75")
+        history_frame.pack(fill="x", padx=10, pady=10)
+
+        history_title = ModernLabel(
+            history_frame,
+            text="📚 Filing History",
+            font=ctk.CTkFont(size=16, weight="bold")
+        )
+        history_title.pack(pady=(15, 10))
+
+        history_desc = ModernLabel(
+            history_frame,
+            text="View your previous e-filing submissions and status updates",
+            font=ctk.CTkFont(size=12),
+            text_color="gray70",
+            wraplength=400
+        )
+        history_desc.pack(pady=(0, 15))
+
+        view_history_button = ModernButton(
+            history_frame,
+            text="📖 View Filing History",
+            command=self._view_e_filing_history,
+            button_type="secondary",
+            height=35
+        )
+        view_history_button.pack(pady=(0, 15))
+
+        # Update status
+        self.status_label.configure(text="IRS E-Filing Center")
+
+    def _prepare_federal_e_filing(self):
+        """Prepare federal tax return for e-filing"""
+        try:
+            # Import e-filing service
+            from services.e_filing_service import EFilingService
+
+            # Create e-filing service instance
+            e_filing_service = EFilingService(self.config)
+
+            # Generate XML for federal return
+            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+            xml_content = e_filing_service.generate_efile_xml(self.tax_data, tax_year)
+
+            if xml_content:
+                # Show success message and update page
+                show_info_message("Preparation Complete", "Your federal tax return has been prepared for e-filing. You can now submit it to the IRS.")
+                # Update the page to show prepared status
+                self._show_e_filing_page()
+            else:
+                show_error_message("Preparation Failed", "Failed to prepare your tax return for e-filing. Please check your data and try again.")
+
+        except Exception as e:
+            show_error_message("E-Filing Error", f"Failed to prepare federal e-filing: {str(e)}")
+
+    def _submit_federal_e_filing(self):
+        """Submit federal tax return via e-filing"""
+        try:
+            # Import e-filing service
+            from services.e_filing_service import EFilingService
+
+            # Create e-filing service instance
+            e_filing_service = EFilingService(self.config)
+
+            # First generate the XML
+            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+            xml_content = e_filing_service.generate_efile_xml(self.tax_data, tax_year)
+
+            if xml_content:
+                # Submit the return
+                result = e_filing_service.submit_efile(xml_content, test_mode=True)
+
+                if result.get('success'):
+                    show_info_message("Submission Successful", f"Your tax return has been submitted to the IRS.\nConfirmation: {result.get('confirmation_number', 'N/A')}")
+                    # Update the page to show submitted status
+                    self._show_e_filing_page()
+                else:
+                    show_error_message("Submission Failed", f"Failed to submit your tax return: {result.get('error', 'Unknown error')}")
+            else:
+                show_error_message("Preparation Failed", "Failed to prepare your tax return for submission.")
+
+        except Exception as e:
+            show_error_message("E-Filing Error", f"Failed to submit federal e-filing: {str(e)}")
+
+    def _prepare_state_e_filing(self):
+        """Prepare state tax returns for e-filing"""
+        show_error_message("Coming Soon", "State e-filing preparation will be available in a future update.")
+
+    def _submit_state_e_filing(self):
+        """Submit state tax returns via e-filing"""
+        show_error_message("Coming Soon", "State e-filing submission will be available in a future update.")
+
+    def _view_e_filing_history(self):
+        """View e-filing history"""
+        show_error_message("Coming Soon", "E-filing history will be available in a future update.")
+
+    def _show_analytics_page(self):
+        """Show analytics page with grid of analytics features"""
+        # Clear content area
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        # Create main content frame
+        main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Title
+        title_label = ModernLabel(
+            main_frame,
+            text="📊 Tax Analytics & Advanced Tools",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(0, 10))
+
+        # Subtitle
+        subtitle_label = ModernLabel(
+            main_frame,
+            text="Powerful tools to analyze, optimize, and plan your tax strategy",
+            font=ctk.CTkFont(size=14),
+            text_color="gray70"
+        )
+        subtitle_label.pack(pady=(0, 30))
+
+        # Create scrollable frame for the grid
+        scrollable_frame = ctk.CTkScrollableFrame(main_frame, fg_color="transparent")
+        scrollable_frame.pack(fill="both", expand=True)
+
+        # Define analytics features
+        analytics_features = [
+            {
+                "icon": "📈",
+                "title": "Tax Analytics Dashboard",
+                "description": "Comprehensive tax analysis including effective rates, deductions breakdown, and tax optimization insights",
+                "command": self._show_tax_analytics_dashboard
+            },
+            {
+                "icon": "🔮",
+                "title": "Tax Projections",
+                "description": "Future tax planning with scenario analysis and year-over-year comparisons",
+                "command": self._show_tax_projections
+            },
+            {
+                "icon": "🤖",
+                "title": "AI Deduction Finder",
+                "description": "Artificial intelligence powered deduction discovery and tax saving opportunities",
+                "command": self._show_ai_deduction_finder
+            },
+            {
+                "icon": "🔌",
+                "title": "Plugin Management",
+                "description": "Manage tax calculation plugins and third-party integrations",
+                "command": self._show_plugin_management
+            },
+            {
+                "icon": "₿",
+                "title": "Cryptocurrency Tax",
+                "description": "Specialized cryptocurrency transaction tracking and tax reporting",
+                "command": self._show_cryptocurrency_tax
+            },
+            {
+                "icon": "🏛️",
+                "title": "Estate & Trust Returns",
+                "description": "Estate tax planning and trust return preparation tools",
+                "command": self._show_estate_trust
+            },
+            {
+                "icon": "🤝",
+                "title": "Partnership & S-Corp Returns",
+                "description": "Business entity tax returns and partnership income reporting",
+                "command": self._show_partnership_s_corp
+            },
+            {
+                "icon": "📊",
+                "title": "Tax Planning Tools",
+                "description": "Strategic tax planning calculators and optimization tools",
+                "command": self._show_tax_planning
+            },
+            {
+                "icon": "📄",
+                "title": "Receipt Scanning",
+                "description": "AI-powered receipt scanning and expense categorization",
+                "command": self._show_receipt_scanning
+            },
+            {
+                "icon": "🌍",
+                "title": "Foreign Income & FBAR",
+                "description": "International income reporting and FBAR filing assistance",
+                "command": self._show_foreign_income_fbar
+            }
+        ]
+
+        # Create grid layout
+        # Calculate columns based on available width (aim for 3-4 columns)
+        columns = 3
+        current_row = 0
+        current_col = 0
+
+        for feature in analytics_features:
+            # Create feature card
+            card_frame = ctk.CTkFrame(scrollable_frame, fg_color="transparent", border_width=1, border_color="gray75")
+            card_frame.grid(row=current_row, column=current_col, padx=10, pady=10, sticky="nsew")
+
+            # Configure grid weights
+            scrollable_frame.grid_rowconfigure(current_row, weight=1)
+            scrollable_frame.grid_columnconfigure(current_col, weight=1)
+
+            # Icon
+            icon_label = ModernLabel(
+                card_frame,
+                text=feature["icon"],
+                font=ctk.CTkFont(size=32)
+            )
+            icon_label.pack(pady=(15, 5))
+
+            # Title
+            title_label = ModernLabel(
+                card_frame,
+                text=feature["title"],
+                font=ctk.CTkFont(size=14, weight="bold"),
+                text_color="white"
+            )
+            title_label.pack(pady=(0, 8))
+
+            # Description
+            desc_label = ModernLabel(
+                card_frame,
+                text=feature["description"],
+                font=ctk.CTkFont(size=11),
+                text_color="gray70",
+                wraplength=200,
+                justify="center"
+            )
+            desc_label.pack(pady=(0, 15))
+
+            # Button
+            action_button = ModernButton(
+                card_frame,
+                text="Open Tool",
+                command=feature["command"],
+                button_type="secondary",
+                height=30,
+                width=120
+            )
+            action_button.pack(pady=(0, 15))
+
+            # Move to next position
+            current_col += 1
+            if current_col >= columns:
+                current_col = 0
+                current_row += 1
+
+        # Update status
+        self.status_label.configure(text="Tax Analytics & Advanced Tools")
+
+    def _show_tax_analytics_dashboard(self):
+        """Show the main tax analytics dashboard window"""
+        try:
+            # Import required services
+            from services.tax_calculation_service import TaxCalculationService
+
+            # Create analytics window
+            tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+            tax_calc_service = TaxCalculationService(tax_year)
+            analytics_window = TaxAnalyticsWindow(
+                self,  # parent window
+                self.config,
+                self.tax_data
+            )
+            analytics_window.show()
+
+        except Exception as e:
+            show_error_message("Analytics Error", f"Failed to open analytics dashboard: {str(e)}")
+
     def _show_receipt_scanning(self):
         """Show receipt scanning window"""
         try:
@@ -1397,63 +2030,83 @@ class ModernMainWindow(ctk.CTk):
             show_error_message("Foreign Income & FBAR Error", f"Failed to open foreign income & FBAR window: {str(e)}")
 
     def _show_e_filing(self):
-        """Show IRS e-filing window"""
-        try:
-            # Import e-filing service if not already imported
-            from services.e_filing_service import EFilingService
-            
-            # Create e-filing service instance
-            e_filing_service = EFilingService(self.config)
-            
-            # Create and show e-filing window
-            e_filing_window = EFilingWindow(
-                self,
-                self.tax_data,
-                self.config,
-                e_filing_service
-            )
-            
-        except Exception as e:
-            show_error_message("E-Filing Error", f"Failed to open e-filing window: {str(e)}")
+        """Show IRS e-filing page"""
+        # Check if tax data exists and has basic personal info
+        if not self.tax_data or not self.tax_data.get('personal_info.first_name', '').strip():
+            self._show_e_filing_placeholder()
+            return
+
+        # Show e-filing page
+        self._show_e_filing_page()
 
     def _create_amended_return(self):
-        """Create an amended tax return"""
+        """Show amended return page"""
         if not self.tax_data:
             show_error_message("No Tax Data", "Please complete a tax return first before creating an amended return.")
             return
 
         try:
-            # Create amended return dialog
-            dialog = AmendedReturnDialog(self, self.tax_data)
-            
-            # If user created an amended return, refresh the interface
-            if dialog.result:
-                show_info_message("Amended Return Created", 
-                                f"Amended return for tax year {dialog.result.get('tax_year')} has been created.\n\n" +
-                                "You can now modify the return data and file the amended return.")
-                
-                # Update status to reflect amended return
-                self.status_label.configure(text=f"Amended return created for tax year {dialog.result.get('tax_year')}")
-                
+            # Clear content frame
+            for widget in self.content_frame.winfo_children():
+                widget.destroy()
+
+            # Create and show amended return page
+            self.amended_return_page = ModernAmendedReturnPage(
+                self.content_frame,
+                tax_data=self.tax_data,
+                on_amended_created=self._handle_amended_created
+            )
+
+            # Show the amended return page
+            self.amended_return_page.pack(fill="both", expand=True)
+
+            # Update status
+            self.status_label.configure(text="Amended Return - Create Form 1040-X")
+
+            # Update progress
+            self._update_progress()
+
         except Exception as e:
-            show_error_message("Amended Return Error", f"Failed to create amended return: {str(e)}")
+            show_error_message("Amended Return Error", f"Failed to open amended return page: {str(e)}")
+
+    def _handle_amended_created(self, amended_result):
+        """Handle amended return created callback"""
+        if amended_result:
+            show_info_message(
+                "Amended Return Created",
+                f"Amended return for tax year {amended_result.get('tax_year')} has been created.\n\n"
+                "You can now modify the return data and file the amended return."
+            )
+            # Update status to reflect amended return
+            self.status_label.configure(text=f"Amended return created for tax year {amended_result.get('tax_year')}")
 
     def _show_audit_trail(self):
-        """Show audit trail window"""
+        """Show audit trail as a page"""
         try:
             from services.audit_trail_service import AuditTrailService
-            
+
+            # Clear content frame
+            for widget in self.content_frame.winfo_children():
+                widget.destroy()
+
             # Create audit trail service
             audit_service = AuditTrailService(self.config)
-            
-            # Create and show audit trail window
-            audit_window = AuditTrailWindow(
-                self,
-                audit_service,
-                self.session_token
+
+            # Create and show audit trail page
+            self.audit_trail_page = ModernAuditTrailPage(
+                self.content_frame,
+                audit_service
             )
-            audit_window.show()
-            
+
+            # Show the audit trail page
+            self.audit_trail_page.pack(fill="both", expand=True)
+
+            # Update status
+            self.status_label.configure(text="Audit Trail - System activity log")
+
+            # Update progress
+            self._update_progress()
+
         except Exception as e:
             show_error_message("Audit Trail Error", f"Failed to open audit trail: {str(e)}")
 
@@ -1472,60 +2125,11 @@ class ModernMainWindow(ctk.CTk):
         if show_confirmation("Logout", "Are you sure you want to logout?"):
             self.destroy()
 
-    def _show_about(self):
-        """Show about dialog"""
-        show_info_message("About Freedom US Tax Return", "Modern Edition - Guided Tax Preparation")
-
-    def _launch_web_interface(self):
-        """Launch the mobile/web interface"""
-        try:
-            import subprocess
-            import webbrowser
-            import threading
-            import time
-            
-            def start_web_server():
-                """Start the web server in a separate process"""
-                try:
-                    # Get absolute path to web_server.py for security
-                    web_server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'web_server.py'))
-
-                    # Validate that the file exists and is a Python file
-                    if not os.path.isfile(web_server_path) or not web_server_path.endswith('.py'):
-                        raise FileNotFoundError(f"Web server script not found: {web_server_path}")
-
-                    # Launch web server with validated path
-                    subprocess.Popen([
-                        sys.executable,
-                        web_server_path
-                    ],
-                    cwd=os.path.dirname(web_server_path),
-                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-                    )
-                    
-                    # Wait a moment for server to start
-                    time.sleep(2)
-                    
-                    # Open browser
-                    webbrowser.open('http://localhost:5000')
-                    
-                except Exception as e:
-                    print(f"Failed to start web server: {e}")
-            
-            # Start web server in background thread
-            server_thread = threading.Thread(target=start_web_server, daemon=True)
-            server_thread.start()
-            
-            show_info_message("Mobile/Web Interface", 
-                           "Launching web interface...\n\nThe mobile-responsive web application will open in your default browser at http://localhost:5000")
-            
-        except Exception as e:
-            show_error_message("Web Interface Error", f"Failed to launch web interface: {str(e)}")
-
     def _open_state_tax_window(self):
         """Open the state tax returns window"""
-        if not self.tax_data:
-            show_error_message("No Tax Data", "Please complete the tax interview first to access state tax features.")
+        # Check if tax data exists and has basic personal info
+        if not self.tax_data or not self.tax_data.get('personal_info.first_name', '').strip():
+            self._show_state_tax_placeholder()
             return
 
         try:

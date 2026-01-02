@@ -46,7 +46,9 @@ class TranslationService:
             config: Application configuration
         """
         self.config = config
-        self.current_language = 'en'  # Default to English
+        self.current_language = config.default_language  # Use language from config
+        if self.current_language == 'system':
+            self.current_language = 'en'
         self._translators: Dict[str, Optional[gettext.GNUTranslations]] = {}
         self._load_translators()
 
@@ -72,12 +74,16 @@ class TranslationService:
         Set the current language.
 
         Args:
-            language_code: ISO language code (e.g., 'en', 'es', 'fr')
+            language_code: ISO language code (e.g., 'en', 'es', 'fr') or 'system' for default
 
         Returns:
             True if language was set successfully, False otherwise
         """
-        if language_code in self.SUPPORTED_LANGUAGES:
+        if language_code == 'system':
+            # System default maps to English
+            self.current_language = 'en'
+            return True
+        elif language_code in self.SUPPORTED_LANGUAGES:
             self.current_language = language_code
             return True
         return False

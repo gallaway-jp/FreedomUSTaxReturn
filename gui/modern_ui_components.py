@@ -153,22 +153,39 @@ class ModernButton(ctk.CTkButton):
 
     def __init__(self, master, text: str, command: Optional[Callable] = None,
                  button_type: str = "primary", accessibility_service=None, **kwargs):
-        # Set colors based on type
-        if button_type == "primary":
-            fg_color = "#1f538d"
-            hover_color = "#14375e"
-        elif button_type == "secondary":
-            fg_color = "#6c757d"
-            hover_color = "#545b62"
-        elif button_type == "success":
-            fg_color = "#28a745"
-            hover_color = "#1e7e34"
-        elif button_type == "danger":
-            fg_color = "#dc3545"
-            hover_color = "#bd2130"
+        # Set colors based on type, but don't override if already specified
+        if 'fg_color' not in kwargs:
+            if button_type == "primary":
+                fg_color = "#1f538d"
+                hover_color = "#14375e"
+            elif button_type == "secondary":
+                fg_color = "#6c757d"
+                hover_color = "#545b62"
+            elif button_type == "success":
+                fg_color = "#28a745"
+                hover_color = "#1e7e34"
+            elif button_type == "danger":
+                fg_color = "#dc3545"
+                hover_color = "#bd2130"
+            else:
+                fg_color = None
+                hover_color = None
         else:
-            fg_color = None
-            hover_color = None
+            # Use provided fg_color, remove it from kwargs to avoid duplication
+            fg_color = kwargs.pop('fg_color')
+            if 'hover_color' not in kwargs:
+                if button_type == "primary":
+                    hover_color = "#14375e"
+                elif button_type == "secondary":
+                    hover_color = "#545b62"
+                elif button_type == "success":
+                    hover_color = "#1e7e34"
+                elif button_type == "danger":
+                    hover_color = "#bd2130"
+                else:
+                    hover_color = None
+            else:
+                hover_color = kwargs.pop('hover_color')
 
         super().__init__(
             master,
