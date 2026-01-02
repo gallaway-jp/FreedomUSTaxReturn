@@ -94,7 +94,7 @@ class PluginManagementWindow:
 
         # Title
         title_label = ctk.CTkLabel(main_frame, text="Plugin Management",
-                                 font=ctk.CTkFont(size=16, weight="bold"))
+                                 font=ctk.CTkFont(size=16))
         title_label.pack(pady=(0, 10))
 
         # Toolbar

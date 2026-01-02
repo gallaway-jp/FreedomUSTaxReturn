@@ -60,7 +60,7 @@ class TaxPlanningWindow:
         title_label = ModernLabel(
             main_frame,
             text="💰 Tax Planning & Projections",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 15))
 
@@ -113,7 +113,7 @@ class TaxPlanningWindow:
         scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title = ModernLabel(scroll_frame, text="🔄 What-If Scenario Analysis", font=ctk.CTkFont(size=14, weight="bold"))
+        title = ModernLabel(scroll_frame, text="🔄 What-If Scenario Analysis", font=ctk.CTkFont(size=14))
         title.pack(anchor="w", pady=(0, 10))
 
         desc = ModernLabel(
@@ -163,7 +163,7 @@ class TaxPlanningWindow:
         results_frame = ctk.CTkFrame(scroll_frame)
         results_frame.pack(fill="both", expand=True, pady=(20, 0))
 
-        results_title = ModernLabel(results_frame, text="📊 Results", font=ctk.CTkFont(size=12, weight="bold"))
+        results_title = ModernLabel(results_frame, text="📊 Results", font=ctk.CTkFont(size=12))
         results_title.pack(anchor="w", pady=(0, 10))
 
         # Result cards
@@ -178,7 +178,7 @@ class TaxPlanningWindow:
         scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title = ModernLabel(scroll_frame, text="📈 Multi-Year Tax Projections", font=ctk.CTkFont(size=14, weight="bold"))
+        title = ModernLabel(scroll_frame, text="📈 Multi-Year Tax Projections", font=ctk.CTkFont(size=14))
         title.pack(anchor="w", pady=(0, 10))
 
         desc = ModernLabel(
@@ -204,7 +204,7 @@ class TaxPlanningWindow:
         ).pack(side="left")
 
         # Projection results
-        ModernLabel(scroll_frame, text="5-Year Tax Projection:", font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", pady=(10, 10))
+        ModernLabel(scroll_frame, text="5-Year Tax Projection:", font=ctk.CTkFont(size=11)).pack(anchor="w", pady=(10, 10))
 
         for year in range(2025, 2030):
             self._create_projection_row(scroll_frame, f"Tax Year {year}", f"${15000 * year % 50000:.2f}")
@@ -215,7 +215,7 @@ class TaxPlanningWindow:
         scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title = ModernLabel(scroll_frame, text="💵 Estimated Tax Calculator", font=ctk.CTkFont(size=14, weight="bold"))
+        title = ModernLabel(scroll_frame, text="💵 Estimated Tax Calculator", font=ctk.CTkFont(size=14))
         title.pack(anchor="w", pady=(0, 10))
 
         desc = ModernLabel(
@@ -241,7 +241,7 @@ class TaxPlanningWindow:
         ).pack(side="left", padx=(20, 0))
 
         # Quarterly payments section
-        ModernLabel(scroll_frame, text="Quarterly Payments:", font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", pady=(10, 10))
+        ModernLabel(scroll_frame, text="Quarterly Payments:", font=ctk.CTkFont(size=11)).pack(anchor="w", pady=(10, 10))
 
         for quarter in ["Q1 (April 15)", "Q2 (June 15)", "Q3 (Sep 15)", "Q4 (Jan 15)"]:
             self._create_payment_row(scroll_frame, quarter, "$3,750.00")
@@ -252,7 +252,7 @@ class TaxPlanningWindow:
         scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title = ModernLabel(scroll_frame, text="🎯 Withholding Optimizer", font=ctk.CTkFont(size=14, weight="bold"))
+        title = ModernLabel(scroll_frame, text="🎯 Withholding Optimizer", font=ctk.CTkFont(size=14))
         title.pack(anchor="w", pady=(0, 10))
 
         desc = ModernLabel(
@@ -278,7 +278,7 @@ class TaxPlanningWindow:
         ).pack(side="left", padx=(20, 0))
 
         # Recommendations
-        rec_label = ModernLabel(scroll_frame, text="💡 Recommendations:", font=ctk.CTkFont(size=11, weight="bold"))
+        rec_label = ModernLabel(scroll_frame, text="💡 Recommendations:", font=ctk.CTkFont(size=11))
         rec_label.pack(anchor="w", pady=(10, 10))
 
         self._create_recommendation_card(scroll_frame, "Your withholding is on track", "No adjustment needed at this time", "success")
@@ -290,7 +290,7 @@ class TaxPlanningWindow:
         scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Title
-        title = ModernLabel(scroll_frame, text="🏖️ Retirement Planning", font=ctk.CTkFont(size=14, weight="bold"))
+        title = ModernLabel(scroll_frame, text="🏖️ Retirement Planning", font=ctk.CTkFont(size=14))
         title.pack(anchor="w", pady=(0, 10))
 
         desc = ModernLabel(
@@ -305,16 +305,16 @@ class TaxPlanningWindow:
         accounts_frame.pack(fill="x", pady=(0, 15))
 
         ModernLabel(accounts_frame, text="Traditional IRA Contribution Room:", width=250).pack(side="left", padx=(0, 10))
-        ModernLabel(accounts_frame, text="$7,000", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
+        ModernLabel(accounts_frame, text="$7,000", font=ctk.CTkFont(size=12)).pack(side="left")
 
         roth_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
         roth_frame.pack(fill="x", pady=(0, 15))
 
         ModernLabel(roth_frame, text="Roth IRA Contribution Room:", width=250).pack(side="left", padx=(0, 10))
-        ModernLabel(roth_frame, text="$5,500", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
+        ModernLabel(roth_frame, text="$5,500", font=ctk.CTkFont(size=12)).pack(side="left")
 
         # Recommendations
-        rec_label = ModernLabel(scroll_frame, text="💡 Retirement Recommendations:", font=ctk.CTkFont(size=11, weight="bold"))
+        rec_label = ModernLabel(scroll_frame, text="💡 Retirement Recommendations:", font=ctk.CTkFont(size=11))
         rec_label.pack(anchor="w", pady=(10, 10))
 
         self._create_recommendation_card(scroll_frame, "Contribute to Traditional IRA", "Tax-deductible contribution available", "success")
@@ -328,7 +328,7 @@ class TaxPlanningWindow:
         title_label = ModernLabel(card_frame, text=title, text_color="gray60", font=ctk.CTkFont(size=10))
         title_label.pack(anchor="w", padx=10, pady=(10, 0))
 
-        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14, weight="bold"))
+        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14))
         value_label.pack(anchor="w", padx=10, pady=(0, 10))
 
     def _create_projection_row(self, parent, label: str, value: str):
@@ -337,7 +337,7 @@ class TaxPlanningWindow:
         row_frame.pack(fill="x", pady=(0, 5))
 
         ModernLabel(row_frame, text=label, width=200).pack(side="left")
-        ModernLabel(row_frame, text=value, font=ctk.CTkFont(weight="bold")).pack(side="left", padx=(50, 0))
+        ModernLabel(row_frame, text=value, font=ctk.CTkFont()).pack(side="left", padx=(50, 0))
 
     def _create_payment_row(self, parent, label: str, amount: str):
         """Create a quarterly payment row"""
@@ -345,7 +345,7 @@ class TaxPlanningWindow:
         row_frame.pack(fill="x", pady=(0, 8))
 
         ModernLabel(row_frame, text=label, width=200).pack(side="left")
-        ModernLabel(row_frame, text=amount, font=ctk.CTkFont(size=12, weight="bold")).pack(side="left", padx=(50, 0))
+        ModernLabel(row_frame, text=amount, font=ctk.CTkFont(size=12)).pack(side="left", padx=(50, 0))
 
     def _create_recommendation_card(self, parent, title: str, description: str, card_type: str = "info"):
         """Create a recommendation card"""
@@ -360,7 +360,7 @@ class TaxPlanningWindow:
         icon_label = ModernLabel(header_frame, text=icon)
         icon_label.pack(side="left", padx=(0, 8))
 
-        title_label = ModernLabel(header_frame, text=title, font=ctk.CTkFont(weight="bold"))
+        title_label = ModernLabel(header_frame, text=title, font=ctk.CTkFont())
         title_label.pack(side="left")
 
         # Description

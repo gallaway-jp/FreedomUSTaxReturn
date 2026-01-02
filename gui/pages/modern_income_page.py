@@ -71,7 +71,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text="Income Information",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -104,7 +104,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         summary_title = ctk.CTkLabel(
             summary_frame,
             text="💰 Income Summary",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         summary_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -144,7 +144,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
             value_label = ctk.CTkLabel(
                 item_frame,
                 text=default_value,
-                font=ctk.CTkFont(size=12, weight="bold"),
+                font=ctk.CTkFont(size=12),
                 text_color="#1f538d"
             )
             value_label.pack(anchor="w")
@@ -160,7 +160,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         section_title = ctk.CTkLabel(
             sections_frame,
             text="Income Sources",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         section_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -266,7 +266,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text=income_type["title"],
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(side="left")
 
@@ -348,7 +348,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         tools_title = ctk.CTkLabel(
             tools_frame,
             text="🛠️ Tax Tools & Analysis",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         tools_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -524,7 +524,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             item_frame,
             text=title,
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         title_label.pack(anchor="w", padx=10, pady=(10, 0))
 
@@ -798,7 +798,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             main_frame,
             text="🚨 Potential Wash Sales Detected",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 20))
 
@@ -854,7 +854,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             main_frame,
             text="📄 Form 8949 Summary",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 20))
 
@@ -891,7 +891,7 @@ class ModernIncomePage(ctk.CTkScrollableFrame):
         header_label = ctk.CTkLabel(
             scroll_frame,
             text=f"{holding_period} Capital Gains and Losses - Form 8949",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         header_label.pack(pady=(0, 20))
 
@@ -985,7 +985,7 @@ Use this data to complete Form 8949 and Schedule D."""
         title_label = ctk.CTkLabel(
             main_frame,
             text="📊 Income Analysis",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 20))
 

@@ -87,7 +87,7 @@ class TranslationManagementWindow:
         title_label = ModernLabel(
             main_frame,
             text="Translation Management",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 20))
 
@@ -137,7 +137,7 @@ class TranslationManagementWindow:
         ModernLabel(
             current_frame,
             text="Current Language:",
-            font=ctk.CTkFont(weight="bold")
+            font=ctk.CTkFont()
         ).pack(side="left", padx=(0, 10))
 
         current_lang_label = ModernLabel(
@@ -153,7 +153,7 @@ class TranslationManagementWindow:
         ModernLabel(
             select_frame,
             text="Select Language:",
-            font=ctk.CTkFont(weight="bold")
+            font=ctk.CTkFont()
         ).pack(anchor="w", pady=(0, 10))
 
         self.language_var = ctk.StringVar(value=self.translation_service.get_language())
@@ -259,7 +259,7 @@ To add new translations, edit the .po files in the locale/ directory.
         ModernLabel(
             select_frame,
             text="Check Missing Translations for:",
-            font=ctk.CTkFont(weight="bold")
+            font=ctk.CTkFont()
         ).pack(anchor="w", pady=(0, 10))
 
         self.missing_lang_var = ctk.StringVar(value="es")  # Default to Spanish

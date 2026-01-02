@@ -349,7 +349,7 @@ class ModernMainWindow(ctk.CTk):
         header = ModernLabel(
             parent,
             text=title,
-            font=ctk.CTkFont(size=10, weight="bold"),
+            font=ctk.CTkFont(size=10),
             text_color="gray60"
         )
         header.pack(fill="x", padx=10, pady=(10, 5), anchor="w")
@@ -388,7 +388,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             welcome_frame,
             text="Welcome to Freedom US Tax Return",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(50, 10))
 
@@ -432,7 +432,7 @@ class ModernMainWindow(ctk.CTk):
             command=self._start_interview,
             button_type="primary",
             height=50,
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         quick_start_button.pack(pady=(0, 20))
 
@@ -555,7 +555,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             rec_frame,
             text="Your Recommended Tax Forms",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=20)
         )
         title_label.pack(pady=(0, 10))
 
@@ -602,7 +602,7 @@ class ModernMainWindow(ctk.CTk):
             ModernLabel(
                 title_frame,
                 text=f"{i}. {rec['form']}",
-                font=ctk.CTkFont(size=14, weight="bold")
+                font=ctk.CTkFont(size=14)
             ).pack(side="left")
 
             priority_label = ModernLabel(
@@ -950,7 +950,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="📊 Tax Return Summary",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -980,7 +980,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1255,7 +1255,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="📊 Tax Analytics & Tools",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -1285,7 +1285,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1470,7 +1470,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="🏛️ State Tax Returns",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -1500,7 +1500,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1548,7 +1548,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="📊 Tax Return Summary",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -1578,7 +1578,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1626,7 +1626,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="📊 Tax Analytics & Tools",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -1656,7 +1656,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1704,7 +1704,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             placeholder_frame,
             text="🚀 IRS E-Filing",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 20))
 
@@ -1734,7 +1734,7 @@ class ModernMainWindow(ctk.CTk):
         instructions_title = ModernLabel(
             instructions_frame,
             text="To get started:",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         instructions_title.pack(anchor="w", pady=(0, 10))
 
@@ -1782,7 +1782,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             main_frame,
             text="🚀 IRS E-Filing Center",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 10))
 
@@ -1806,7 +1806,7 @@ class ModernMainWindow(ctk.CTk):
         status_title = ModernLabel(
             status_frame,
             text="📋 Filing Status",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         status_title.pack(pady=(15, 10))
 
@@ -1836,7 +1836,7 @@ class ModernMainWindow(ctk.CTk):
         federal_title = ModernLabel(
             federal_frame,
             text="🇺🇸 Federal Tax Return E-Filing",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         federal_title.pack(pady=(15, 10))
 
@@ -1880,7 +1880,7 @@ class ModernMainWindow(ctk.CTk):
         state_title = ModernLabel(
             state_frame,
             text="🏛️ State Tax Return E-Filing",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         state_title.pack(pady=(15, 10))
 
@@ -1924,7 +1924,7 @@ class ModernMainWindow(ctk.CTk):
         history_title = ModernLabel(
             history_frame,
             text="📚 Filing History",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         history_title.pack(pady=(15, 10))
 
@@ -2028,7 +2028,7 @@ class ModernMainWindow(ctk.CTk):
         title_label = ModernLabel(
             main_frame,
             text="📊 Tax Analytics & Advanced Tools",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(pady=(0, 10))
 
@@ -2136,7 +2136,7 @@ class ModernMainWindow(ctk.CTk):
             title_label = ModernLabel(
                 card_frame,
                 text=feature["title"],
-                font=ctk.CTkFont(size=14, weight="bold"),
+                font=ctk.CTkFont(size=14),
                 text_color="white"
             )
             title_label.pack(pady=(0, 8))

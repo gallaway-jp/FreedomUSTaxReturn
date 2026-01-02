@@ -63,7 +63,7 @@ class TaxInterviewWizard(ModernDialog):
         header_label = ModernLabel(
             main_frame,
             text="Tax Interview Wizard",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=20)
         )
         header_label.pack(pady=(0, 10))
 

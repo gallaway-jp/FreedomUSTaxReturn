@@ -63,7 +63,7 @@ class ModernPaymentsPage(ModernFrame):
         header_label = ModernLabel(
             content_frame,
             text="Tax Payments",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         header_label.pack(pady=(0, 10))
 
@@ -101,7 +101,7 @@ class ModernPaymentsPage(ModernFrame):
         header_label = ModernLabel(
             withholding_frame,
             text="Federal Income Tax Withheld",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         header_label.pack(anchor="w", pady=(0, 10))
 
@@ -123,7 +123,7 @@ class ModernPaymentsPage(ModernFrame):
         header_label = ModernLabel(
             est_frame,
             text="Estimated Tax Payments",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         header_label.pack(anchor="w", pady=(0, 10))
 
@@ -161,7 +161,7 @@ class ModernPaymentsPage(ModernFrame):
         header_label = ModernLabel(
             other_frame,
             text="Other Payments",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         header_label.pack(anchor="w", pady=(0, 10))
 
@@ -194,7 +194,7 @@ class ModernPaymentsPage(ModernFrame):
         self.total_label = ModernLabel(
             total_frame,
             text="Total Payments: $0.00",
-            font=ctk.CTkFont(size=18, weight="bold"),
+            font=ctk.CTkFont(size=18),
             text_color="green"
         )
         self.total_label.pack(anchor="w")
@@ -422,7 +422,7 @@ class ModernEstimatedPaymentDialog(ctk.CTkToplevel):
         title_label = ModernLabel(
             main_frame,
             text="Add Estimated Tax Payment",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 20))
 

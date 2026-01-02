@@ -67,7 +67,7 @@ class ModernPersonalInfoPage(ModernScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="Tell us about yourself",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -270,7 +270,7 @@ class ModernPersonalInfoPage(ModernScrollableFrame):
         title_label = ModernLabel(
             section_frame,
             text=title,
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w", pady=(15, 5), padx=15)
 

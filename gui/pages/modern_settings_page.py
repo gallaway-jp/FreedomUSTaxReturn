@@ -81,7 +81,7 @@ class ModernSettingsPage(ctk.CTkScrollableFrame):
         theme_label = ModernLabel(
             theme_frame,
             text="Theme:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         theme_label.pack(anchor="w", pady=(0, 5))
 
@@ -118,7 +118,7 @@ class ModernSettingsPage(ctk.CTkScrollableFrame):
         password_label = ModernLabel(
             password_frame,
             text="Change Password:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         password_label.pack(anchor="w", pady=(0, 10))
 
@@ -172,7 +172,7 @@ class ModernSettingsPage(ctk.CTkScrollableFrame):
         language_label = ModernLabel(
             language_frame,
             text="Language:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         language_label.pack(anchor="w", pady=(0, 5))
 
@@ -257,7 +257,7 @@ class ModernSettingsPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text=title,
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color=ctk.ThemeManager.theme["CTkLabel"]["text_color"]
         )
         title_label.pack(side="left")

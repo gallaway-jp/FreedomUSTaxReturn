@@ -115,7 +115,7 @@ class AIDeductionFinderWindow:
         title_label = ModernLabel(
             header_frame,
             text="🤖 AI Deduction Finder",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -184,7 +184,7 @@ class AIDeductionFinderWindow:
         preview_label = ModernLabel(
             overview_tab,
             text="💡 Top Deduction Opportunities",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         preview_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -229,7 +229,7 @@ class AIDeductionFinderWindow:
             value = ModernLabel(
                 card,
                 text=default,
-                font=ctk.CTkFont(size=14, weight="bold")
+                font=ctk.CTkFont(size=14)
             )
             value.pack(anchor="w", padx=12, pady=(0, 12))
 
@@ -274,7 +274,7 @@ class AIDeductionFinderWindow:
         suggestions_label = ModernLabel(
             suggestions_tab,
             text="📝 Deduction Suggestions",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         suggestions_label.pack(anchor="w", padx=15, pady=(10, 10))
 
@@ -289,7 +289,7 @@ class AIDeductionFinderWindow:
         details_label = ModernLabel(
             suggestions_tab,
             text="📌 Suggestion Details",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         )
         details_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -309,7 +309,7 @@ class AIDeductionFinderWindow:
         categories_label = ModernLabel(
             categories_tab,
             text="📊 Deduction Categories Analysis",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         categories_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -324,7 +324,7 @@ class AIDeductionFinderWindow:
         insights_label = ModernLabel(
             categories_tab,
             text="💡 Category Insights",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         )
         insights_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -343,7 +343,7 @@ class AIDeductionFinderWindow:
         title_label = ModernLabel(
             details_tab,
             text="📖 Analysis Methodology",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         title_label.pack(anchor="w", padx=15, pady=(15, 10))
 

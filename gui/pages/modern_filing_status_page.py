@@ -145,7 +145,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text="Choose Your Filing Status",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -176,7 +176,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         instruction_label = ctk.CTkLabel(
             cards_frame,
             text="Select the filing status that applies to you:",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         instruction_label.pack(anchor="w", pady=(0, 15))
 
@@ -206,7 +206,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
             variable=self.selected_status,
             value=status_key,
             command=lambda: self._on_status_selected(status_key),
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         radio.pack(side="left")
 
@@ -235,7 +235,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         req_title = ctk.CTkLabel(
             req_frame,
             text="📋 Requirements",
-            font=ctk.CTkFont(size=11, weight="bold"),
+            font=ctk.CTkFont(size=11),
             cursor="hand2"
         )
         req_title.pack(anchor="w")
@@ -302,7 +302,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             additional_frame,
             text="Additional Information",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -348,7 +348,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         benefits_title = ctk.CTkLabel(
             self.status_info_frame,
             text="💡 Benefits of this filing status:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         benefits_title.pack(anchor="w", pady=(0, 5))
 
@@ -364,7 +364,7 @@ class ModernFilingStatusPage(ctk.CTkScrollableFrame):
         tax_title = ctk.CTkLabel(
             self.status_info_frame,
             text="📊 Tax Implications:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         tax_title.pack(anchor="w", pady=(0, 5))
 

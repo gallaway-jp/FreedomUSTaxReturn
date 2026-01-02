@@ -253,7 +253,7 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="Tax Forms Selection",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(side="left")
 
@@ -376,7 +376,7 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
             category_label = ModernLabel(
                 category_frame,
                 text=category,
-                font=ctk.CTkFont(size=13, weight="bold"),
+                font=ctk.CTkFont(size=13),
                 text_color="skyblue"
             )
             category_label.pack(anchor="w", pady=(0, 10))
@@ -419,7 +419,7 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
         name_label = ModernLabel(
             details_frame,
             text=name_text,
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         name_label.pack(anchor="w")
 
@@ -481,7 +481,7 @@ class ModernTaxFormsPage(ctk.CTkScrollableFrame):
             category_label = ModernLabel(
                 category_frame,
                 text=category,
-                font=ctk.CTkFont(size=13, weight="bold"),
+                font=ctk.CTkFont(size=13),
                 text_color="skyblue"
             )
             category_label.pack(anchor="w", pady=(0, 10))

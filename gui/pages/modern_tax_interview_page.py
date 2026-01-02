@@ -101,7 +101,7 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="Tax Interview",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(side="left", fill="x", expand=True)
 
@@ -174,7 +174,7 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
         question_label = ModernLabel(
             self.question_container,
             text=question.text,
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             wraplength=500
         )
         question_label.pack(pady=(0, 10), anchor="w")
@@ -385,7 +385,7 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
         recommendations_label = ModernLabel(
             self.question_container,
             text=f"Interview Complete!",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         recommendations_label.pack(pady=(0, 10))
 
@@ -403,7 +403,7 @@ class ModernTaxInterviewPage(ctk.CTkScrollableFrame):
             forms_label = ModernLabel(
                 self.question_container,
                 text="Recommended Forms:",
-                font=ctk.CTkFont(size=12, weight="bold")
+                font=ctk.CTkFont(size=12)
             )
             forms_label.pack(anchor="w", pady=(0, 10))
 

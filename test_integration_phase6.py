@@ -52,6 +52,8 @@ class IntegrationTestRunner:
     def log(self, message: str, level: str = "INFO"):
         """Log test message with timestamp"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        # Replace Unicode characters with ASCII equivalents for compatibility
+        message = message.replace('✓', '[OK]').replace('✗', '[FAIL]').replace('⚠', '[WARN]').replace('⚡', '[PERF]')
         print(f"[{timestamp}] [{level}] {message}")
         
     def run_all_tests(self):

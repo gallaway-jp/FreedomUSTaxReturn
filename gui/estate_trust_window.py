@@ -111,7 +111,7 @@ class EstateTrustWindow:
         title_label = ModernLabel(
             header_frame,
             text="📋 Estate & Trust Tax Returns",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -203,7 +203,7 @@ class EstateTrustWindow:
         list_label = ModernLabel(
             returns_tab,
             text="📊 Estate & Trust Returns",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         list_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -225,7 +225,7 @@ class EstateTrustWindow:
         summary_label = ModernLabel(
             returns_tab,
             text="📈 Tax Year Summary",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         summary_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -251,7 +251,7 @@ class EstateTrustWindow:
             item_frame.grid(row=row, column=col, sticky="ew", padx=(0, 20), pady=(0, 10))
 
             ModernLabel(item_frame, text=label, font=ctk.CTkFont(size=10), text_color="gray60").pack(anchor="w")
-            value_label = ModernLabel(item_frame, text=default, font=ctk.CTkFont(size=12, weight="bold"))
+            value_label = ModernLabel(item_frame, text=default, font=ctk.CTkFont(size=12))
             value_label.pack(anchor="w")
 
             self.summary_vars[key] = value_label
@@ -267,7 +267,7 @@ class EstateTrustWindow:
         title_label = ModernLabel(
             entity_tab,
             text="🏛️ Entity Information",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         title_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -344,7 +344,7 @@ class EstateTrustWindow:
         income_label = ModernLabel(
             main_frame,
             text="💰 Income",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         income_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
@@ -377,7 +377,7 @@ class EstateTrustWindow:
         deductions_label = ModernLabel(
             main_frame,
             text="📋 Deductions",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         deductions_label.grid(row=0, column=1, sticky="w", pady=(0, 10), padx=(10, 0))
 
@@ -427,7 +427,7 @@ class EstateTrustWindow:
         list_label = ModernLabel(
             beneficiaries_tab,
             text="👥 Trust Beneficiaries",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         list_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -442,7 +442,7 @@ class EstateTrustWindow:
         form_label = ModernLabel(
             beneficiaries_tab,
             text="➕ Add/Edit Beneficiary",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         form_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -513,7 +513,7 @@ class EstateTrustWindow:
         form_label = ModernLabel(
             forms_tab,
             text="📄 Form 1041 - U.S. Income Tax Return for Estates and Trusts",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         form_label.pack(anchor="w", padx=15, pady=(15, 8))
 
@@ -531,7 +531,7 @@ class EstateTrustWindow:
         k1_label = ModernLabel(
             forms_tab,
             text="📑 Schedule K-1 (Form 1041) - Beneficiary's Share of Income",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         k1_label.pack(anchor="w", padx=15, pady=(15, 8))
 
@@ -549,7 +549,7 @@ class EstateTrustWindow:
         tax_label = ModernLabel(
             forms_tab,
             text="🧮 Tax Calculation Summary",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         tax_label.pack(anchor="w", padx=15, pady=(15, 8))
 
@@ -572,7 +572,7 @@ class EstateTrustWindow:
             self.tax_summary_vars[key] = ModernLabel(
                 row_frame,
                 text=default,
-                font=ctk.CTkFont(weight="bold")
+                font=ctk.CTkFont()
             )
             self.tax_summary_vars[key].pack(side="right")
 

@@ -60,7 +60,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="📊 Tax Analytics & Insights",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -97,7 +97,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title = ModernLabel(
             section,
             text="💰 Tax Burden Analysis",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title.pack(anchor="w", pady=(0, 15))
 
@@ -127,7 +127,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title = ModernLabel(
             section,
             text="📋 Deduction Analysis",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title.pack(anchor="w", pady=(0, 15))
 
@@ -147,7 +147,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         rec_frame = ctk.CTkFrame(section, fg_color="transparent")
         rec_frame.pack(fill="x", pady=(15, 0))
 
-        rec_title = ModernLabel(rec_frame, text="💡 Recommendations:", font=ctk.CTkFont(weight="bold"))
+        rec_title = ModernLabel(rec_frame, text="💡 Recommendations:", font=ctk.CTkFont())
         rec_title.pack(anchor="w", pady=(0, 10))
 
         self._create_recommendation(rec_frame, "Consider bunching charitable donations in alternating years for higher deductions")
@@ -162,7 +162,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title = ModernLabel(
             section,
             text="📈 Income Analysis",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title.pack(anchor="w", pady=(0, 15))
 
@@ -182,7 +182,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         viz_frame = ctk.CTkFrame(section, fg_color="transparent")
         viz_frame.pack(fill="x", pady=(15, 0))
 
-        viz_title = ModernLabel(viz_frame, text="Income Distribution:", font=ctk.CTkFont(weight="bold"))
+        viz_title = ModernLabel(viz_frame, text="Income Distribution:", font=ctk.CTkFont())
         viz_title.pack(anchor="w", pady=(0, 10))
 
         self._create_bar_chart(viz_frame, "W-2 Wages", 95000, 125000)
@@ -198,7 +198,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title = ModernLabel(
             section,
             text="📊 Tax Bracket Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title.pack(anchor="w", pady=(0, 15))
 
@@ -206,25 +206,25 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         info_frame.pack(fill="x")
 
         ModernLabel(info_frame, text="Filing Status:", width=150).pack(side="left", padx=(0, 10))
-        ModernLabel(info_frame, text="Single", font=ctk.CTkFont(weight="bold")).pack(side="left")
+        ModernLabel(info_frame, text="Single", font=ctk.CTkFont()).pack(side="left")
 
         bracket_frame = ctk.CTkFrame(section, fg_color="transparent")
         bracket_frame.pack(fill="x", pady=(10, 0))
 
         ModernLabel(bracket_frame, text="Tax Bracket:", width=150).pack(side="left", padx=(0, 10))
-        ModernLabel(bracket_frame, text="22% (Marginal)", font=ctk.CTkFont(weight="bold")).pack(side="left")
+        ModernLabel(bracket_frame, text="22% (Marginal)", font=ctk.CTkFont()).pack(side="left")
 
         rate_frame = ctk.CTkFrame(section, fg_color="transparent")
         rate_frame.pack(fill="x", pady=(5, 0))
 
         ModernLabel(rate_frame, text="Effective Rate:", width=150).pack(side="left", padx=(0, 10))
-        ModernLabel(rate_frame, text="14.59%", font=ctk.CTkFont(weight="bold")).pack(side="left")
+        ModernLabel(rate_frame, text="14.59%", font=ctk.CTkFont()).pack(side="left")
 
         # Bracket details
         details_frame = ctk.CTkFrame(section, fg_color="transparent")
         details_frame.pack(fill="x", pady=(15, 0))
 
-        details_title = ModernLabel(details_frame, text="Tax Bracket Details:", font=ctk.CTkFont(weight="bold"))
+        details_title = ModernLabel(details_frame, text="Tax Bracket Details:", font=ctk.CTkFont())
         details_title.pack(anchor="w", pady=(0, 10))
 
         brackets = [
@@ -238,7 +238,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
             bracket_row.pack(fill="x", pady=(0, 5))
 
             ModernLabel(bracket_row, text=f"{bracket}: {range_text}", width=300).pack(side="left")
-            ModernLabel(bracket_row, text=tax_text, font=ctk.CTkFont(weight="bold")).pack(side="right")
+            ModernLabel(bracket_row, text=tax_text, font=ctk.CTkFont()).pack(side="right")
 
     def _create_year_comparison_section(self):
         """Create year-over-year comparison section"""
@@ -248,7 +248,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title = ModernLabel(
             section,
             text="📅 Year-Over-Year Comparison",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title.pack(anchor="w", pady=(0, 15))
 
@@ -261,9 +261,9 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         header_row.pack(fill="x", pady=(0, 10))
 
         ModernLabel(header_row, text="Metric", width=200).pack(side="left", padx=(0, 20))
-        ModernLabel(header_row, text="2024", width=150, font=ctk.CTkFont(weight="bold")).pack(side="left", padx=(0, 20))
-        ModernLabel(header_row, text="2025", width=150, font=ctk.CTkFont(weight="bold")).pack(side="left", padx=(0, 20))
-        ModernLabel(header_row, text="Change", width=100, font=ctk.CTkFont(weight="bold")).pack(side="left")
+        ModernLabel(header_row, text="2024", width=150, font=ctk.CTkFont()).pack(side="left", padx=(0, 20))
+        ModernLabel(header_row, text="2025", width=150, font=ctk.CTkFont()).pack(side="left", padx=(0, 20))
+        ModernLabel(header_row, text="Change", width=100, font=ctk.CTkFont()).pack(side="left")
 
         # Data rows
         comparisons = [
@@ -280,7 +280,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
 
             ModernLabel(row, text=metric, width=200).pack(side="left", padx=(0, 20))
             ModernLabel(row, text=val_2024, width=150).pack(side="left", padx=(0, 20))
-            ModernLabel(row, text=val_2025, width=150, font=ctk.CTkFont(weight="bold")).pack(side="left", padx=(0, 20))
+            ModernLabel(row, text=val_2025, width=150, font=ctk.CTkFont()).pack(side="left", padx=(0, 20))
             
             color = "gray70"
             if change.startswith("-"):
@@ -298,7 +298,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(card, text=title, text_color="gray60", font=ctk.CTkFont(size=10))
         title_label.pack(anchor="w", padx=10, pady=(10, 0))
 
-        value_label = ModernLabel(card, text=value, font=ctk.CTkFont(size=14, weight="bold"))
+        value_label = ModernLabel(card, text=value, font=ctk.CTkFont(size=14))
         value_label.pack(anchor="w", padx=10, pady=(0, 10))
 
     def _create_detail_row(self, parent, label: str, value: str, tag: str = "default"):
@@ -317,7 +317,7 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         elif tag == "danger":
             color = "red"
         
-        ModernLabel(row, text=value, text_color=color, font=ctk.CTkFont(weight="bold")).pack(side="right")
+        ModernLabel(row, text=value, text_color=color, font=ctk.CTkFont()).pack(side="right")
 
     def _create_deduction_row(self, parent, name: str, amount: str, description: str):
         """Create a deduction row"""
@@ -328,8 +328,8 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         header = ctk.CTkFrame(row, fg_color="transparent")
         header.pack(fill="x")
 
-        ModernLabel(header, text=name, font=ctk.CTkFont(weight="bold")).pack(side="left")
-        ModernLabel(header, text=amount, font=ctk.CTkFont(weight="bold")).pack(side="right")
+        ModernLabel(header, text=name, font=ctk.CTkFont()).pack(side="left")
+        ModernLabel(header, text=amount, font=ctk.CTkFont()).pack(side="right")
 
         # Description
         desc_label = ModernLabel(row, text=description, text_color="gray70", font=ctk.CTkFont(size=10))
@@ -344,8 +344,8 @@ class ModernAnalyticsPage(ctk.CTkScrollableFrame):
         header = ctk.CTkFrame(row, fg_color="transparent")
         header.pack(fill="x")
 
-        ModernLabel(header, text=name, font=ctk.CTkFont(weight="bold")).pack(side="left")
-        ModernLabel(header, text=amount, font=ctk.CTkFont(weight="bold")).pack(side="right")
+        ModernLabel(header, text=name, font=ctk.CTkFont()).pack(side="left")
+        ModernLabel(header, text=amount, font=ctk.CTkFont()).pack(side="right")
 
         # Source
         source_label = ModernLabel(row, text=source, text_color="gray70", font=ctk.CTkFont(size=10))

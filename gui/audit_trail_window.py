@@ -62,14 +62,14 @@ class AuditTrailWindow:
 
         # Title
         title_label = ModernLabel(main_frame, text="Audit Trail History",
-                                 font=ctk.CTkFont(size=18, weight="bold"))
+                                 font=ctk.CTkFont(size=18))
         title_label.pack(pady=(0, 10))
 
         # Filter frame
         filter_frame = ctk.CTkFrame(main_frame)
         filter_frame.pack(fill=ctk.X, pady=(0, 10))
 
-        filter_title = ModernLabel(filter_frame, text="Filters", font=ctk.CTkFont(size=14, weight="bold"))
+        filter_title = ModernLabel(filter_frame, text="Filters", font=ctk.CTkFont(size=14))
         filter_title.pack(pady=(10, 5), padx=10, anchor="w")
 
         # Filter controls
@@ -137,7 +137,7 @@ class AuditTrailWindow:
         entries_frame = ctk.CTkFrame(main_frame)
         entries_frame.pack(fill=ctk.BOTH, expand=True, pady=(0, 10))
 
-        entries_title = ModernLabel(entries_frame, text="Audit Entries", font=ctk.CTkFont(size=14, weight="bold"))
+        entries_title = ModernLabel(entries_frame, text="Audit Entries", font=ctk.CTkFont(size=14))
         entries_title.pack(pady=(10, 5), padx=10, anchor="w")
 
         # Create scrolled text widget for audit entries
@@ -151,7 +151,7 @@ class AuditTrailWindow:
         detail_frame = ctk.CTkFrame(main_frame)
         detail_frame.pack(fill=ctk.BOTH, expand=True)
 
-        detail_title = ModernLabel(detail_frame, text="Entry Details", font=ctk.CTkFont(size=14, weight="bold"))
+        detail_title = ModernLabel(detail_frame, text="Entry Details", font=ctk.CTkFont(size=14))
         detail_title.pack(pady=(10, 5), padx=10, anchor="w")
 
         # Detail text area

@@ -110,7 +110,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             main_frame,
             text="Foreign Financial Accounts (FBAR)",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -126,7 +126,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         list_title = ctk.CTkLabel(
             left_panel,
             text="Accounts",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         list_title.pack(pady=(10, 10))
 
@@ -179,7 +179,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         form_title = ctk.CTkLabel(
             right_panel,
             text="Account Details",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         form_title.pack(pady=(10, 20))
 
@@ -297,7 +297,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             main_frame,
             text="Foreign Income Sources",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -313,7 +313,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         list_title = ctk.CTkLabel(
             left_panel,
             text="Income Sources",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         list_title.pack(pady=(10, 10))
 
@@ -366,7 +366,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         form_title = ctk.CTkLabel(
             right_panel,
             text="Income Details",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         form_title.pack(pady=(10, 20))
 
@@ -458,7 +458,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             main_frame,
             text="FBAR Filing Summary",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -487,7 +487,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         status_title = ctk.CTkLabel(
             status_frame,
             text="FBAR Filing Requirement",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         status_title.pack(pady=(10, 10))
 
@@ -505,7 +505,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         accounts_title = ctk.CTkLabel(
             accounts_frame,
             text="Foreign Accounts Summary",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         accounts_title.pack(pady=(10, 10))
 
@@ -523,7 +523,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         instructions_title = ctk.CTkLabel(
             instructions_frame,
             text="FBAR Filing Instructions",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         instructions_title.pack(pady=(10, 10))
 
@@ -549,7 +549,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             main_frame,
             text="Foreign Tax Credit Calculator",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -588,7 +588,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         credits_title = ctk.CTkLabel(
             credits_frame,
             text="Foreign Tax Credit Summary",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         credits_title.pack(pady=(10, 10))
 
@@ -606,7 +606,7 @@ class ForeignIncomeFBARWindow(ctk.CTkToplevel):
         income_summary_title = ctk.CTkLabel(
             income_summary_frame,
             text="Foreign Income Summary",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         income_summary_title.pack(pady=(10, 10))
 

@@ -66,7 +66,7 @@ class ModernAmendedReturnPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="📝 Create Amended Return",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -91,7 +91,7 @@ class ModernAmendedReturnPage(ctk.CTkScrollableFrame):
         orig_title = ModernLabel(
             orig_frame,
             text="🗂️ Original Return Information",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         orig_title.pack(anchor="w", pady=(0, 10))
 
@@ -130,7 +130,7 @@ class ModernAmendedReturnPage(ctk.CTkScrollableFrame):
         reason_title = ModernLabel(
             reason_frame,
             text="⚠️ Reason for Amendment",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         reason_title.pack(anchor="w", pady=(0, 10))
 
@@ -177,7 +177,7 @@ class ModernAmendedReturnPage(ctk.CTkScrollableFrame):
         expl_title = ModernLabel(
             expl_frame,
             text="📄 Explanation of Changes",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         expl_title.pack(anchor="w", pady=(0, 10))
 

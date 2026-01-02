@@ -65,7 +65,7 @@ class ModernSaveProgressPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="💾 Save Progress",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -85,7 +85,7 @@ class ModernSaveProgressPage(ctk.CTkScrollableFrame):
         save_title = ModernLabel(
             save_frame,
             text="📝 Current Progress",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         save_title.pack(anchor="w", pady=(0, 10))
 
@@ -182,7 +182,7 @@ class ModernSaveProgressPage(ctk.CTkScrollableFrame):
         files_title = ModernLabel(
             files_frame,
             text="📋 Previously Saved Returns",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         files_title.pack(anchor="w", pady=(0, 10))
 
@@ -236,7 +236,7 @@ class ModernSaveProgressPage(ctk.CTkScrollableFrame):
                 file_label = ModernLabel(
                     info_frame,
                     text=file_name,
-                    font=ctk.CTkFont(size=11, weight="bold")
+                    font=ctk.CTkFont(size=11)
                 )
                 file_label.pack(anchor="w")
 

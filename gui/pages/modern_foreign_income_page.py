@@ -73,7 +73,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text="Foreign Income & FBAR Reporting",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(10, 5))
 
@@ -176,7 +176,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         header_label = ctk.CTkLabel(
             self.accounts_scrollable_frame,
             text="Foreign Financial Accounts",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         header_label.pack(anchor="w", pady=(10, 15))
 
@@ -238,7 +238,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         header_label = ctk.CTkLabel(
             self.income_scrollable_frame,
             text="Foreign Income Sources",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         header_label.pack(anchor="w", pady=(10, 15))
 
@@ -258,7 +258,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         header_label = ctk.CTkLabel(
             self.summary_scrollable_frame,
             text="FBAR Filing Summary",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         header_label.pack(anchor="w", pady=(10, 20))
 
@@ -325,7 +325,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         account_label = ctk.CTkLabel(
             header_frame,
             text=f"{account.account_number} - {account.institution_name}",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         account_label.pack(anchor="w")
 
@@ -429,7 +429,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
         type_label = ctk.CTkLabel(
             header_frame,
             text=f"{income.source_type.title()} • {income.country}",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         type_label.pack(anchor="w")
 
@@ -522,7 +522,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
             status_title = ctk.CTkLabel(
                 status_frame,
                 text="FBAR Filing Requirement",
-                font=ctk.CTkFont(size=16, weight="bold")
+                font=ctk.CTkFont(size=16)
             )
             status_title.pack(anchor="w", pady=(10, 5))
 
@@ -533,7 +533,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
             status_label = ctk.CTkLabel(
                 status_frame,
                 text=status_text,
-                font=ctk.CTkFont(size=14, weight="bold"),
+                font=ctk.CTkFont(size=14),
                 text_color=status_color
             )
             status_label.pack(anchor="w", pady=(0, 5))
@@ -554,7 +554,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
                 accounts_title = ctk.CTkLabel(
                     accounts_frame,
                     text="Account Summary",
-                    font=ctk.CTkFont(size=14, weight="bold")
+                    font=ctk.CTkFont(size=14)
                 )
                 accounts_title.pack(anchor="w", pady=(10, 10))
 
@@ -584,7 +584,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
                     countries_title = ctk.CTkLabel(
                         accounts_frame,
                         text="Accounts by Country:",
-                        font=ctk.CTkFont(size=12, weight="bold")
+                        font=ctk.CTkFont(size=12)
                     )
                     countries_title.pack(anchor="w", pady=(10, 5))
 
@@ -604,7 +604,7 @@ class ModernForeignIncomePage(ctk.CTkFrame):
                 income_title = ctk.CTkLabel(
                     income_frame,
                     text="Foreign Income Summary",
-                    font=ctk.CTkFont(size=14, weight="bold")
+                    font=ctk.CTkFont(size=14)
                 )
                 income_title.pack(anchor="w", pady=(10, 10))
 
@@ -823,7 +823,7 @@ class ModernForeignAccountDialog(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             scrollable_frame,
             text="Foreign Account Information",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -873,7 +873,7 @@ class ModernForeignAccountDialog(ctk.CTkToplevel):
         values_frame = ctk.CTkFrame(scrollable_frame)
         values_frame.pack(fill="x", pady=(0, 15))
 
-        values_title = ctk.CTkLabel(values_frame, text="Account Values", font=ctk.CTkFont(weight="bold"))
+        values_title = ctk.CTkLabel(values_frame, text="Account Values", font=ctk.CTkFont())
         values_title.pack(anchor="w", padx=15, pady=(15, 10))
 
         # Max value during year
@@ -894,7 +894,7 @@ class ModernForeignAccountDialog(ctk.CTkToplevel):
         status_frame = ctk.CTkFrame(scrollable_frame)
         status_frame.pack(fill="x", pady=(0, 20))
 
-        status_title = ctk.CTkLabel(status_frame, text="Account Status", font=ctk.CTkFont(weight="bold"))
+        status_title = ctk.CTkLabel(status_frame, text="Account Status", font=ctk.CTkFont())
         status_title.pack(anchor="w", padx=15, pady=(15, 10))
 
         # Closed checkbox
@@ -1091,7 +1091,7 @@ class ModernForeignIncomeDialog(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             scrollable_frame,
             text="Foreign Income Information",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         title_label.pack(pady=(10, 20))
 
@@ -1127,7 +1127,7 @@ class ModernForeignIncomeDialog(ctk.CTkToplevel):
         values_frame = ctk.CTkFrame(scrollable_frame)
         values_frame.pack(fill="x", pady=(0, 15))
 
-        values_title = ctk.CTkLabel(values_frame, text="Income Amounts", font=ctk.CTkFont(weight="bold"))
+        values_title = ctk.CTkLabel(values_frame, text="Income Amounts", font=ctk.CTkFont())
         values_title.pack(anchor="w", padx=15, pady=(15, 10))
 
         # USD amount

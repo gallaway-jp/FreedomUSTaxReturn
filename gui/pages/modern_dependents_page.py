@@ -59,7 +59,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text="Dependents Information",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -89,7 +89,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
         info_title = ctk.CTkLabel(
             info_frame,
             text="💡 Qualifying Child Requirements (2024)",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         info_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -115,7 +115,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
         header_label = ctk.CTkLabel(
             section_frame,
             text="Your Dependents",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         header_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -137,7 +137,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
         empty_title = ctk.CTkLabel(
             self.empty_state_frame,
             text="No Dependents Added Yet",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=16)
         )
         empty_title.pack(pady=(0, 5))
 
@@ -242,7 +242,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
         name_label = ctk.CTkLabel(
             header_frame,
             text=name,
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         name_label.pack(side="left")
 
@@ -351,7 +351,7 @@ class ModernDependentsPage(ctk.CTkScrollableFrame):
             indicator_label = ctk.CTkLabel(
                 indicators_frame,
                 text=indicator_text,
-                font=ctk.CTkFont(size=10, weight="bold"),
+                font=ctk.CTkFont(size=10),
                 text_color=color
             )
             indicator_label.pack(anchor="w", pady=(1, 0))
@@ -537,7 +537,7 @@ class ModernDependentDialog(ctk.CTkToplevel):
         header_label = ctk.CTkLabel(
             main_frame,
             text="Dependent Information",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         header_label.pack(pady=(0, 20))
 
@@ -561,7 +561,7 @@ class ModernDependentDialog(ctk.CTkToplevel):
         section_title = ctk.CTkLabel(
             section_frame,
             text="Personal Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         section_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -611,7 +611,7 @@ class ModernDependentDialog(ctk.CTkToplevel):
         section_title = ctk.CTkLabel(
             section_frame,
             text="Relationship to You",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         section_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -656,7 +656,7 @@ class ModernDependentDialog(ctk.CTkToplevel):
         section_title = ctk.CTkLabel(
             section_frame,
             text="Living Arrangement",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         section_title.pack(anchor="w", padx=15, pady=(15, 10))
 

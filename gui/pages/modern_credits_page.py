@@ -74,7 +74,7 @@ class ModernCreditsPage(ModernFrame):
         title_label = ModernLabel(
             header_frame,
             text="Claim Your Tax Credits",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -121,7 +121,7 @@ class ModernCreditsPage(ModernFrame):
         ModernLabel(
             children_frame,
             text="Number of qualifying children:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left", padx=(0, 15))
 
         self.num_children_entry = ModernEntry(
@@ -144,7 +144,7 @@ class ModernCreditsPage(ModernFrame):
         self.child_credit_label = ModernLabel(
             amount_frame,
             text="$0",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color="#2E8B57"
         )
         self.child_credit_label.pack(side="left")
@@ -247,7 +247,7 @@ class ModernCreditsPage(ModernFrame):
         ModernLabel(
             contrib_frame,
             text="Retirement plan contributions:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left", padx=(0, 15))
 
         self.retirement_entry = ModernEntry(
@@ -270,7 +270,7 @@ class ModernCreditsPage(ModernFrame):
         self.retirement_credit_label = ModernLabel(
             amount_frame,
             text="$0",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color="#2E8B57"
         )
         self.retirement_credit_label.pack(side="left")
@@ -301,7 +301,7 @@ class ModernCreditsPage(ModernFrame):
         ModernLabel(
             expense_frame,
             text="Qualified care expenses paid:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left", padx=(0, 15))
 
         self.care_expenses_entry = ModernEntry(
@@ -324,7 +324,7 @@ class ModernCreditsPage(ModernFrame):
         self.care_credit_label = ModernLabel(
             amount_frame,
             text="$0",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color="#2E8B57"
         )
         self.care_credit_label.pack(side="left")
@@ -355,7 +355,7 @@ class ModernCreditsPage(ModernFrame):
         ModernLabel(
             credit_frame_inner,
             text="Energy credit amount:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left", padx=(0, 15))
 
         self.energy_credit_entry = ModernEntry(
@@ -387,7 +387,7 @@ class ModernCreditsPage(ModernFrame):
         ModernLabel(
             credit_frame_inner,
             text="Premium tax credit amount:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left", padx=(0, 15))
 
         self.premium_credit_entry = ModernEntry(

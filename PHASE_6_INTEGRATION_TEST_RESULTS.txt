@@ -2,8 +2,8 @@
 FREEDOM US TAX RETURN - PHASE 6 INTEGRATION TEST RESULTS
 ================================================================================
 
-Test Date: 2026-01-02 16:13:31
-Total Test Time: 3.6 seconds
+Test Date: 2026-01-02 16:36:21
+Total Test Time: 10.3 seconds
 
 [1] APPLICATION STARTUP
 --------------------------------------------------------------------------------
@@ -19,43 +19,43 @@ Navigation Methods Present: True
 [3] SIDEBAR PAGES LOADED
 --------------------------------------------------------------------------------
 Total Pages: 26
-Passed: 6
-Failed: 20
+Passed: 24
+Failed: 2
 
 Page-by-Page Results:
   [FAILED] state_tax_integration                    - N/A
-  [FAILED] estate_trust                             - N/A
-  [FAILED] partnership_s_corp                       - N/A
+  [PASSED] Estate & Trust Planning                  - 699.2ms
+  [PASSED] Partnership & S-Corp                     - 442.9ms
   [FAILED] state_tax                                - N/A
-  [FAILED] state_tax_calculator                     - N/A
-  [FAILED] ai_deduction_finder                      - N/A
-  [FAILED] cryptocurrency_tax                       - N/A
-  [FAILED] audit_trail                              - N/A
-  [FAILED] tax_planning                             - N/A
-  [FAILED] quickbooks_integration                   - N/A
-  [FAILED] tax_dashboard                            - N/A
-  [FAILED] receipt_scanning                         - N/A
-  [FAILED] client_portal                            - N/A
-  [FAILED] tax_interview                            - N/A
-  [FAILED] cloud_backup                             - N/A
-  [FAILED] ptin_ero_management                      - N/A
-  [FAILED] tax_analytics                            - N/A
-  [FAILED] settings_preferences                     - N/A
-  [FAILED] help_documentation                       - N/A
-  [PASSED] Bank Account Linking                     - 496.4ms
-  [FAILED] e_filing                                 - N/A
-  [PASSED] Foreign Income & FBAR                    - 323.2ms
-  [PASSED] Plugin Management                        - 392.5ms
-  [PASSED] Tax Projections                          - 312.8ms
-  [PASSED] Translation Management                   - 306.4ms
-  [PASSED] Year Comparison                          - 294.7ms
+  [PASSED] State Tax Calculator                     - 370.6ms
+  [PASSED] AI Deduction Finder                      - 365.5ms
+  [PASSED] Cryptocurrency Tax                       - 313.7ms
+  [PASSED] Audit Trail                              - 257.8ms
+  [PASSED] Tax Planning                             - 343.5ms
+  [PASSED] QuickBooks Integration                   - 342.9ms
+  [PASSED] Tax Dashboard                            - 332.5ms
+  [PASSED] Receipt Scanning                         - 372.3ms
+  [PASSED] Client Portal                            - 319.0ms
+  [PASSED] Tax Interview                            - 409.1ms
+  [PASSED] Cloud Backup                             - 410.8ms
+  [PASSED] PTIN & ERO Management                    - 450.1ms
+  [PASSED] Tax Analytics                            - 313.9ms
+  [PASSED] Settings & Preferences                   - 406.1ms
+  [PASSED] Help & Documentation                     - 333.2ms
+  [PASSED] Bank Account Linking                     - 436.4ms
+  [PASSED] E-Filing                                 - 379.7ms
+  [PASSED] Foreign Income & FBAR                    - 341.3ms
+  [PASSED] Plugin Management                        - 398.1ms
+  [PASSED] Tax Projections                          - 309.8ms
+  [PASSED] Translation Management                   - 283.3ms
+  [PASSED] Year Comparison                          - 286.0ms
 
 [4] PAGE SWITCHING PERFORMANCE
 --------------------------------------------------------------------------------
 Status: PASSED
-Average Switch Time: 7.3ms
-Min Switch Time:     4.3ms
-Max Switch Time:     18.9ms
+Average Switch Time: 0.1ms
+Min Switch Time:     0.1ms
+Max Switch Time:     0.1ms
 Performance Rating:  EXCELLENT
 
 [5] DATA PERSISTENCE
@@ -70,25 +70,7 @@ Popup Dialogs Detected: 0
 [ERRORS]
 --------------------------------------------------------------------------------
   - Page state_tax_integration: Page instance is None
-  - Page estate_trust: Page instance is None
-  - Page partnership_s_corp: Page instance is None
   - Page state_tax: Page instance is None
-  - Page state_tax_calculator: Page instance is None
-  - Page ai_deduction_finder: Page instance is None
-  - Page cryptocurrency_tax: Page instance is None
-  - Page audit_trail: Page instance is None
-  - Page tax_planning: Page instance is None
-  - Page quickbooks_integration: Page instance is None
-  - Page tax_dashboard: Page instance is None
-  - Page receipt_scanning: Page instance is None
-  - Page client_portal: Page instance is None
-  - Page tax_interview: Page instance is None
-  - Page cloud_backup: Page instance is None
-  - Page ptin_ero_management: Page instance is None
-  - Page tax_analytics: Page instance is None
-  - Page settings_preferences: Page instance is None
-  - Page help_documentation: Page instance is None
-  - Page e_filing: Page instance is None
 
 [SUMMARY]
 --------------------------------------------------------------------------------

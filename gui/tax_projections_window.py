@@ -89,7 +89,7 @@ class TaxProjectionsWindow:
         title_label = ModernLabel(
             main_container,
             text="🔮 Tax Projections",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=20)
         )
         title_label.grid(row=0, column=0, pady=(0, 10), sticky="w")
 
@@ -128,7 +128,7 @@ class TaxProjectionsWindow:
         scenarios_title = ModernLabel(
             parent,
             text="Projection Scenarios",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         scenarios_title.grid(row=0, column=0, pady=(10, 5), sticky="w")
 

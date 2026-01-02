@@ -112,7 +112,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(
             main_frame,
             text="💰 Cryptocurrency Tax Reporting",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(pady=(0, 15))
 
@@ -200,7 +200,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(
             scroll_frame,
             text="🔄 Transaction Management",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title_label.pack(anchor="w", pady=(0, 10))
 
@@ -217,7 +217,7 @@ class CryptocurrencyTaxWindow:
         form_frame = ctk.CTkFrame(scroll_frame)
         form_frame.pack(fill="x", pady=(0, 15))
 
-        form_title = ModernLabel(form_frame, text="Add New Transaction", font=ctk.CTkFont(size=12, weight="bold"))
+        form_title = ModernLabel(form_frame, text="Add New Transaction", font=ctk.CTkFont(size=12))
         form_title.pack(anchor="w", pady=(0, 10))
 
         # Form inputs
@@ -285,7 +285,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(
             scroll_frame,
             text="📊 Capital Gains & Losses",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title_label.pack(anchor="w", pady=(0, 10))
 
@@ -341,7 +341,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(
             scroll_frame,
             text="📄 Reports & Tax Forms",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title_label.pack(anchor="w", pady=(0, 15))
 
@@ -364,7 +364,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(
             scroll_frame,
             text="⚙️ Settings",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         title_label.pack(anchor="w", pady=(0, 15))
 
@@ -406,7 +406,7 @@ class CryptocurrencyTaxWindow:
         title_label = ModernLabel(card_frame, text=title, text_color="gray60", font=ctk.CTkFont(size=10))
         title_label.pack(anchor="w", padx=10, pady=(10, 0))
 
-        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14, weight="bold"))
+        value_label = ModernLabel(card_frame, text=value, font=ctk.CTkFont(size=14))
         value_label.pack(anchor="w", padx=10, pady=(0, 10))
 
     def _create_report_option(self, parent, title: str, subtitle: str, description: str):
@@ -418,7 +418,7 @@ class CryptocurrencyTaxWindow:
         text_frame = ctk.CTkFrame(option_frame, fg_color="transparent")
         text_frame.pack(side="left", fill="both", expand=True)
 
-        title_label = ModernLabel(text_frame, text=title, font=ctk.CTkFont(size=12, weight="bold"))
+        title_label = ModernLabel(text_frame, text=title, font=ctk.CTkFont(size=12))
         title_label.pack(anchor="w")
 
         subtitle_label = ModernLabel(text_frame, text=subtitle, text_color="gray60", font=ctk.CTkFont(size=10))

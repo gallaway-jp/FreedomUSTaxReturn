@@ -109,7 +109,7 @@ class PartnershipSCorpWindow:
         title_label = ModernLabel(
             header_frame,
             text="🤝 Partnership & S-Corp Tax Returns",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -201,7 +201,7 @@ class PartnershipSCorpWindow:
         list_label = ModernLabel(
             returns_tab,
             text="📊 Partnership & S-Corp Returns",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         list_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -223,7 +223,7 @@ class PartnershipSCorpWindow:
         summary_label = ModernLabel(
             returns_tab,
             text="📈 Summary",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         summary_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -249,7 +249,7 @@ class PartnershipSCorpWindow:
             item_frame.grid(row=row, column=col, sticky="ew", padx=(0, 20), pady=(0, 10))
 
             ModernLabel(item_frame, text=label, font=ctk.CTkFont(size=10), text_color="gray60").pack(anchor="w")
-            value_label = ModernLabel(item_frame, text=default, font=ctk.CTkFont(size=12, weight="bold"))
+            value_label = ModernLabel(item_frame, text=default, font=ctk.CTkFont(size=12))
             value_label.pack(anchor="w")
 
             self.summary_vars[key] = value_label
@@ -265,7 +265,7 @@ class PartnershipSCorpWindow:
         title_label = ModernLabel(
             entity_tab,
             text="🏢 Entity Information",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         title_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -342,7 +342,7 @@ class PartnershipSCorpWindow:
         income_label = ModernLabel(
             main_frame,
             text="💰 Business Income",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         income_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
@@ -376,7 +376,7 @@ class PartnershipSCorpWindow:
         deductions_label = ModernLabel(
             main_frame,
             text="📋 Business Deductions",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         deductions_label.grid(row=0, column=1, sticky="w", pady=(0, 10), padx=(10, 0))
 
@@ -428,7 +428,7 @@ class PartnershipSCorpWindow:
         list_label = ModernLabel(
             partners_tab,
             text="👥 Partners & Shareholders",
-            font=ctk.CTkFont(size=13, weight="bold")
+            font=ctk.CTkFont(size=13)
         )
         list_label.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -443,7 +443,7 @@ class PartnershipSCorpWindow:
         form_label = ModernLabel(
             partners_tab,
             text="➕ Add/Edit Partner or Shareholder",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         form_label.pack(anchor="w", padx=15, pady=(10, 8))
 
@@ -514,7 +514,7 @@ class PartnershipSCorpWindow:
         form_1065_label = ModernLabel(
             forms_tab,
             text="📄 Form 1065 - U.S. Return of Partnership Income",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         form_1065_label.pack(anchor="w", padx=15, pady=(15, 8))
 
@@ -532,7 +532,7 @@ class PartnershipSCorpWindow:
         form_1120s_label = ModernLabel(
             forms_tab,
             text="📄 Form 1120-S - U.S. Income Tax Return for S Corporation",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         form_1120s_label.pack(anchor="w", padx=15, pady=(15, 8))
 
@@ -550,7 +550,7 @@ class PartnershipSCorpWindow:
         k1_label = ModernLabel(
             forms_tab,
             text="📑 Schedule K-1 - Partner's/Shareholder's Share of Income",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         k1_label.pack(anchor="w", padx=15, pady=(15, 8))
 

@@ -69,7 +69,7 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
         title_label = ModernLabel(
             header_frame,
             text="Audit Trail - System Activity Log",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w")
 
@@ -89,7 +89,7 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
         filter_title = ModernLabel(
             filter_frame,
             text="🔍 Filters",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         filter_title.pack(anchor="w", pady=(0, 10))
 
@@ -176,7 +176,7 @@ class ModernAuditTrailPage(ctk.CTkScrollableFrame):
         tree_title = ModernLabel(
             tree_frame,
             text="📋 Audit Entries",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         tree_title.pack(anchor="w", pady=(0, 10))
 

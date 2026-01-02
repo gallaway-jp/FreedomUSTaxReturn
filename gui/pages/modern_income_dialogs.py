@@ -83,7 +83,7 @@ class ModernIncomeDialog(ctk.CTkToplevel):
         self.title_label = ctk.CTkLabel(
             self.main_frame,
             text=self.title(),
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         self.title_label.pack(pady=(0, 20))
 
@@ -186,7 +186,7 @@ class ModernW2Dialog(ModernIncomeDialog):
         employer_title = ctk.CTkLabel(
             employer_frame,
             text="🏢 Employer Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         employer_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -207,7 +207,7 @@ class ModernW2Dialog(ModernIncomeDialog):
         wage_title = ctk.CTkLabel(
             wage_frame,
             text="💰 Wage Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         wage_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -246,7 +246,7 @@ class ModernW2Dialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -259,7 +259,7 @@ class ModernW2Dialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -338,7 +338,7 @@ class ModernInterestDialog(ModernIncomeDialog):
         payer_title = ctk.CTkLabel(
             payer_frame,
             text="🏦 Payer Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         payer_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -359,7 +359,7 @@ class ModernInterestDialog(ModernIncomeDialog):
         interest_title = ctk.CTkLabel(
             interest_frame,
             text="💰 Interest Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         interest_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -383,7 +383,7 @@ class ModernInterestDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -396,7 +396,7 @@ class ModernInterestDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -469,7 +469,7 @@ class ModernDividendDialog(ModernIncomeDialog):
         payer_title = ctk.CTkLabel(
             payer_frame,
             text="🏢 Payer Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         payer_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -490,7 +490,7 @@ class ModernDividendDialog(ModernIncomeDialog):
         dividend_title = ctk.CTkLabel(
             dividend_frame,
             text="📈 Dividend Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         dividend_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -519,7 +519,7 @@ class ModernDividendDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -532,7 +532,7 @@ class ModernDividendDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -658,7 +658,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
 
         accounting_label = ctk.CTkLabel(
             accounting_frame, text="Accounting Method:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         accounting_label.pack(anchor="w", pady=(0, 5))
 
@@ -697,7 +697,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         net_title = ctk.CTkLabel(
             net_frame,
             text="📊 Net Profit Calculation",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         net_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -705,7 +705,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         self.net_profit_label = ctk.CTkLabel(
             net_frame,
             text="Net Profit: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.net_profit_label.pack(anchor="w", padx=15, pady=(0, 15))
 
@@ -753,7 +753,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         self.total_expenses_label = ctk.CTkLabel(
             expenses_frame,
             text="Total Expenses: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.total_expenses_label.pack(anchor="w", padx=15, pady=(20, 0))
 
@@ -774,7 +774,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
 
         method_label = ctk.CTkLabel(
             method_frame, text="Vehicle Expense Method:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         method_label.pack(anchor="w", pady=(0, 5))
 
@@ -798,7 +798,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         mileage_title = ctk.CTkLabel(
             mileage_frame,
             text="🛣️ Mileage Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         mileage_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -817,7 +817,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         actual_title = ctk.CTkLabel(
             actual_frame,
             text="🚗 Actual Vehicle Expenses",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         actual_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -840,7 +840,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
 
         method_label = ctk.CTkLabel(
             method_frame, text="Home Office Method:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         method_label.pack(anchor="w", pady=(0, 5))
 
@@ -864,7 +864,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         simplified_title = ctk.CTkLabel(
             simplified_frame,
             text="🏠 Simplified Method",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         simplified_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -879,7 +879,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         actual_title = ctk.CTkLabel(
             actual_frame,
             text="🏠 Actual Home Office Expenses",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         actual_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -898,7 +898,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -911,7 +911,7 @@ class ModernSelfEmploymentDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -1095,7 +1095,7 @@ class ModernRetirementDialog(ModernIncomeDialog):
         payer_title = ctk.CTkLabel(
             payer_frame,
             text="🏦 Payer Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         payer_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1110,7 +1110,7 @@ class ModernRetirementDialog(ModernIncomeDialog):
 
         account_label = ctk.CTkLabel(
             account_frame, text="Account Type:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         account_label.pack(anchor="w", pady=(0, 5))
 
@@ -1147,7 +1147,7 @@ class ModernRetirementDialog(ModernIncomeDialog):
         dist_title = ctk.CTkLabel(
             dist_frame,
             text="💰 Distribution Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         dist_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1176,7 +1176,7 @@ class ModernRetirementDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -1189,7 +1189,7 @@ class ModernRetirementDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -1269,7 +1269,7 @@ class ModernSocialSecurityDialog(ModernIncomeDialog):
         benefits_title = ctk.CTkLabel(
             benefits_frame,
             text="👴 Social Security Benefits",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         benefits_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1290,7 +1290,7 @@ class ModernSocialSecurityDialog(ModernIncomeDialog):
         net_title = ctk.CTkLabel(
             net_frame,
             text="📊 Net Benefits Calculation",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         net_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1298,7 +1298,7 @@ class ModernSocialSecurityDialog(ModernIncomeDialog):
         self.net_benefits_label = ctk.CTkLabel(
             net_frame,
             text="Net Benefits: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.net_benefits_label.pack(anchor="w", padx=15, pady=(0, 15))
 
@@ -1311,7 +1311,7 @@ class ModernSocialSecurityDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -1393,7 +1393,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         asset_title = ctk.CTkLabel(
             asset_frame,
             text="📊 Asset Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         asset_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1408,7 +1408,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
 
         holding_label = ctk.CTkLabel(
             holding_frame, text="Holding Period:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         holding_label.pack(anchor="w", pady=(0, 5))
 
@@ -1432,7 +1432,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         trans_title = ctk.CTkLabel(
             trans_frame,
             text="💰 Transaction Details",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         trans_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1468,7 +1468,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         basis_title = ctk.CTkLabel(
             basis_frame,
             text="📊 Adjusted Basis Calculation",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         basis_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1476,7 +1476,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         self.adjusted_basis_label = ctk.CTkLabel(
             basis_frame,
             text="Adjusted Basis: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.adjusted_basis_label.pack(anchor="w", padx=15, pady=(0, 10))
 
@@ -1484,7 +1484,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         self.gain_loss_label = ctk.CTkLabel(
             basis_frame,
             text="Gain/Loss: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.gain_loss_label.pack(anchor="w", padx=15, pady=(0, 15))
 
@@ -1498,7 +1498,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -1511,7 +1511,7 @@ class ModernCapitalGainDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -1625,7 +1625,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         property_title = ctk.CTkLabel(
             property_frame,
             text="🏠 Property Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         property_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1640,7 +1640,7 @@ class ModernRentalDialog(ModernIncomeDialog):
 
         type_label = ctk.CTkLabel(
             type_frame, text="Property Type:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         type_label.pack(anchor="w", pady=(0, 5))
 
@@ -1662,7 +1662,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         income_title = ctk.CTkLabel(
             income_frame,
             text="💰 Rental Income",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         income_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1678,7 +1678,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         expenses_title = ctk.CTkLabel(
             expenses_frame,
             text="💸 Rental Expenses",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         expenses_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1712,7 +1712,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         net_title = ctk.CTkLabel(
             net_frame,
             text="📊 Net Rental Income Calculation",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         net_title.pack(anchor="w", padx=15, pady=(15, 10))
 
@@ -1720,7 +1720,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         self.net_income_label = ctk.CTkLabel(
             net_frame,
             text="Net Rental Income: $0.00",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         self.net_income_label.pack(anchor="w", padx=15, pady=(0, 15))
 
@@ -1734,7 +1734,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry = ctk.CTkEntry(frame, placeholder_text=placeholder)
@@ -1747,7 +1747,7 @@ class ModernRentalDialog(ModernIncomeDialog):
         frame = ctk.CTkFrame(parent, fg_color="transparent")
         frame.pack(fill="x", padx=15, pady=(0, 10))
 
-        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12, weight="bold"))
+        label = ctk.CTkLabel(frame, text=label_text, font=ctk.CTkFont(size=12))
         label.pack(anchor="w", pady=(0, 5))
 
         entry_frame = ctk.CTkFrame(frame, fg_color="transparent")

@@ -80,7 +80,7 @@ class ModernDeductionsPage(ModernFrame):
         title_label = ModernLabel(
             header_frame,
             text="Choose Your Deduction Method",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         title_label.pack(anchor="w", pady=(0, 5))
 
@@ -120,7 +120,7 @@ class ModernDeductionsPage(ModernFrame):
             variable=self.method_var,
             value="standard",
             command=self._on_method_change,
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         std_radio.pack(anchor="w", pady=(0, 5))
 
@@ -147,7 +147,7 @@ class ModernDeductionsPage(ModernFrame):
         self.standard_amount_label = ModernLabel(
             amount_frame,
             text="$14,600",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color="#2E8B57"  # Sea green
         )
         self.standard_amount_label.pack(side="left")
@@ -162,7 +162,7 @@ class ModernDeductionsPage(ModernFrame):
             variable=self.method_var,
             value="itemized",
             command=self._on_method_change,
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         )
         itemized_radio.pack(anchor="w", pady=(0, 5))
 
@@ -188,7 +188,7 @@ class ModernDeductionsPage(ModernFrame):
         ModernLabel(
             medical_frame,
             text="Medical and Dental Expenses",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         ).pack(anchor="w", pady=(0, 2))
 
         ModernLabel(
@@ -212,7 +212,7 @@ class ModernDeductionsPage(ModernFrame):
         ModernLabel(
             taxes_frame,
             text="State and Local Taxes",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         ).pack(anchor="w", pady=(0, 2))
 
         ModernLabel(
@@ -236,7 +236,7 @@ class ModernDeductionsPage(ModernFrame):
         ModernLabel(
             mortgage_frame,
             text="Mortgage Interest",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         ).pack(anchor="w", pady=(0, 2))
 
         ModernLabel(
@@ -260,7 +260,7 @@ class ModernDeductionsPage(ModernFrame):
         ModernLabel(
             charitable_frame,
             text="Charitable Contributions",
-            font=ctk.CTkFont(size=11, weight="bold")
+            font=ctk.CTkFont(size=11)
         ).pack(anchor="w", pady=(0, 2))
 
         ModernLabel(
@@ -288,13 +288,13 @@ class ModernDeductionsPage(ModernFrame):
         ModernLabel(
             total_display_frame,
             text="Total Itemized Deductions:",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=12)
         ).pack(side="left")
 
         self.total_label = ModernLabel(
             total_display_frame,
             text="$0.00",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=14),
             text_color="#2E8B57"
         )
         self.total_label.pack(side="right")

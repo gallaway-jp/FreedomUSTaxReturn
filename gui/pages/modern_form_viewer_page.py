@@ -61,7 +61,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         title_label = ctk.CTkLabel(
             header_frame,
             text="Tax Return Summary & Forms",
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=24)
         )
         title_label.pack(anchor="w", pady=(10, 5))
 
@@ -90,7 +90,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         summary_header = ctk.CTkLabel(
             self.scrollable_frame,
             text="Tax Return Summary",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         summary_header.pack(anchor="w", pady=(20, 15))
 
@@ -148,7 +148,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         income_title = ctk.CTkLabel(
             financial_frame,
             text="Income Information",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         income_title.pack(anchor="w", pady=(0, 10))
 
@@ -164,7 +164,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         tax_title = ctk.CTkLabel(
             financial_frame,
             text="Tax & Payments",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         tax_title.pack(anchor="w", pady=(0, 10))
 
@@ -179,7 +179,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         refund_owe_title = ctk.CTkLabel(
             financial_frame,
             text="Refund or Amount Owed",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14)
         )
         refund_owe_title.pack(anchor="w", pady=(0, 10))
 
@@ -221,7 +221,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         forms_header = ctk.CTkLabel(
             self.scrollable_frame,
             text="Required Forms",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         forms_header.pack(anchor="w", pady=(20, 15))
 
@@ -282,7 +282,7 @@ class ModernFormViewerPage(ctk.CTkFrame):
         preview_header = ctk.CTkLabel(
             self.scrollable_frame,
             text="Form 1040 Preview",
-            font=ctk.CTkFont(size=18, weight="bold")
+            font=ctk.CTkFont(size=18)
         )
         preview_header.pack(anchor="w", pady=(20, 15))
 

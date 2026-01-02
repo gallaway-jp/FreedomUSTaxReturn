@@ -23,7 +23,7 @@ class ModernFrame(ctk.CTkFrame):
             self.title_label = ctk.CTkLabel(
                 self,
                 text=title,
-                font=ctk.CTkFont(size=16, weight="bold")
+                font=ctk.CTkFont(size=16)
             )
             self.title_label.pack(pady=(10, 5), padx=10, anchor="w")
 
@@ -31,9 +31,17 @@ class ModernFrame(ctk.CTkFrame):
 class ModernLabel(ctk.CTkLabel):
     """Modern label with consistent styling and accessibility support"""
 
-    def __init__(self, master, text: str = "", required: bool = False, accessibility_service=None, **kwargs):
+    def __init__(self, master, text: str = "", required: bool = False, accessibility_service=None, 
+                 font_size: Optional[int] = None, font_weight: Optional[str] = None, **kwargs):
         # Add asterisk for required fields
         display_text = f"{text} *" if required else text
+        
+        # Handle font_size and font_weight parameters by converting to font parameter
+        if font_size is not None or font_weight is not None:
+            # If no explicit font parameter provided, create one
+            if 'font' not in kwargs:
+                size = font_size if font_size is not None else 12
+                kwargs['font'] = ctk.CTkFont(size=size)
 
         super().__init__(master, text=display_text, **kwargs)
 
@@ -328,7 +336,7 @@ class ModernScrollableFrame(ctk.CTkScrollableFrame):
             self.title_label = ctk.CTkLabel(
                 self,
                 text=title,
-                font=ctk.CTkFont(size=16, weight="bold")
+                font=ctk.CTkFont(size=16)
             )
             self.title_label.pack(pady=(10, 5), padx=10, anchor="w")
 
