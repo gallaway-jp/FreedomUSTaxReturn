@@ -29,11 +29,12 @@ class StateTaxIntegrationPage(ctk.CTkScrollableFrame):
     within the main application window.
     """
 
-    def __init__(self, master, config: AppConfig, 
+    def __init__(self, master, config: AppConfig, tax_data: Optional[Any] = None,
                  accessibility_service: AccessibilityService = None, **kwargs):
         super().__init__(master, **kwargs)
 
         self.config = config
+        self.tax_data = tax_data
         self.accessibility_service = accessibility_service
         self.service = StateTaxIntegrationService(config, None)
 
