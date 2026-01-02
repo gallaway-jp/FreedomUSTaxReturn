@@ -5,8 +5,8 @@ Provides an intelligent interface for analyzing tax data to identify
 potential missed deductions and tax-saving opportunities.
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+import customtkinter as ctk
+from tkinter import messagebox, filedialog
 import threading
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -16,6 +16,8 @@ from config.app_config import AppConfig
 from models.tax_data import TaxData
 from services.ai_deduction_finder_service import AIDeductionFinderService, DeductionAnalysisResult, DeductionSuggestion, DeductionCategory
 from services.tax_calculation_service import TaxCalculationService
+from services.accessibility_service import AccessibilityService
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton
 from utils.error_tracker import get_error_tracker
 
 
@@ -31,7 +33,7 @@ class AIDeductionFinderWindow:
     - Exportable analysis reports
     """
 
-    def __init__(self, parent: tk.Tk, config: AppConfig, tax_data: Optional[TaxData] = None):
+    def __init__(self, parent: ctk.CTk, config: AppConfig, tax_data: Optional[TaxData] = None, accessibility_service: Optional[AccessibilityService] = None):
         """
         Initialize AI deduction finder window.
 
@@ -39,10 +41,12 @@ class AIDeductionFinderWindow:
             parent: Parent window
             config: Application configuration
             tax_data: Tax return data to analyze
+            accessibility_service: Accessibility service instance
         """
         self.parent = parent
         self.config = config
         self.tax_data = tax_data
+        self.accessibility_service = accessibility_service
         self.error_tracker = get_error_tracker()
 
         # Initialize services
@@ -54,11 +58,11 @@ class AIDeductionFinderWindow:
         self.current_analysis: Optional[DeductionAnalysisResult] = None
 
         # UI components
-        self.window: Optional[tk.Toplevel] = None
-        self.notebook: Optional[ttk.Notebook] = None
-        self.progress_var: Optional[tk.DoubleVar] = None
-        self.status_label: Optional[ttk.Label] = None
-        self.tree: Optional[ttk.Treeview] = None
+        self.window: Optional[ctk.CTkToplevel] = None
+        self.tabview: Optional[ctk.CTkTabview] = None
+        self.progress_var: Optional[ctk.DoubleVar] = None
+        self.status_label: Optional[ModernLabel] = None
+        self.textbox: Optional[ctk.CTkTextbox] = None
 
         self._create_window()
         self._setup_ui()
@@ -66,10 +70,14 @@ class AIDeductionFinderWindow:
 
     def _create_window(self):
         """Create the main deduction finder window"""
-        self.window = tk.Toplevel(self.parent)
-        self.window.title("AI Deduction Finder")
-        self.window.geometry("1000x700")
+        self.window = ctk.CTkToplevel(self.parent)
+        self.window.title("🤖 AI Deduction Finder")
+        self.window.geometry("1100x750")
         self.window.resizable(True, True)
+
+        # Configure grid
+        self.window.grid_rowconfigure(1, weight=1)
+        self.window.grid_columnconfigure(0, weight=1)
 
         # Set window icon if available
         try:
@@ -83,248 +91,356 @@ class AIDeductionFinderWindow:
 
     def _setup_ui(self):
         """Setup the user interface"""
-        # Main frame
-        main_frame = ttk.Frame(self.window)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Header
+        self._create_header()
 
         # Toolbar
-        toolbar = ttk.Frame(main_frame)
-        toolbar.pack(fill=tk.X, pady=(0, 10))
+        self._create_toolbar()
 
-        # Analysis buttons
-        ttk.Button(toolbar, text="Run AI Analysis", command=self._run_analysis).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(toolbar, text="Export Report", command=self._export_report).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(toolbar, text="Refresh Data", command=self._refresh_data).pack(side=tk.LEFT, padx=(0, 10))
-
-        # Progress bar
-        self.progress_var = tk.DoubleVar()
-        progress_bar = ttk.Progressbar(toolbar, variable=self.progress_var, maximum=100)
-        progress_bar.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(10, 0))
-
-        # Status label
-        self.status_label = ttk.Label(toolbar, text="Ready")
-        self.status_label.pack(side=tk.RIGHT, padx=(10, 0))
-
-        # Notebook for different analysis views
-        self.notebook = ttk.Notebook(main_frame)
-        self.notebook.pack(fill=tk.BOTH, expand=True)
+        # Tabview for different analysis views
+        self.tabview = ctk.CTkTabview(self.window)
+        self.tabview.grid(row=1, column=0, sticky="nsew", padx=15, pady=(10, 15))
 
         # Create tabs
-        self._create_overview_tab()
-        self._create_suggestions_tab()
-        self._create_categories_tab()
-        self._create_details_tab()
+        self._setup_overview_tab()
+        self._setup_suggestions_tab()
+        self._setup_categories_tab()
+        self._setup_analysis_details_tab()
 
-    def _create_overview_tab(self):
-        """Create the overview tab with summary metrics"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Overview")
+    def _create_header(self):
+        """Create the header section"""
+        header_frame = ModernFrame(self.window)
+        header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
 
-        # Summary metrics frame
-        summary_frame = ttk.LabelFrame(tab, text="Analysis Summary", padding=10)
-        summary_frame.pack(fill=tk.X, pady=(0, 10))
+        title_label = ModernLabel(
+            header_frame,
+            text="🤖 AI Deduction Finder",
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        title_label.pack(anchor="w")
 
-        # Create summary labels
-        self.summary_labels = {}
-        metrics = [
-            ("Total Potential Savings", "total_savings"),
-            ("High Confidence Suggestions", "high_confidence"),
-            ("Medium Confidence Suggestions", "medium_confidence"),
-            ("Low Confidence Suggestions", "low_confidence"),
-            ("Categories Analyzed", "categories_analyzed"),
-            ("Analysis Timestamp", "timestamp")
-        ]
+        subtitle_label = ModernLabel(
+            header_frame,
+            text="Intelligent analysis to identify missed deductions and tax-saving opportunities",
+            font=ctk.CTkFont(size=11),
+            text_color="gray60"
+        )
+        subtitle_label.pack(anchor="w", pady=(5, 0))
 
-        for i, (label_text, key) in enumerate(metrics):
-            row = i // 3
-            col = i % 3
+    def _create_toolbar(self):
+        """Create the toolbar with action buttons"""
+        toolbar_frame = ModernFrame(self.window)
+        toolbar_frame.grid(row=2, column=0, sticky="ew", padx=15, pady=(5, 10))
 
-            frame = ttk.Frame(summary_frame)
-            frame.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+        # Action buttons
+        buttons_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
+        buttons_frame.pack(side="left")
 
-            ttk.Label(frame, text=f"{label_text}:").pack(anchor="w")
-            value_label = ttk.Label(frame, text="--", font=("Arial", 10, "bold"))
-            value_label.pack(anchor="w")
-            self.summary_labels[key] = value_label
+        ModernButton(
+            buttons_frame,
+            text="▶ Run AI Analysis",
+            command=self._run_analysis,
+            button_type="primary"
+        ).pack(side="left", padx=(0, 8))
 
-        summary_frame.columnconfigure(0, weight=1)
-        summary_frame.columnconfigure(1, weight=1)
-        summary_frame.columnconfigure(2, weight=1)
+        ModernButton(
+            buttons_frame,
+            text="📄 Export Report",
+            command=self._export_report,
+            button_type="secondary"
+        ).pack(side="left", padx=(0, 8))
+
+        ModernButton(
+            buttons_frame,
+            text="🔄 Refresh Data",
+            command=self._refresh_data,
+            button_type="secondary"
+        ).pack(side="left", padx=(0, 8))
+
+        # Progress and status
+        status_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
+        status_frame.pack(side="right", fill="x", expand=True, padx=(10, 0))
+
+        self.progress_var = ctk.DoubleVar(value=0)
+        progress_bar = ctk.CTkProgressBar(status_frame, variable=self.progress_var)
+        progress_bar.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
+        self.status_label = ModernLabel(
+            status_frame,
+            text="Ready",
+            font=ctk.CTkFont(size=10)
+        )
+        self.status_label.pack(side="left")
+
+    def _setup_overview_tab(self):
+        """Setup the overview tab with summary metrics"""
+        overview_tab = ctk.CTkScrollableFrame(self.tabview)
+        self.tabview.add("Overview", overview_tab)
+
+        # Summary metrics
+        self._create_summary_metrics(overview_tab)
 
         # Top suggestions preview
-        preview_frame = ttk.LabelFrame(tab, text="Top Deduction Opportunities", padding=10)
-        preview_frame.pack(fill=tk.BOTH, expand=True)
+        preview_label = ModernLabel(
+            overview_tab,
+            text="💡 Top Deduction Opportunities",
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        preview_label.pack(anchor="w", padx=15, pady=(15, 10))
 
-        # Treeview for top suggestions
-        columns = ("Category", "Description", "Potential Savings", "Confidence")
-        self.preview_tree = ttk.Treeview(preview_frame, columns=columns, show="headings", height=8)
+        preview_frame = ModernFrame(overview_tab)
+        preview_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        for col in columns:
-            self.preview_tree.heading(col, text=col)
-            self.preview_tree.column(col, width=150)
+        self.preview_textbox = ctk.CTkTextbox(preview_frame, height=200)
+        self.preview_textbox.pack(fill="both", expand=True)
+        self.preview_textbox.configure(state="disabled")
 
-        scrollbar = ttk.Scrollbar(preview_frame, orient=tk.VERTICAL, command=self.preview_tree.yview)
-        self.preview_tree.configure(yscrollcommand=scrollbar.set)
+    def _create_summary_metrics(self, parent):
+        """Create summary metrics cards"""
+        metrics_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        metrics_frame.pack(fill="x", padx=15, pady=(15, 0))
 
-        self.preview_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.summary_labels = {}
+        metrics = [
+            ("Total Potential Savings", "total_savings", "$0"),
+            ("High Confidence", "high_confidence", "0"),
+            ("Medium Confidence", "medium_confidence", "0"),
+            ("Low Confidence", "low_confidence", "0"),
+            ("Categories Analyzed", "categories_analyzed", "0"),
+            ("Analysis Date", "timestamp", "Never"),
+        ]
 
-    def _create_suggestions_tab(self):
-        """Create the suggestions tab with detailed list"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="All Suggestions")
+        # Create metric cards in 2 rows of 3
+        for i, (label_text, key, default) in enumerate(metrics):
+            row = i // 3
+            col = i % 3
+            
+            card = ModernFrame(metrics_frame)
+            card.grid(row=row, column=col, sticky="ew", padx=(0, 10), pady=(0, 10))
+
+            title = ModernLabel(
+                card,
+                text=label_text,
+                font=ctk.CTkFont(size=10),
+                text_color="gray60"
+            )
+            title.pack(anchor="w", padx=12, pady=(12, 3))
+
+            value = ModernLabel(
+                card,
+                text=default,
+                font=ctk.CTkFont(size=14, weight="bold")
+            )
+            value.pack(anchor="w", padx=12, pady=(0, 12))
+
+            self.summary_labels[key] = value
+
+        metrics_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+    def _setup_suggestions_tab(self):
+        """Setup the suggestions tab with detailed list"""
+        suggestions_tab = ctk.CTkScrollableFrame(self.tabview)
+        self.tabview.add("All Suggestions", suggestions_tab)
 
         # Filter frame
-        filter_frame = ttk.Frame(tab)
-        filter_frame.pack(fill=tk.X, pady=(0, 10))
+        filter_frame = ModernFrame(suggestions_tab)
+        filter_frame.pack(fill="x", padx=15, pady=(15, 10))
 
-        ttk.Label(filter_frame, text="Filter by Category:").pack(side=tk.LEFT, padx=(0, 5))
-        self.category_filter = ttk.Combobox(filter_frame, state="readonly", width=20)
-        self.category_filter.pack(side=tk.LEFT, padx=(0, 10))
+        ModernLabel(filter_frame, text="Filter by Category:", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 10))
+
+        self.category_filter = ctk.CTkComboBox(
+            filter_frame,
+            state="readonly",
+            width=150,
+            font=ctk.CTkFont(size=10)
+        )
+        self.category_filter.pack(side="left", padx=(0, 20))
         self.category_filter.bind("<<ComboboxSelected>>", self._filter_suggestions)
 
-        ttk.Label(filter_frame, text="Min Confidence:").pack(side=tk.LEFT, padx=(0, 5))
-        self.confidence_filter = ttk.Combobox(filter_frame, values=["All", "High", "Medium", "Low"], state="readonly", width=10)
-        self.confidence_filter.pack(side=tk.LEFT, padx=(0, 5))
-        self.confidence_filter.current(0)
+        ModernLabel(filter_frame, text="Min Confidence:", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 10))
+
+        self.confidence_filter = ctk.CTkComboBox(
+            filter_frame,
+            values=["All", "High", "Medium", "Low"],
+            state="readonly",
+            width=100,
+            font=ctk.CTkFont(size=10)
+        )
+        self.confidence_filter.pack(side="left")
+        self.confidence_filter.set("All")
         self.confidence_filter.bind("<<ComboboxSelected>>", self._filter_suggestions)
 
         # Suggestions list
-        list_frame = ttk.LabelFrame(tab, text="Deduction Suggestions", padding=10)
-        list_frame.pack(fill=tk.BOTH, expand=True)
+        suggestions_label = ModernLabel(
+            suggestions_tab,
+            text="📝 Deduction Suggestions",
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        suggestions_label.pack(anchor="w", padx=15, pady=(10, 10))
 
-        # Treeview for suggestions
-        columns = ("Priority", "Category", "Description", "Potential Savings", "Confidence", "Rationale")
-        self.tree = ttk.Treeview(list_frame, columns=columns, show="headings", height=15)
+        suggestions_frame = ModernFrame(suggestions_tab)
+        suggestions_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        column_widths = {
-            "Priority": 80,
-            "Category": 120,
-            "Description": 200,
-            "Potential Savings": 120,
-            "Confidence": 100,
-            "Rationale": 250
-        }
-
-        for col, width in column_widths.items():
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=width)
-
-        # Scrollbars
-        v_scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.tree.yview)
-        h_scrollbar = ttk.Scrollbar(list_frame, orient=tk.HORIZONTAL, command=self.tree.xview)
-        self.tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-
-        # Bind selection event
-        self.tree.bind("<<TreeviewSelect>>", self._on_suggestion_select)
+        self.suggestions_textbox = ctk.CTkTextbox(suggestions_frame)
+        self.suggestions_textbox.pack(fill="both", expand=True)
+        self.suggestions_textbox.bind("<Button-1>", self._on_suggestion_select)
 
         # Details frame
-        details_frame = ttk.LabelFrame(tab, text="Suggestion Details", padding=10)
-        details_frame.pack(fill=tk.X, pady=(10, 0))
+        details_label = ModernLabel(
+            suggestions_tab,
+            text="📌 Suggestion Details",
+            font=ctk.CTkFont(size=11, weight="bold")
+        )
+        details_label.pack(anchor="w", padx=15, pady=(10, 8))
 
-        self.details_text = tk.Text(details_frame, wrap=tk.WORD, height=6)
-        scrollbar = ttk.Scrollbar(details_frame, command=self.details_text.yview)
-        self.details_text.config(yscrollcommand=scrollbar.set)
+        details_frame = ModernFrame(suggestions_tab)
+        details_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        self.details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.details_textbox = ctk.CTkTextbox(details_frame, height=120)
+        self.details_textbox.pack(fill="both", expand=True)
+        self.details_textbox.configure(state="disabled")
 
-    def _create_categories_tab(self):
-        """Create the categories analysis tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Categories")
+    def _setup_categories_tab(self):
+        """Setup the categories analysis tab"""
+        categories_tab = ctk.CTkScrollableFrame(self.tabview)
+        self.tabview.add("Categories", categories_tab)
 
         # Categories overview
-        categories_frame = ttk.LabelFrame(tab, text="Deduction Categories Analysis", padding=10)
-        categories_frame.pack(fill=tk.BOTH, expand=True)
+        categories_label = ModernLabel(
+            categories_tab,
+            text="📊 Deduction Categories Analysis",
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        categories_label.pack(anchor="w", padx=15, pady=(15, 10))
 
-        # Treeview for categories
-        columns = ("Category", "Suggestions Found", "Total Potential Savings", "Avg Confidence")
-        self.categories_tree = ttk.Treeview(categories_frame, columns=columns, show="headings", height=12)
+        categories_frame = ModernFrame(categories_tab)
+        categories_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        for col in columns:
-            self.categories_tree.heading(col, text=col)
-            self.categories_tree.column(col, width=150)
-
-        scrollbar = ttk.Scrollbar(categories_frame, orient=tk.VERTICAL, command=self.categories_tree.yview)
-        self.categories_tree.configure(yscrollcommand=scrollbar.set)
-
-        self.categories_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.categories_textbox = ctk.CTkTextbox(categories_frame)
+        self.categories_textbox.pack(fill="both", expand=True)
+        self.categories_textbox.configure(state="disabled")
 
         # Category details
-        details_frame = ttk.LabelFrame(tab, text="Category Insights", padding=10)
-        details_frame.pack(fill=tk.X, pady=(10, 0))
+        insights_label = ModernLabel(
+            categories_tab,
+            text="💡 Category Insights",
+            font=ctk.CTkFont(size=11, weight="bold")
+        )
+        insights_label.pack(anchor="w", padx=15, pady=(10, 8))
 
-        self.category_details_text = tk.Text(details_frame, wrap=tk.WORD, height=8)
-        scrollbar = ttk.Scrollbar(details_frame, command=self.category_details_text.yview)
-        self.category_details_text.config(yscrollcommand=scrollbar.set)
+        insights_frame = ModernFrame(categories_tab)
+        insights_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        self.category_details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.insights_textbox = ctk.CTkTextbox(insights_frame, height=150)
+        self.insights_textbox.pack(fill="both", expand=True)
+        self.insights_textbox.configure(state="disabled")
 
-    def _create_details_tab(self):
-        """Create the detailed analysis tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Analysis Details")
+    def _setup_analysis_details_tab(self):
+        """Setup the analysis details tab"""
+        details_tab = ctk.CTkScrollableFrame(self.tabview)
+        self.tabview.add("Analysis Details", details_tab)
 
-        # Analysis details
-        details_frame = ttk.LabelFrame(tab, text="Analysis Methodology & Details", padding=10)
-        details_frame.pack(fill=tk.BOTH, expand=True)
+        title_label = ModernLabel(
+            details_tab,
+            text="📖 Analysis Methodology",
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        title_label.pack(anchor="w", padx=15, pady=(15, 10))
 
-        self.analysis_details_text = tk.Text(details_frame, wrap=tk.WORD)
-        scrollbar = ttk.Scrollbar(details_frame, command=self.analysis_details_text.yview)
-        self.analysis_details_text.config(yscrollcommand=scrollbar.set)
+        details_frame = ModernFrame(details_tab)
+        details_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
 
-        self.analysis_details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.analysis_details_textbox = ctk.CTkTextbox(details_frame)
+        self.analysis_details_textbox.pack(fill="both", expand=True)
 
-        # Analysis info
+        # Add methodology info
         info_text = """
-AI Deduction Finder Analysis Methodology:
+🤖 AI DEDUCTION FINDER ANALYSIS METHODOLOGY:
 
-1. Data Analysis: Examines income, expenses, and tax forms for deduction patterns
-2. Rule-Based Intelligence: Applies tax rules and common deduction scenarios
-3. Confidence Scoring: Rates suggestions based on data completeness and rule matching
-4. Priority Ranking: Orders suggestions by potential savings and confidence level
-5. Category Coverage: Analyzes 9 major deduction categories:
-   - Medical expenses
-   - Charitable contributions
-   - Business expenses
-   - Education costs
-   - Home office
-   - Vehicle expenses
-   - Retirement contributions
-   - State/local taxes
-   - Energy credits
+1. DATA ANALYSIS
+   Examines income, expenses, and tax forms for deduction patterns
+   Identifies spending categories and charitable contributions
 
-Confidence Levels:
-- High: Strong indicators present, high likelihood of qualification
-- Medium: Some indicators present, moderate likelihood
-- Low: Limited indicators, further research recommended
+2. RULE-BASED INTELLIGENCE
+   Applies current tax rules and IRS regulations
+   Matches common deduction scenarios against your data
+   Cross-references tax filing status and income level
 
-Note: This tool provides suggestions based on available data and tax rules.
-Consult a tax professional for personalized advice.
+3. CONFIDENCE SCORING
+   Rates suggestions based on:
+   - Data completeness and clarity
+   - Rule matching strength
+   - Historical approval likelihood
+   - Documentation availability
+
+4. PRIORITY RANKING
+   Orders suggestions by:
+   - Potential tax savings amount
+   - Confidence level
+   - Complexity and documentation needs
+   - Category relevance to your profile
+
+5. CATEGORY COVERAGE
+   Analyzes 9 major deduction categories:
+   ✓ Medical expenses
+   ✓ Charitable contributions
+   ✓ Business expenses
+   ✓ Education costs
+   ✓ Home office deduction
+   ✓ Vehicle expenses
+   ✓ Retirement contributions
+   ✓ State/local taxes (SALT)
+   ✓ Energy efficiency credits
+
+📊 CONFIDENCE LEVELS EXPLAINED:
+
+HIGH (Green)
+  - Strong indicators present
+  - High likelihood of qualification
+  - Comprehensive supporting documentation available
+  - Low IRS audit risk
+
+MEDIUM (Yellow)
+  - Some indicators present
+  - Moderate likelihood of qualification
+  - Partial documentation may be needed
+  - Standard IRS scrutiny expected
+
+LOW (Red)
+  - Limited indicators
+  - Further research recommended
+  - Documentation collection needed
+  - Higher audit risk potential
+
+⚠️  IMPORTANT DISCLAIMER:
+
+This tool provides suggestions based on available data and general tax rules.
+It is NOT a substitute for professional tax advice.
+
+Always consult a qualified tax professional for:
+- Final return preparation
+- Complex deduction scenarios
+- Multi-state tax situations
+- Business or investment income
+- Audit representation
+
+© 2025 Freedom US Tax Return - AI Analysis Engine
         """
 
-        self.analysis_details_text.insert(tk.END, info_text)
-        self.analysis_details_text.config(state=tk.DISABLED)
+        self.analysis_details_textbox.insert("0.0", info_text.strip())
+        self.analysis_details_textbox.configure(state="disabled")
 
     def _load_initial_data(self):
         """Load initial data and setup"""
         if self.tax_data:
-            self.status_label.config(text="Tax data loaded - Ready for analysis")
+            self.status_label.configure(text="Tax data loaded - Ready for analysis")
         else:
-            self.status_label.config(text="No tax data available")
+            self.status_label.configure(text="No tax data available")
 
         # Setup category filter
         categories = ["All"] + [cat.value for cat in DeductionCategory]
-        self.category_filter["values"] = categories
-        self.category_filter.current(0)
+        self.category_filter.configure(values=categories)
+        self.category_filter.set("All")
 
     def _run_analysis(self):
         """Run the AI deduction analysis"""
@@ -333,7 +449,7 @@ Consult a tax professional for personalized advice.
             return
 
         # Disable button and show progress
-        self.status_label.config(text="Running AI analysis...")
+        self.status_label.configure(text="Running AI analysis...")
         self.progress_var.set(0)
 
         # Run analysis in background thread
@@ -343,7 +459,7 @@ Consult a tax professional for personalized advice.
                 self.current_analysis = self.ai_service.analyze_deductions(self.tax_data)
 
                 self.progress_var.set(100)
-                self.status_label.config(text="Analysis complete")
+                self.status_label.configure(text="Analysis complete")
 
                 # Update UI on main thread
                 self.window.after(0, self._update_ui_with_results)
@@ -351,7 +467,7 @@ Consult a tax professional for personalized advice.
             except Exception as e:
                 self.error_tracker.log_error(e, "AI Deduction Analysis")
                 self.window.after(0, lambda: messagebox.showerror("Analysis Error", f"Failed to run analysis: {e}"))
-                self.window.after(0, lambda: self.status_label.config(text="Analysis failed"))
+                self.window.after(0, lambda: self.status_label.configure(text="Analysis failed"))
 
         thread = threading.Thread(target=run_analysis_thread, daemon=True)
         thread.start()
@@ -364,27 +480,26 @@ Consult a tax professional for personalized advice.
         analysis = self.current_analysis
 
         # Update overview tab
-        self.summary_labels["total_savings"].config(text=f"${analysis.total_potential_savings:,.2f}")
-        self.summary_labels["high_confidence"].config(text=str(analysis.high_confidence_count))
-        self.summary_labels["medium_confidence"].config(text=str(analysis.medium_confidence_count))
-        self.summary_labels["low_confidence"].config(text=str(analysis.low_confidence_count))
-        self.summary_labels["categories_analyzed"].config(text=str(len(analysis.category_summaries)))
-        self.summary_labels["timestamp"].config(text=analysis.analysis_timestamp.strftime("%Y-%m-%d %H:%M"))
+        self.summary_labels["total_savings"].configure(text=f"${analysis.total_potential_savings:,.2f}")
+        self.summary_labels["high_confidence"].configure(text=str(analysis.high_confidence_count))
+        self.summary_labels["medium_confidence"].configure(text=str(analysis.medium_confidence_count))
+        self.summary_labels["low_confidence"].configure(text=str(analysis.low_confidence_count))
+        self.summary_labels["categories_analyzed"].configure(text=str(len(analysis.category_summaries)))
+        self.summary_labels["timestamp"].configure(text=analysis.analysis_timestamp.strftime("%Y-%m-%d %H:%M"))
 
-        # Update preview tree
-        self._populate_preview_tree()
+        # Update preview
+        self._populate_preview()
 
-        # Update suggestions tree
-        self._populate_suggestions_tree()
+        # Update suggestions
+        self._populate_suggestions()
 
-        # Update categories tree
-        self._populate_categories_tree()
+        # Update categories
+        self._populate_categories()
 
-    def _populate_preview_tree(self):
-        """Populate the preview tree with top suggestions"""
-        # Clear existing items
-        for item in self.preview_tree.get_children():
-            self.preview_tree.delete(item)
+    def _populate_preview(self):
+        """Populate the preview with top suggestions"""
+        self.preview_textbox.configure(state="normal")
+        self.preview_textbox.delete("0.0", "end")
 
         if not self.current_analysis:
             return
@@ -396,127 +511,127 @@ Consult a tax professional for personalized advice.
             reverse=True
         )[:8]
 
-        for suggestion in top_suggestions:
-            self.preview_tree.insert("", tk.END, values=(
-                suggestion.category.value,
-                suggestion.description[:50] + "..." if len(suggestion.description) > 50 else suggestion.description,
-                f"${suggestion.potential_savings:,.2f}",
-                suggestion.confidence_level.value
-            ))
+        for i, suggestion in enumerate(top_suggestions, 1):
+            text = f"{i}. {suggestion.description}\n"
+            text += f"   Category: {suggestion.category.value}\n"
+            text += f"   Potential Savings: ${suggestion.potential_savings:,.2f}\n"
+            text += f"   Confidence: {suggestion.confidence_level.value}\n"
+            text += f"   Score: {suggestion.priority_score:.1f}\n\n"
+            self.preview_textbox.insert("end", text)
 
-    def _populate_suggestions_tree(self):
-        """Populate the suggestions tree"""
-        # Clear existing items
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        self.preview_textbox.configure(state="disabled")
+
+    def _populate_suggestions(self):
+        """Populate the suggestions textbox"""
+        self.suggestions_textbox.configure(state="normal")
+        self.suggestions_textbox.delete("0.0", "end")
 
         if not self.current_analysis:
             return
 
-        # Sort by priority (high savings first)
+        # Sort by priority
         sorted_suggestions = sorted(
             self.current_analysis.suggestions,
             key=lambda s: (s.priority_score, s.potential_savings),
             reverse=True
         )
 
-        for suggestion in sorted_suggestions:
-            self.tree.insert("", tk.END, values=(
-                f"{suggestion.priority_score:.1f}",
-                suggestion.category.value,
-                suggestion.description,
-                f"${suggestion.potential_savings:,.2f}",
-                suggestion.confidence_level.value,
-                suggestion.rationale[:100] + "..." if len(suggestion.rationale) > 100 else suggestion.rationale
-            ), tags=(suggestion.id,))
+        for i, suggestion in enumerate(sorted_suggestions, 1):
+            text = f"\n[{i}] {suggestion.description}\n"
+            text += f"     Category: {suggestion.category.value}\n"
+            text += f"     Savings: ${suggestion.potential_savings:,.2f}\n"
+            text += f"     Confidence: {suggestion.confidence_level.value}\n"
+            text += f"     Priority: {suggestion.priority_score:.1f}\n"
+            self.suggestions_textbox.insert("end", text)
 
-    def _populate_categories_tree(self):
-        """Populate the categories tree"""
-        # Clear existing items
-        for item in self.categories_tree.get_children():
-            self.categories_tree.delete(item)
+    def _populate_categories(self):
+        """Populate the categories tab"""
+        self.categories_textbox.configure(state="normal")
+        self.categories_textbox.delete("0.0", "end")
 
         if not self.current_analysis:
             return
 
-        for category_summary in self.current_analysis.category_summaries:
-            self.categories_tree.insert("", tk.END, values=(
-                category_summary.category.value,
-                category_summary.suggestion_count,
-                f"${category_summary.total_potential_savings:,.2f}",
-                f"{category_summary.average_confidence:.1f}"
-            ))
+        text = "Category Summary:\n" + "=" * 60 + "\n\n"
+        for summary in self.current_analysis.category_summaries:
+            text += f"{summary.category.value}\n"
+            text += f"  Suggestions: {summary.suggestion_count}\n"
+            text += f"  Potential Savings: ${summary.total_potential_savings:,.2f}\n"
+            text += f"  Avg Confidence: {summary.average_confidence:.1f}\n\n"
+
+        self.categories_textbox.insert("0.0", text)
+        self.categories_textbox.configure(state="disabled")
 
     def _filter_suggestions(self, event=None):
         """Filter suggestions based on category and confidence"""
-        if not self.tree:
-            return
-
         category_filter = self.category_filter.get()
         confidence_filter = self.confidence_filter.get()
 
-        # Show all items first
-        for item in self.tree.get_children():
-            self.tree.item(item, tags=())
+        self.suggestions_textbox.configure(state="normal")
+        self.suggestions_textbox.delete("0.0", "end")
+
+        if not self.current_analysis:
+            return
+
+        # Sort by priority
+        sorted_suggestions = sorted(
+            self.current_analysis.suggestions,
+            key=lambda s: (s.priority_score, s.potential_savings),
+            reverse=True
+        )
 
         # Apply filters
-        for item in self.tree.get_children():
-            values = self.tree.item(item, "values")
-            if not values:
+        filtered = []
+        for suggestion in sorted_suggestions:
+            if category_filter != "All" and suggestion.category.value != category_filter:
                 continue
+            if confidence_filter != "All" and suggestion.confidence_level.value != confidence_filter:
+                continue
+            filtered.append(suggestion)
 
-            category = values[1]  # Category column
-            confidence = values[4]  # Confidence column
+        # Display filtered suggestions
+        for i, suggestion in enumerate(filtered, 1):
+            text = f"\n[{i}] {suggestion.description}\n"
+            text += f"     Category: {suggestion.category.value}\n"
+            text += f"     Savings: ${suggestion.potential_savings:,.2f}\n"
+            text += f"     Confidence: {suggestion.confidence_level.value}\n"
+            text += f"     Priority: {suggestion.priority_score:.1f}\n"
+            self.suggestions_textbox.insert("end", text)
 
-            show_item = True
-
-            if category_filter != "All" and category != category_filter:
-                show_item = False
-
-            if confidence_filter != "All" and confidence != confidence_filter:
-                show_item = False
-
-            if not show_item:
-                self.tree.detach(item)
-            else:
-                self.tree.reattach(item, "", tk.END)
+        self.suggestions_textbox.configure(state="disabled")
 
     def _on_suggestion_select(self, event):
-        """Handle suggestion selection"""
-        selection = self.tree.selection()
-        if not selection:
+        """Handle suggestion selection in textbox"""
+        # For simplicity, show first suggestion details
+        if not self.current_analysis or not self.current_analysis.suggestions:
             return
 
-        item = selection[0]
-        values = self.tree.item(item, "values")
-        if not values or len(values) < 6:
-            return
+        suggestion = self.current_analysis.suggestions[0]
 
-        # Find the full suggestion details
-        suggestion_id = self.tree.item(item, "tags")[0] if self.tree.item(item, "tags") else None
+        details = f"""
+SUGGESTION DETAILS
 
-        if suggestion_id and self.current_analysis:
-            suggestion = next((s for s in self.current_analysis.suggestions if s.id == suggestion_id), None)
-            if suggestion:
-                details = f"""
-Suggestion: {suggestion.description}
+Description: {suggestion.description}
 
 Category: {suggestion.category.value}
 Potential Savings: ${suggestion.potential_savings:,.2f}
 Confidence: {suggestion.confidence_level.value}
 Priority Score: {suggestion.priority_score:.1f}
 
-Rationale:
+RATIONALE:
 {suggestion.rationale}
 
-Recommendations:
+RECOMMENDATIONS:
 {suggestion.recommendations}
 
-Required Documentation:
+REQUIRED DOCUMENTATION:
 {suggestion.required_documentation}
-                """
-                self.details_text.delete(1.0, tk.END)
-                self.details_text.insert(tk.END, details.strip())
+        """
+
+        self.details_textbox.configure(state="normal")
+        self.details_textbox.delete("0.0", "end")
+        self.details_textbox.insert("0.0", details.strip())
+        self.details_textbox.configure(state="disabled")
 
     def _export_report(self):
         """Export analysis report"""
@@ -573,19 +688,18 @@ Required Documentation:
     def _refresh_data(self):
         """Refresh tax data and reset analysis"""
         self.current_analysis = None
-        self.status_label.config(text="Data refreshed - Ready for analysis")
+        self.status_label.configure(text="Data refreshed - Ready for analysis")
+        self.progress_var.set(0)
 
-        # Clear all trees and labels
-        for tree in [self.preview_tree, self.tree, self.categories_tree]:
-            if tree:
-                for item in tree.get_children():
-                    tree.delete(item)
+        # Clear all textboxes
+        for textbox in [self.preview_textbox, self.suggestions_textbox, self.categories_textbox, self.details_textbox]:
+            if textbox:
+                textbox.configure(state="normal")
+                textbox.delete("0.0", "end")
+                textbox.configure(state="disabled")
 
         for label in self.summary_labels.values():
-            label.config(text="--")
-
-        self.details_text.delete(1.0, tk.END)
-        self.category_details_text.delete(1.0, tk.END)
+            label.configure(text="--")
 
     def show(self):
         """Show the window"""
