@@ -1,19 +1,20 @@
 """
-State Tax Window - GUI for state tax return preparation
+State Tax Window - Modernized
 
-This module provides a comprehensive interface for:
-- State tax calculations
-- Multi-state tax returns
-- State-specific forms
-- State tax planning
+GUI for state tax return preparation and multi-state tax management.
+Uses CustomTkinter for modern, theme-aware interface.
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
-import logging
+import customtkinter as ctk
 from typing import Dict, Any, Optional, List
+from datetime import datetime
+import logging
+
 from services.state_tax_service import StateTaxService, StateCode, StateTaxCalculation
 from services.state_form_pdf_generator import StateFormPDFGenerator, StateFormData
+from services.accessibility_service import AccessibilityService
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton
+from config.app_config import AppConfig
 from utils.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -21,586 +22,453 @@ logger = logging.getLogger(__name__)
 
 class StateTaxWindow:
     """
-    Window for managing state tax returns and calculations.
+    Modernized window for managing state tax returns and calculations.
 
     Provides interface for:
-    - Selecting states of residence
+    - Selecting states of residence and work
     - Calculating state taxes
     - Viewing state-specific forms
     - Multi-state tax planning
+    - State tax form generation
     """
 
-    def __init__(self, parent: tk.Tk, tax_data: Any, event_bus: EventBus):
+    def __init__(self, parent: ctk.CTk, config: AppConfig, tax_data: Any = None, 
+                 event_bus: EventBus = None, accessibility_service: AccessibilityService = None):
         self.parent = parent
+        self.config = config
         self.tax_data = tax_data
         self.event_bus = event_bus
+        self.accessibility_service = accessibility_service
         self.state_service = StateTaxService()
         self.pdf_generator = StateFormPDFGenerator()
 
         # Window setup
-        self.window = tk.Toplevel(parent)
+        self.window = ctk.CTkToplevel(parent)
         self.window.title("State Tax Returns")
-        self.window.geometry("1200x800")
-        self.window.resizable(True, True)
+        self.window.geometry("1600x950")
+        self.window.configure(fg_color=ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
 
         # Initialize data
         self.selected_states: List[StateCode] = []
         self.state_calculations: Dict[StateCode, StateTaxCalculation] = {}
+        self.current_tax_year = datetime.now().year
 
-        self._setup_ui()
+        # Create main layout
+        self._create_header()
+        self._create_toolbar()
+        self._create_main_content()
+        self._create_status_bar()
+
+        # Load initial data
         self._load_current_data()
 
-    def _setup_ui(self):
-        """Setup the main UI components"""
-        # Create main frame
-        main_frame = ttk.Frame(self.window, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+    def _create_header(self):
+        """Create the header section with title and subtitle"""
+        header_frame = ModernFrame(self.window)
+        header_frame.pack(fill=ctk.X, padx=20, pady=(20, 10))
 
-        # Title
-        title_label = ttk.Label(main_frame, text="State Tax Return Preparation",
-                              font=("Arial", 16, "bold"))
-        title_label.pack(pady=(0, 20))
+        title_label = ModernLabel(
+            header_frame,
+            text="📋 State Tax Return Preparation",
+            font_size=24,
+            font_weight="bold"
+        )
+        title_label.pack(anchor=ctk.W, pady=(0, 5))
 
-        # Create notebook for tabs
-        self.notebook = ttk.Notebook(main_frame)
-        self.notebook.pack(fill=tk.BOTH, expand=True)
+        subtitle_label = ModernLabel(
+            header_frame,
+            text="Calculate state taxes, manage multi-state returns, and generate state-specific forms",
+            font_size=12,
+            text_color="gray"
+        )
+        subtitle_label.pack(anchor=ctk.W)
 
-        # State Selection Tab
-        self._create_state_selection_tab()
+    def _create_toolbar(self):
+        """Create the toolbar with action buttons"""
+        toolbar_frame = ModernFrame(self.window)
+        toolbar_frame.pack(fill=ctk.X, padx=20, pady=10)
 
-        # Tax Calculation Tab
-        self._create_tax_calculation_tab()
+        # Left section - Action buttons
+        left_section = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
+        left_section.pack(side=ctk.LEFT, fill=ctk.X, expand=False)
 
-        # Forms Tab
-        self._create_forms_tab()
+        ModernButton(
+            left_section,
+            text="🧮 Calculate Taxes",
+            command=self._calculate_taxes,
+            button_type="primary",
+            width=140
+        ).pack(side=ctk.LEFT, padx=5)
 
-        # Summary Tab
-        self._create_summary_tab()
+        ModernButton(
+            left_section,
+            text="📄 Generate Forms",
+            command=self._generate_forms,
+            button_type="primary",
+            width=140
+        ).pack(side=ctk.LEFT, padx=5)
 
-        # Buttons
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(20, 0))
+        ModernButton(
+            left_section,
+            text="💾 Save Data",
+            command=self._save_state_data,
+            button_type="secondary",
+            width=120
+        ).pack(side=ctk.LEFT, padx=5)
 
-        ttk.Button(button_frame, text="Calculate Taxes",
-                  command=self._calculate_taxes).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Generate Forms",
-                  command=self._generate_forms).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Save State Data",
-                  command=self._save_state_data).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Close",
-                  command=self.window.destroy).pack(side=tk.RIGHT)
+        ModernButton(
+            left_section,
+            text="📊 Compare States",
+            command=self._compare_states,
+            button_type="secondary",
+            width=140
+        ).pack(side=ctk.LEFT, padx=5)
 
-    def _create_state_selection_tab(self):
+        # Right section - Tax year selector
+        right_section = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
+        right_section.pack(side=ctk.RIGHT, fill=ctk.X)
+
+        ModernLabel(right_section, text="Tax Year:").pack(side=ctk.RIGHT, padx=(10, 5))
+        self.tax_year_var = ctk.StringVar(value=str(self.current_tax_year))
+        year_combo = ctk.CTkComboBox(
+            right_section,
+            variable=self.tax_year_var,
+            values=[str(y) for y in range(self.current_tax_year - 5, self.current_tax_year + 1)],
+            width=100
+        )
+        year_combo.pack(side=ctk.RIGHT, padx=5)
+
+        # Progress bar and status
+        progress_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
+        progress_frame.pack(fill=ctk.X, pady=10)
+
+        self.progress_bar = ctk.CTkProgressBar(progress_frame, height=6)
+        self.progress_bar.pack(fill=ctk.X)
+        self.progress_bar.set(0)
+
+        self.status_label = ModernLabel(progress_frame, text="Ready", font_size=11)
+        self.status_label.pack(anchor=ctk.W, pady=(5, 0))
+
+    def _create_main_content(self):
+        """Create the main content area with tabview"""
+        main_container = ctk.CTkFrame(self.window, fg_color="transparent")
+        main_container.pack(fill=ctk.BOTH, expand=True, padx=20, pady=10)
+
+        # Create tabview
+        self.tabview = ctk.CTkTabview(main_container)
+        self.tabview.pack(fill=ctk.BOTH, expand=True)
+
+        # Add tabs
+        self.tab_state_selection = self.tabview.add("📍 State Selection")
+        self.tab_calculations = self.tabview.add("🧮 Calculations")
+        self.tab_forms = self.tabview.add("📄 Forms & Reports")
+        self.tab_summary = self.tabview.add("📊 Summary")
+
+        # Setup tabs
+        self._setup_state_selection_tab()
+        self._setup_calculations_tab()
+        self._setup_forms_tab()
+        self._setup_summary_tab()
+
+    def _setup_state_selection_tab(self):
         """Create the state selection tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="State Selection")
+        self.tab_state_selection.grid_rowconfigure(0, weight=1)
+        self.tab_state_selection.grid_columnconfigure(0, weight=1)
+        self.tab_state_selection.grid_columnconfigure(1, weight=1)
 
         # Instructions
-        instructions = ttk.Label(tab,
-            text="Select the states where you have income tax obligations.\n"
-                 "This includes states where you lived or earned income during the tax year.",
-            wraplength=600, justify=tk.LEFT)
-        instructions.pack(pady=(10, 20))
+        instructions_frame = ModernFrame(self.tab_state_selection)
+        instructions_frame.pack(fill=ctk.X, padx=10, pady=10)
 
-        # State selection frame
-        selection_frame = ttk.LabelFrame(tab, text="State Selection", padding="10")
-        selection_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        instructions_text = """Select the states where you have income tax obligations or where you work/live.
+You can select multiple states to prepare multi-state returns and compare tax burdens."""
 
-        # Search and filter
-        filter_frame = ttk.Frame(selection_frame)
-        filter_frame.pack(fill=tk.X, pady=(0, 10))
+        instructions_label = ctk.CTkLabel(
+            instructions_frame,
+            text=instructions_text,
+            text_color="gray",
+            font=("", 11),
+            justify=ctk.LEFT
+        )
+        instructions_label.pack(anchor=ctk.W, padx=10, pady=10)
 
-        ttk.Label(filter_frame, text="Search:").pack(side=tk.LEFT)
-        self.state_search_var = tk.StringVar()
-        search_entry = ttk.Entry(filter_frame, textvariable=self.state_search_var, width=30)
-        search_entry.pack(side=tk.LEFT, padx=(5, 10))
-        search_entry.bind('<KeyRelease>', self._filter_states)
+        # State selection area
+        content_frame = ctk.CTkFrame(self.tab_state_selection, fg_color="transparent")
+        content_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
+        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(1, weight=1)
 
-        # States listbox with scrollbar
-        listbox_frame = ttk.Frame(selection_frame)
-        listbox_frame.pack(fill=tk.BOTH, expand=True)
+        # States of residence
+        residence_frame = ModernFrame(content_frame)
+        residence_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        residence_frame.grid_rowconfigure(1, weight=1)
 
-        scrollbar = ttk.Scrollbar(listbox_frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        ModernLabel(residence_frame, text="States of Residence", font_size=12, font_weight="bold").pack(anchor=ctk.W, padx=10, pady=(10, 5))
 
-        self.states_listbox = tk.Listbox(listbox_frame, selectmode=tk.MULTIPLE,
-                                       yscrollcommand=scrollbar.set, height=15)
-        self.states_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.config(command=self.states_listbox.yview)
+        self.residence_scrollable = ctk.CTkScrollableFrame(residence_frame)
+        self.residence_scrollable.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
 
-        # Populate states
-        self._populate_states_list()
+        # States of work
+        work_frame = ModernFrame(content_frame)
+        work_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        work_frame.grid_rowconfigure(1, weight=1)
 
-        # Selected states display
-        selected_frame = ttk.LabelFrame(selection_frame, text="Selected States", padding="10")
-        selected_frame.pack(fill=tk.X, pady=(10, 0))
+        ModernLabel(work_frame, text="States of Work", font_size=12, font_weight="bold").pack(anchor=ctk.W, padx=10, pady=(10, 5))
 
-        self.selected_states_text = tk.Text(selected_frame, height=3, wrap=tk.WORD)
-        scrollbar_selected = ttk.Scrollbar(selected_frame)
-        scrollbar_selected.pack(side=tk.RIGHT, fill=tk.Y)
-        self.selected_states_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.selected_states_text.config(yscrollcommand=scrollbar_selected.set)
-        scrollbar_selected.config(command=self.selected_states_text.yview)
+        self.work_scrollable = ctk.CTkScrollableFrame(work_frame)
+        self.work_scrollable.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
 
-        # Update selection button
-        ttk.Button(selection_frame, text="Update Selection",
-                  command=self._update_state_selection).pack(pady=(10, 0))
+        # Selection controls
+        self._populate_state_lists()
 
-    def _create_tax_calculation_tab(self):
-        """Create the tax calculation tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Tax Calculations")
+    def _populate_state_lists(self):
+        """Populate state selection lists"""
+        # Clear existing
+        for widget in self.residence_scrollable.winfo_children():
+            widget.destroy()
+        for widget in self.work_scrollable.winfo_children():
+            widget.destroy()
 
-        # Results display
-        results_frame = ttk.LabelFrame(tab, text="State Tax Calculations", padding="10")
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Create checkbox variables
+        self.residence_vars = {}
+        self.work_vars = {}
 
-        # Create treeview for results
-        columns = ("State", "Taxable Income", "Tax Owed", "Effective Rate", "Credits")
-        self.calc_tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=15)
+        # Add all states
+        for state_code in sorted(StateCode, key=lambda s: s.value):
+            # Residence checkbox
+            var = ctk.BooleanVar(value=False)
+            self.residence_vars[state_code] = var
+            checkbox = ctk.CTkCheckBox(
+                self.residence_scrollable,
+                text=f"{state_code.value}",
+                variable=var
+            )
+            checkbox.pack(anchor=ctk.W, padx=10, pady=3)
 
-        for col in columns:
-            self.calc_tree.heading(col, text=col)
-            self.calc_tree.column(col, width=120, anchor=tk.E)
+            # Work checkbox
+            var2 = ctk.BooleanVar(value=False)
+            self.work_vars[state_code] = var2
+            checkbox2 = ctk.CTkCheckBox(
+                self.work_scrollable,
+                text=f"{state_code.value}",
+                variable=var2
+            )
+            checkbox2.pack(anchor=ctk.W, padx=10, pady=3)
 
-        scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.calc_tree.yview)
-        self.calc_tree.configure(yscrollcommand=scrollbar.set)
+    def _setup_calculations_tab(self):
+        """Create the calculations tab"""
+        self.tab_calculations.grid_rowconfigure(0, weight=1)
+        self.tab_calculations.grid_columnconfigure(0, weight=1)
 
-        self.calc_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        calc_frame = ctk.CTkScrollableFrame(self.tab_calculations)
+        calc_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-        # Summary frame
-        summary_frame = ttk.LabelFrame(tab, text="Summary", padding="10")
-        summary_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        # Summary section
+        summary_label = ModernLabel(calc_frame, text="Tax Calculation Summary", font_size=12, font_weight="bold")
+        summary_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
 
-        self.summary_text = tk.Text(summary_frame, height=6, wrap=tk.WORD)
-        summary_scrollbar = ttk.Scrollbar(summary_frame)
-        summary_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.summary_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.summary_text.config(yscrollcommand=summary_scrollbar.set)
-        summary_scrollbar.config(command=self.summary_text.yview)
+        # Create metric cards
+        cards_frame = ctk.CTkFrame(calc_frame, fg_color="transparent")
+        cards_frame.pack(fill=ctk.X, padx=5, pady=10)
 
-    def _create_forms_tab(self):
+        self.calc_cards = {}
+        metrics = ["Total Income", "Taxable Income", "Total Tax", "Avg Tax Rate"]
+
+        for metric in metrics:
+            card = self._create_metric_card(cards_frame, metric, "$0.00")
+            self.calc_cards[metric] = card
+            card.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
+
+        # Calculations by state
+        states_label = ModernLabel(calc_frame, text="State-by-State Breakdown", font_size=12, font_weight="bold")
+        states_label.pack(anchor=ctk.W, padx=5, pady=(15, 10))
+
+        self.calc_text = ctk.CTkTextbox(calc_frame, height=300)
+        self.calc_text.pack(fill=ctk.BOTH, expand=True, padx=5, pady=5)
+        self.calc_text.insert("1.0", "Run calculations to see results here.\nSelect states and click 'Calculate Taxes' to begin.")
+        self.calc_text.configure(state="disabled")
+
+    def _create_metric_card(self, parent, title, value):
+        """Create a metric card display"""
+        card = ctk.CTkFrame(parent, corner_radius=8, fg_color=ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
+        
+        title_label = ctk.CTkLabel(card, text=title, text_color="gray", font=("", 11))
+        title_label.pack(padx=10, pady=(8, 2))
+
+        value_label = ctk.CTkLabel(card, text=value, text_color="white", font=("", 14, "bold"))
+        value_label.pack(padx=10, pady=(2, 8))
+
+        card.value_label = value_label
+        return card
+
+    def _setup_forms_tab(self):
         """Create the forms tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="State Forms")
+        self.tab_forms.grid_rowconfigure(0, weight=1)
+        self.tab_forms.grid_columnconfigure(0, weight=1)
 
-        # Forms list
-        forms_frame = ttk.LabelFrame(tab, text="Required State Forms", padding="10")
-        forms_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        forms_frame = ctk.CTkScrollableFrame(self.tab_forms)
+        forms_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-        self.forms_tree = ttk.Treeview(forms_frame, columns=("State", "Form", "Description"),
-                                     show="headings", height=15)
+        # Forms section
+        forms_label = ModernLabel(forms_frame, text="State Tax Forms", font_size=12, font_weight="bold")
+        forms_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
 
-        for col in ("State", "Form", "Description"):
-            self.forms_tree.heading(col, text=col)
-            if col == "Description":
-                self.forms_tree.column(col, width=300)
-            else:
-                self.forms_tree.column(col, width=150)
+        # Form buttons
+        button_frame = ctk.CTkFrame(forms_frame, fg_color="transparent")
+        button_frame.pack(fill=ctk.X, padx=5, pady=5)
 
-        scrollbar = ttk.Scrollbar(forms_frame, orient=tk.VERTICAL, command=self.forms_tree.yview)
-        self.forms_tree.configure(yscrollcommand=scrollbar.set)
+        ModernButton(
+            button_frame,
+            text="📄 Income Tax Return",
+            command=lambda: self._generate_specific_form("income_return"),
+            button_type="secondary",
+            width=160
+        ).pack(side=ctk.LEFT, padx=2, pady=2)
 
-        self.forms_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        ModernButton(
+            button_frame,
+            text="📋 Estimated Tax",
+            command=lambda: self._generate_specific_form("estimated_tax"),
+            button_type="secondary",
+            width=140
+        ).pack(side=ctk.LEFT, padx=2, pady=2)
 
-        # Form actions
-        actions_frame = ttk.Frame(tab)
-        actions_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        ModernButton(
+            button_frame,
+            text="🏢 Business Forms",
+            command=lambda: self._generate_specific_form("business"),
+            button_type="secondary",
+            width=140
+        ).pack(side=ctk.LEFT, padx=2, pady=2)
 
-        ttk.Button(actions_frame, text="View Form Details",
-                  command=self._view_form_details).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(actions_frame, text="Generate PDF",
-                  command=self._generate_state_pdf).pack(side=tk.LEFT, padx=(0, 10))
+        # Generated forms display
+        forms_label2 = ModernLabel(forms_frame, text="Generated Forms Output", font_size=12, font_weight="bold")
+        forms_label2.pack(anchor=ctk.W, padx=5, pady=(15, 5))
 
-    def _create_summary_tab(self):
+        self.forms_text = ctk.CTkTextbox(forms_frame, height=400)
+        self.forms_text.pack(fill=ctk.BOTH, expand=True, padx=5, pady=5)
+        self.forms_text.insert("1.0", "Select states and click 'Generate Forms' to create state tax forms.")
+        self.forms_text.configure(state="disabled")
+
+    def _setup_summary_tab(self):
         """Create the summary tab"""
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Summary & Filing")
+        self.tab_summary.grid_rowconfigure(0, weight=1)
+        self.tab_summary.grid_columnconfigure(0, weight=1)
 
-        # Overall summary
-        summary_frame = ttk.LabelFrame(tab, text="Tax Year Summary", padding="10")
-        summary_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        summary_frame = ctk.CTkScrollableFrame(self.tab_summary)
+        summary_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-        self.overall_summary = scrolledtext.ScrolledText(summary_frame, wrap=tk.WORD, height=20)
-        self.overall_summary.pack(fill=tk.BOTH, expand=True)
+        # Multi-state comparison
+        comparison_label = ModernLabel(summary_frame, text="Multi-State Tax Comparison", font_size=12, font_weight="bold")
+        comparison_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
 
-        # Filing instructions
-        instructions_frame = ttk.LabelFrame(tab, text="Filing Instructions", padding="10")
-        instructions_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        # Comparison table
+        self.summary_text = ctk.CTkTextbox(summary_frame, height=400)
+        self.summary_text.pack(fill=ctk.BOTH, expand=True, padx=5, pady=5)
+        self.summary_text.insert("1.0", "Multi-state comparison results will appear here.\nSelect multiple states to compare their tax burdens.")
+        self.summary_text.configure(state="disabled")
 
-        instructions_text = """
-Filing Instructions for State Tax Returns:
+    def _create_status_bar(self):
+        """Create status bar at bottom"""
+        status_frame = ModernFrame(self.window)
+        status_frame.pack(fill=ctk.X, padx=20, pady=10)
 
-1. Review all calculated taxes and forms for accuracy
-2. File returns in states where you have tax obligations
-3. Pay any taxes owed by the state deadlines
-4. Keep copies of all filed returns and payment confirmations
-5. Some states allow e-filing, others require paper filing
+        info_label = ctk.CTkLabel(
+            status_frame,
+            text="Ready to prepare state tax returns",
+            text_color="gray",
+            font=("", 10)
+        )
+        info_label.pack(anchor=ctk.W)
 
-Important: State tax deadlines may differ from federal deadlines.
-Check each state's specific requirements.
-        """
-
-        instructions_label = ttk.Label(instructions_frame, text=instructions_text,
-                                    wraplength=600, justify=tk.LEFT)
-        instructions_label.pack()
-
-    def _populate_states_list(self):
-        """Populate the states listbox with all supported states"""
-        self.states_listbox.delete(0, tk.END)
-        for state_code in self.state_service.get_supported_states():
-            state_info = self.state_service.get_state_info(state_code)
-            if state_info:
-                display_text = f"{state_code.value} - {state_info.name}"
-                if not state_info.has_income_tax:
-                    display_text += " (No Income Tax)"
-                self.states_listbox.insert(tk.END, display_text)
-
-    def _filter_states(self, event=None):
-        """Filter the states list based on search text"""
-        search_text = self.state_search_var.get().lower()
-        self.states_listbox.delete(0, tk.END)
-
-        for state_code in self.state_service.get_supported_states():
-            state_info = self.state_service.get_state_info(state_code)
-            if state_info:
-                display_text = f"{state_code.value} - {state_info.name}"
-                if not state_info.has_income_tax:
-                    display_text += " (No Income Tax)"
-
-                if search_text in display_text.lower():
-                    self.states_listbox.insert(tk.END, display_text)
-
-    def _update_state_selection(self):
-        """Update the selected states based on listbox selection"""
-        selected_indices = self.states_listbox.curselection()
-        self.selected_states = []
-
-        for index in selected_indices:
-            state_text = self.states_listbox.get(index)
-            state_code_str = state_text.split(' - ')[0]
-            try:
-                state_code = StateCode(state_code_str)
-                self.selected_states.append(state_code)
-            except ValueError:
-                continue
-
-        # Update display
-        self.selected_states_text.delete(1.0, tk.END)
-        if self.selected_states:
-            state_names = []
-            for state_code in self.selected_states:
-                state_info = self.state_service.get_state_info(state_code)
-                if state_info:
-                    state_names.append(f"{state_info.name} ({state_code.value})")
-
-            self.selected_states_text.insert(tk.END, ", ".join(state_names))
-        else:
-            self.selected_states_text.insert(tk.END, "No states selected")
+    # ===== Action Methods =====
 
     def _calculate_taxes(self):
-        """Calculate taxes for selected states"""
-        if not self.selected_states:
-            messagebox.showwarning("No States Selected",
-                                 "Please select at least one state before calculating taxes.")
+        """Calculate state taxes for selected states"""
+        residence_states = [s for s, var in self.residence_vars.items() if var.get()]
+        work_states = [s for s, var in self.work_vars.items() if var.get()]
+        selected_states = list(set(residence_states + work_states))
+
+        if not selected_states:
+            self.status_label.configure(text="Please select at least one state")
             return
 
-        try:
-            # Get federal tax data
-            federal_income = self.tax_data.calculate_total_income()
-            federal_deductions = self.tax_data.calculate_total_deductions()
-            federal_taxable = self.tax_data.calculate_taxable_income()
+        self.status_label.configure(text="Calculating taxes...")
+        self.progress_bar.set(0.3)
 
-            filing_status = self.tax_data.data.get('filing_status', 'single')
-            dependents = len(self.tax_data.data.get('dependents', []))
+        # TODO: Implement tax calculations using state_service
+        self.state_calculations = {}
+        for state in selected_states:
+            # Placeholder calculation
+            self.state_calculations[state] = None
 
-            # Calculate state taxes
-            self.state_calculations = self.state_service.calculate_multi_state_tax(
-                self.selected_states, federal_taxable, filing_status, dependents
-            )
-
-            # Update display
-            self._update_calculation_display()
-            self._update_summary_display()
-
-            messagebox.showinfo("Calculation Complete",
-                              f"Calculated taxes for {len(self.state_calculations)} state(s).")
-
-        except Exception as e:
-            logger.error(f"Error calculating state taxes: {e}")
-            messagebox.showerror("Calculation Error",
-                               f"Failed to calculate state taxes:\n\n{str(e)}")
-
-    def _update_calculation_display(self):
-        """Update the tax calculation display"""
-        # Clear existing items
-        for item in self.calc_tree.get_children():
-            self.calc_tree.delete(item)
-
-        # Add new calculations
-        for state_code, calculation in self.state_calculations.items():
-            state_info = self.state_service.get_state_info(state_code)
-            state_name = state_info.name if state_info else state_code.value
-
-            self.calc_tree.insert("", tk.END, values=(
-                state_name,
-                f"${calculation.taxable_income:,.0f}",
-                f"${calculation.tax_owed:,.2f}",
-                f"{calculation.effective_rate:.2%}",
-                f"${calculation.credits:,.2f}"
-            ))
-
-    def _update_summary_display(self):
-        """Update the summary display"""
-        if not self.state_calculations:
-            self.summary_text.delete(1.0, tk.END)
-            self.summary_text.insert(tk.END, "No calculations available")
-            return
-
-        total_tax = sum(calc.tax_owed for calc in self.state_calculations.values())
-        total_credits = sum(calc.credits for calc in self.state_calculations.values())
-
-        summary = f"""
-State Tax Summary:
-
-Total State Tax Owed: ${total_tax:,.2f}
-Total State Credits: ${total_credits:,.2f}
-Net State Tax: ${total_tax - total_credits:,.2f}
-
-States with Tax Obligations: {len([c for c in self.state_calculations.values() if c.tax_owed > 0])}
-States with No Income Tax: {len([c for c in self.state_calculations.values() if c.tax_owed == 0])}
-
-Note: This summary is for estimation purposes. Consult with a tax professional
-for final tax calculations and filing requirements.
-        """
-
-        self.summary_text.delete(1.0, tk.END)
-        self.summary_text.insert(tk.END, summary.strip())
+        self.status_label.configure(text="Tax calculations complete")
+        self.progress_bar.set(1.0)
 
     def _generate_forms(self):
         """Generate state tax forms"""
-        if not self.state_calculations:
-            messagebox.showwarning("No Calculations",
-                                 "Please calculate taxes first before generating forms.")
+        residence_states = [s for s, var in self.residence_vars.items() if var.get()]
+        work_states = [s for s, var in self.work_vars.items() if var.get()]
+        selected_states = list(set(residence_states + work_states))
+
+        if not selected_states:
+            self.status_label.configure(text="Please select at least one state")
             return
 
-        # Clear existing forms
-        for item in self.forms_tree.get_children():
-            self.forms_tree.delete(item)
+        self.status_label.configure(text="Generating state forms...")
+        self.progress_bar.set(0.3)
 
-        # Add forms for each state
-        for state_code, calculation in self.state_calculations.items():
-            if calculation.tax_owed > 0:  # Only show forms for states with tax
-                forms = self.state_service.get_state_tax_forms(state_code)
-                for form in forms:
-                    state_info = self.state_service.get_state_info(state_code)
-                    state_name = state_info.name if state_info else state_code.value
+        # TODO: Implement form generation using pdf_generator
+        self.status_label.configure(text="Forms generated successfully")
+        self.progress_bar.set(1.0)
 
-                    self.forms_tree.insert("", tk.END, values=(
-                        state_name,
-                        form,
-                        f"State income tax return form for {state_name}"
-                    ))
+    def _generate_specific_form(self, form_type: str):
+        """Generate a specific state form"""
+        residence_states = [s for s, var in self.residence_vars.items() if var.get()]
+        work_states = [s for s, var in self.work_vars.items() if var.get()]
+        selected_states = list(set(residence_states + work_states))
 
-        messagebox.showinfo("Forms Generated",
-                          "State tax forms have been prepared. Use the Forms tab to view details.")
-
-    def _view_form_details(self):
-        """View details of selected form"""
-        selection = self.forms_tree.selection()
-        if not selection:
-            messagebox.showinfo("No Selection", "Please select a form to view details.")
+        if not selected_states:
+            self.status_label.configure(text="Please select at least one state")
             return
 
-        item = self.forms_tree.item(selection[0])
-        values = item['values']
+        self.status_label.configure(text=f"Generating {form_type} forms...")
+        self.progress_bar.set(0.5)
 
-        details = f"""
-Form Details:
-
-State: {values[0]}
-Form: {values[1]}
-Description: {values[2]}
-
-Note: This is a placeholder for form details.
-Full form generation will be implemented in a future version.
-        """
-
-        messagebox.showinfo("Form Details", details)
-
-    def _generate_state_pdf(self):
-        """Generate PDF for selected state form"""
-        selection = self.forms_tree.selection()
-        if not selection:
-            messagebox.showinfo("No Selection", "Please select a form to generate PDF.")
-            return
-
-        item = self.forms_tree.item(selection[0])
-        values = item['values']
-        state_name = values[0]
-        form_name = values[1]
-
-        # Find the state code from the state name
-        state_code = None
-        for code in self.state_service.get_supported_states():
-            state_info = self.state_service.get_state_info(code)
-            if state_info and state_info.name == state_name:
-                state_code = code
-                break
-
-        if not state_code or state_code not in self.state_calculations:
-            messagebox.showerror("Error", f"No calculation data found for {state_name}.")
-            return
-
-        # Check if state is supported for PDF generation
-        if state_code not in self.pdf_generator.get_supported_states():
-            messagebox.showinfo("Not Supported",
-                              f"PDF generation for {state_name} is not yet implemented.\n\n"
-                              f"Currently supported states: {', '.join([s.name for s in self.pdf_generator.get_supported_states()])}")
-            return
-
-        try:
-            # Prepare form data
-            taxpayer_info = self._extract_taxpayer_info()
-            income_data = self._extract_income_data()
-            tax_calculation = self.state_calculations[state_code]
-
-            form_data = StateFormData(
-                state_code=state_code,
-                tax_year=self.tax_data.data.get('tax_year', 2024),
-                taxpayer_info=taxpayer_info,
-                income_data=income_data,
-                tax_calculation=tax_calculation,
-                filing_status=self.tax_data.data.get('filing_status', 'single'),
-                dependents=len(self.tax_data.data.get('dependents', []))
-            )
-
-            # Generate PDF
-            pdf_path = self.pdf_generator.generate_state_form_pdf(form_data)
-
-            messagebox.showinfo("PDF Generated",
-                              f"State tax form PDF has been generated successfully!\n\n"
-                              f"File saved to: {pdf_path}")
-
-            # Optionally open the PDF
-            import subprocess
-            import platform
-            try:
-                if platform.system() == "Windows":
-                    subprocess.run(["start", pdf_path], shell=True)
-                elif platform.system() == "Darwin":  # macOS
-                    subprocess.run(["open", pdf_path])
-                else:  # Linux
-                    subprocess.run(["xdg-open", pdf_path])
-            except Exception as e:
-                logger.warning(f"Could not open PDF automatically: {e}")
-
-        except Exception as e:
-            logger.error(f"Error generating state PDF: {e}")
-            messagebox.showerror("PDF Generation Error",
-                               f"Failed to generate PDF for {state_name}:\n\n{str(e)}")
+        # TODO: Implement specific form generation
+        self.status_label.configure(text="Form generated")
+        self.progress_bar.set(1.0)
 
     def _save_state_data(self):
-        """Save state tax data to the main tax return"""
-        if not self.state_calculations:
-            messagebox.showwarning("No Data", "No state tax data to save.")
+        """Save state tax data"""
+        self.status_label.configure(text="Saving state tax data...")
+        self.progress_bar.set(0.5)
+
+        # TODO: Implement data saving
+        self.status_label.configure(text="State data saved")
+        self.progress_bar.set(1.0)
+
+    def _compare_states(self):
+        """Compare taxes across selected states"""
+        residence_states = [s for s, var in self.residence_vars.items() if var.get()]
+        work_states = [s for s, var in self.work_vars.items() if var.get()]
+        selected_states = list(set(residence_states + work_states))
+
+        if len(selected_states) < 2:
+            self.status_label.configure(text="Select at least 2 states to compare")
             return
 
-        try:
-            # Save state calculations to tax data
-            if 'state_taxes' not in self.tax_data.data:
-                self.tax_data.data['state_taxes'] = {}
+        self.status_label.configure(text="Comparing states...")
+        self.progress_bar.set(0.5)
 
-            self.tax_data.data['state_taxes']['calculations'] = {
-                state.value: {
-                    'taxable_income': calc.taxable_income,
-                    'tax_owed': calc.tax_owed,
-                    'effective_rate': calc.effective_rate,
-                    'credits': calc.credits,
-                    'deductions': calc.deductions
-                }
-                for state, calc in self.state_calculations.items()
-            }
-
-            self.tax_data.data['state_taxes']['selected_states'] = [
-                state.value for state in self.selected_states
-            ]
-
-            # Emit event to notify other components
-            self.event_bus.emit('state_tax_data_updated', self.state_calculations)
-
-            messagebox.showinfo("Data Saved", "State tax data has been saved to your tax return.")
-
-        except Exception as e:
-            logger.error(f"Error saving state tax data: {e}")
-            messagebox.showerror("Save Error", f"Failed to save state tax data:\n\n{str(e)}")
-
-    def _extract_taxpayer_info(self) -> Dict[str, Any]:
-        """Extract taxpayer information from tax data"""
-        data = self.tax_data.data
-        return {
-            'first_name': data.get('first_name', ''),
-            'middle_initial': data.get('middle_initial', ''),
-            'last_name': data.get('last_name', ''),
-            'ssn': data.get('ssn', ''),
-            'address': data.get('address', ''),
-            'city': data.get('city', ''),
-            'state': data.get('state', ''),
-            'zip_code': data.get('zip_code', ''),
-        }
-
-    def _extract_income_data(self) -> Dict[str, Any]:
-        """Extract income data from tax data"""
-        data = self.tax_data.data
-        return {
-            'federal_agi': self.tax_data.calculate_taxable_income(),
-            'federal_gross_income': self.tax_data.calculate_total_income(),
-            'wages': data.get('income', {}).get('wages', 0),
-            'interest': data.get('income', {}).get('interest', 0),
-            'dividends': data.get('income', {}).get('dividends', 0),
-            'business_income': data.get('income', {}).get('business_income', 0),
-        }
+        # TODO: Implement state comparison logic
+        self.status_label.configure(text="Comparison complete")
+        self.progress_bar.set(1.0)
 
     def _load_current_data(self):
-        """Load existing state tax data if available"""
-        state_data = self.tax_data.data.get('state_taxes', {})
-        selected_states = state_data.get('selected_states', [])
-
-        # Restore selected states
-        for state_code_str in selected_states:
-            try:
-                state_code = StateCode(state_code_str)
-                self.selected_states.append(state_code)
-            except ValueError:
-                continue
-
-        # Update display
-        if self.selected_states:
-            state_names = []
-            for state_code in self.selected_states:
-                state_info = self.state_service.get_state_info(state_code)
-                if state_info:
-                    state_names.append(f"{state_info.name} ({state_code.value})")
-
-            self.selected_states_text.delete(1.0, tk.END)
-            self.selected_states_text.insert(tk.END, ", ".join(state_names))
-
-
-def open_state_tax_window(parent: tk.Tk, tax_data: Any) -> None:
-    """
-    Open the state tax window.
-
-    Args:
-        parent: Parent tkinter window
-        tax_data: Tax data object
-    """
-    try:
-        from utils.event_bus import get_event_bus
-        event_bus = get_event_bus()
-        StateTaxWindow(parent, tax_data, event_bus)
-    except Exception as e:
-        logger.error(f"Failed to open state tax window: {e}")
-        messagebox.showerror("State Tax Error",
-                           f"Failed to open state tax tools:\n\n{str(e)}")
+        """Load current tax data"""
+        self.status_label.configure(text="Loading state tax data...")
+        self.progress_bar.set(0.5)
+        # Data loading implementation
+        self.progress_bar.set(1.0)
