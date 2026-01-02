@@ -271,6 +271,15 @@ class ModernMainWindow(ctk.CTk):
 
         ModernButton(
             sidebar_scroll,
+            text="📈 Tax Analytics",
+            command=self._show_tax_analytics,
+            button_type="secondary",
+            height=32,
+            accessibility_service=self.accessibility_service
+        ).pack(fill="x", padx=5, pady=2)
+
+        ModernButton(
+            sidebar_scroll,
             text="🌙 Toggle Theme",
             command=self._toggle_theme,
             button_type="secondary",
@@ -1175,8 +1184,8 @@ class ModernMainWindow(ctk.CTk):
             tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
             tax_calc_service = TaxCalculationService(tax_year)
             analytics_window = TaxAnalyticsWindow(
+                self,  # parent window
                 self.config, 
-                tax_calc_service, 
                 self.tax_data
             )
             analytics_window.show()
