@@ -137,8 +137,6 @@ class StateTaxPage(ctk.CTkScrollableFrame):
         """Create main content with tabview"""
         main_container = ctk.CTkFrame(self, fg_color="transparent")
         main_container.pack(fill=ctk.BOTH, expand=True, padx=20, pady=10)
-        main_container.grid_rowconfigure(0, weight=1)
-        main_container.grid_columnconfigure(0, weight=1)
 
         # Create tabview
         self.tabview = ctk.CTkTabview(main_container)
@@ -160,11 +158,8 @@ class StateTaxPage(ctk.CTkScrollableFrame):
 
     def _setup_overview_tab(self):
         """Setup overview tab"""
-        self.tab_overview.grid_rowconfigure(0, weight=1)
-        self.tab_overview.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_overview)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         overview_label = ModernLabel(frame, text="State Tax Overview", font_size=12, font_weight="bold")
         overview_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
@@ -188,10 +183,6 @@ class StateTaxPage(ctk.CTkScrollableFrame):
 
     def _setup_states_tab(self):
         """Setup state selection tab"""
-        self.tab_states.grid_rowconfigure(1, weight=1)
-        self.tab_states.grid_columnconfigure(0, weight=1)
-        self.tab_states.grid_columnconfigure(1, weight=1)
-
         # Controls
         control_frame = ctk.CTkFrame(self.tab_states, fg_color="transparent")
         control_frame.pack(fill=ctk.X, padx=10, pady=10)
@@ -218,13 +209,10 @@ class StateTaxPage(ctk.CTkScrollableFrame):
         # State selection area
         content_frame = ctk.CTkFrame(self.tab_states)
         content_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
-        content_frame.grid_rowconfigure(0, weight=1)
-        content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_columnconfigure(1, weight=2)
 
         # Left panel - state list
         left_panel = ctk.CTkScrollableFrame(content_frame)
-        left_panel.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        left_panel.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=5, pady=5)
 
         left_label = ModernLabel(left_panel, text="States", font_size=11, font_weight="bold")
         left_label.pack(anchor=ctk.W, padx=5, pady=(0, 5))
@@ -236,7 +224,7 @@ class StateTaxPage(ctk.CTkScrollableFrame):
 
         # Right panel - state details
         right_panel = ctk.CTkFrame(content_frame)
-        right_panel.pack(fill=ctk.BOTH, expand=True, padx=5, pady=5, side=ctk.RIGHT)
+        right_panel.pack(side=ctk.RIGHT, fill=ctk.BOTH, expand=True, padx=5, pady=5)
 
         right_label = ModernLabel(right_panel, text="State Information", font_size=11, font_weight="bold")
         right_label.pack(anchor=ctk.W, padx=5, pady=(0, 5))
@@ -248,57 +236,57 @@ class StateTaxPage(ctk.CTkScrollableFrame):
 
     def _setup_income_tab(self):
         """Setup income and deductions tab"""
-        self.tab_income.grid_rowconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(1, weight=1)
-
         container = ctk.CTkFrame(self.tab_income, fg_color="transparent")
         container.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=1)
 
-        # Income section
-        income_label = ModernLabel(container, text="State Income Sources", font_size=12, font_weight="bold")
-        income_label.grid(row=0, column=0, sticky="w", padx=5, pady=(0, 10))
+        # Income and Deductions section
+        content_frame = ctk.CTkFrame(container, fg_color="transparent")
+        content_frame.pack(fill=ctk.BOTH, expand=True)
 
-        income_frame = ctk.CTkFrame(container)
-        income_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        # Income section (left)
+        income_label = ModernLabel(content_frame, text="State Income Sources", font_size=12, font_weight="bold")
+        income_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
+
+        income_frame = ctk.CTkFrame(content_frame)
+        income_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         income_items = ["W-2 Wages", "Self-Employment Income", "Capital Gains", "Dividend Income", "Other Income"]
-        for idx, item in enumerate(income_items):
-            label = ctk.CTkLabel(income_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(income_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in income_items:
+            item_frame = ctk.CTkFrame(income_frame, fg_color="transparent")
+            item_frame.pack(fill=ctk.X, padx=10, pady=8)
+            
+            label = ctk.CTkLabel(item_frame, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            
+            entry = ctk.CTkEntry(item_frame, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
+            
             self.calculation_vars[item.lower().replace(" ", "_")] = entry
-
-        income_frame.grid_columnconfigure(1, weight=1)
 
         # Deductions section
-        deduction_label = ModernLabel(container, text="State Deductions", font_size=12, font_weight="bold")
-        deduction_label.grid(row=0, column=1, sticky="w", padx=5, pady=(0, 10))
+        deduction_label = ModernLabel(content_frame, text="State Deductions", font_size=12, font_weight="bold")
+        deduction_label.pack(anchor=ctk.W, padx=5, pady=(10, 10))
 
-        deduction_frame = ctk.CTkFrame(container)
-        deduction_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        deduction_frame = ctk.CTkFrame(content_frame)
+        deduction_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         deduction_items = ["Standard Deduction", "Itemized Deductions", "Credits", "Tax Payments"]
-        for idx, item in enumerate(deduction_items):
-            label = ctk.CTkLabel(deduction_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(deduction_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in deduction_items:
+            item_frame = ctk.CTkFrame(deduction_frame, fg_color="transparent")
+            item_frame.pack(fill=ctk.X, padx=10, pady=8)
+            
+            label = ctk.CTkLabel(item_frame, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            
+            entry = ctk.CTkEntry(item_frame, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
+            
             self.calculation_vars[item.lower().replace(" ", "_")] = entry
-
-        deduction_frame.grid_columnconfigure(1, weight=1)
 
     def _setup_calculation_tab(self):
         """Setup calculation tab"""
-        self.tab_calculation.grid_rowconfigure(0, weight=1)
-        self.tab_calculation.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_calculation)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         calc_label = ModernLabel(frame, text="State Tax Calculation Results", font_size=12, font_weight="bold")
         calc_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
@@ -310,9 +298,6 @@ class StateTaxPage(ctk.CTkScrollableFrame):
 
     def _setup_forms_tab(self):
         """Setup forms and reports tab"""
-        self.tab_forms.grid_rowconfigure(1, weight=1)
-        self.tab_forms.grid_columnconfigure(0, weight=1)
-
         # Button bar
         button_frame = ctk.CTkFrame(self.tab_forms, fg_color="transparent")
         button_frame.pack(fill=ctk.X, padx=10, pady=10)
