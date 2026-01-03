@@ -268,7 +268,7 @@ class ModernMainWindow(ctk.CTk):
         # Quick Start Section
         self._create_sidebar_section(sidebar_scroll, "🚀 QUICK START", [
             ("Start Interview", lambda: self._start_interview()),
-            ("View Dashboard", lambda: self._switch_to_page('tax_dashboard')),
+            ("View Dashboard", lambda: self._navigate_to_form({'form': 'tax_dashboard'})),
         ])
 
         # Tax Forms Section
@@ -280,55 +280,55 @@ class ModernMainWindow(ctk.CTk):
 
         # Financial Planning Section
         self._create_sidebar_section(sidebar_scroll, "💼 FINANCIAL PLANNING", [
-            ("Estate & Trust", lambda: self._switch_to_page('estate_trust')),
-            ("Partnership & S-Corp", lambda: self._switch_to_page('partnership_s_corp')),
-            ("State Tax Planning", lambda: self._switch_to_page('tax_planning')),
-            ("State Tax Calculator", lambda: self._switch_to_page('state_tax_calculator')),
-            ("Tax Projections", lambda: self._switch_to_page('tax_projections')),
+            ("Estate & Trust", lambda: self._navigate_to_form({'form': 'estate_trust'})),
+            ("Partnership & S-Corp", lambda: self._navigate_to_form({'form': 'partnership_s_corp'})),
+            ("State Tax Planning", lambda: self._navigate_to_form({'form': 'tax_planning'})),
+            ("State Tax Calculator", lambda: self._navigate_to_form({'form': 'state_tax_calculator'})),
+            ("Tax Projections", lambda: self._navigate_to_form({'form': 'tax_projections'})),
         ])
 
         # Business Integration Section
         self._create_sidebar_section(sidebar_scroll, "📊 BUSINESS INTEGRATION", [
-            ("QuickBooks Integration", lambda: self._switch_to_page('quickbooks_integration')),
-            ("Receipt Scanning", lambda: self._switch_to_page('receipt_scanning')),
-            ("Bank Account Linking", lambda: self._switch_to_page('bank_account_linking')),
-            ("State Tax Returns", lambda: self._switch_to_page('state_tax')),
+            ("QuickBooks Integration", lambda: self._navigate_to_form({'form': 'quickbooks_integration'})),
+            ("Receipt Scanning", lambda: self._navigate_to_form({'form': 'receipt_scanning'})),
+            ("Bank Account Linking", lambda: self._navigate_to_form({'form': 'bank_account_linking'})),
+            ("State Tax Returns", lambda: self._navigate_to_form({'form': 'state_tax'})),
         ])
 
         # Advanced Features Section
         self._create_sidebar_section(sidebar_scroll, "🤖 ADVANCED FEATURES", [
-            ("AI Deduction Finder", lambda: self._switch_to_page('ai_deduction_finder')),
-            ("Cryptocurrency Tax", lambda: self._switch_to_page('cryptocurrency_tax')),
+            ("AI Deduction Finder", lambda: self._navigate_to_form({'form': 'ai_deduction_finder'})),
+            ("Cryptocurrency Tax", lambda: self._navigate_to_form({'form': 'cryptocurrency_tax'})),
         ])
 
         # International & Compliance Section
         self._create_sidebar_section(sidebar_scroll, "🌍 INTERNATIONAL & COMPLIANCE", [
-            ("Foreign Income & FBAR", lambda: self._switch_to_page('foreign_income_fbar')),
-            ("PTIN & ERO Management", lambda: self._switch_to_page('ptin_ero_management')),
-            ("State Tax Integration", lambda: self._switch_to_page('state_tax_integration')),
-            ("Translation Management", lambda: self._switch_to_page('translation_management')),
+            ("Foreign Income & FBAR", lambda: self._navigate_to_form({'form': 'foreign_income_fbar'})),
+            ("PTIN & ERO Management", lambda: self._navigate_to_form({'form': 'ptin_ero_management'})),
+            ("State Tax Integration", lambda: self._navigate_to_form({'form': 'state_tax_integration'})),
+            ("Translation Management", lambda: self._navigate_to_form({'form': 'translation_management'})),
         ])
 
         # Analysis & Reporting Section
         self._create_sidebar_section(sidebar_scroll, "📈 ANALYSIS & REPORTING", [
-            ("Tax Dashboard", lambda: self._switch_to_page('tax_dashboard')),
-            ("Tax Analytics", lambda: self._switch_to_page('tax_analytics')),
-            ("Year Comparison", lambda: self._switch_to_page('year_comparison')),
-            ("Audit Trail", lambda: self._switch_to_page('audit_trail')),
+            ("Tax Dashboard", lambda: self._navigate_to_form({'form': 'tax_dashboard'})),
+            ("Tax Analytics", lambda: self._navigate_to_form({'form': 'tax_analytics'})),
+            ("Year Comparison", lambda: self._navigate_to_form({'form': 'year_comparison'})),
+            ("Audit Trail", lambda: self._navigate_to_form({'form': 'audit_trail'})),
         ])
 
         # Management Section
         self._create_sidebar_section(sidebar_scroll, "⚙️ MANAGEMENT & TOOLS", [
-            ("Cloud Backup", lambda: self._switch_to_page('cloud_backup')),
-            ("Plugin Management", lambda: self._switch_to_page('plugin_management')),
-            ("Settings & Preferences", lambda: self._switch_to_page('settings_preferences')),
-            ("Help & Documentation", lambda: self._switch_to_page('help_documentation')),
+            ("Cloud Backup", lambda: self._navigate_to_form({'form': 'cloud_backup'})),
+            ("Plugin Management", lambda: self._navigate_to_form({'form': 'plugin_management'})),
+            ("Settings & Preferences", lambda: self._navigate_to_form({'form': 'settings_preferences'})),
+            ("Help & Documentation", lambda: self._navigate_to_form({'form': 'help_documentation'})),
         ])
 
         # Filing & E-File Section
         self._create_sidebar_section(sidebar_scroll, "📮 FILING", [
-            ("E-Filing", lambda: self._switch_to_page('e_filing')),
-            ("Tax Interview", lambda: self._switch_to_page('tax_interview')),
+            ("E-Filing", lambda: self._navigate_to_form({'form': 'e_filing'})),
+            ("Tax Interview", lambda: self._navigate_to_form({'form': 'tax_interview'})),
         ])
 
         # Session Section
@@ -634,24 +634,71 @@ class ModernMainWindow(ctk.CTk):
         continue_button.pack(pady=(20, 0))
 
     def _navigate_to_form(self, recommendation: Dict[str, Any]):
-        """Navigate to a specific form"""
-        form_name = recommendation.get('form', '')
+        """Navigate to a specific form based on form name"""
+        form_name = recommendation.get('form', '').lower()
 
-        # Route to specific form pages
-        if 'income' in form_name.lower() or form_name in ['Income', '1040', 'W-2', '1099-INT', '1099-DIV', 'Schedule C', '1099-R', 'SSA-1099', 'Schedule D', 'Schedule E']:
-            self._show_income_page()
-        elif 'deduction' in form_name.lower() or form_name in ['Schedule A']:
-            self._show_deductions_page()
-        elif 'credit' in form_name.lower() or form_name in ['Schedule 3', 'Child Tax Credit', 'Earned Income Credit', 'Education Credits']:
-            self._show_credits_page()
-        elif 'payment' in form_name.lower() or form_name in ['1040-ES', 'Estimated Tax']:
-            self._show_payments_page()
-        elif 'foreign' in form_name.lower() or form_name in ['FBAR', '8938', '1116']:
-            self._show_foreign_income_page()
-        elif 'summary' in form_name.lower() or 'viewer' in form_name.lower() or form_name in ['Form 1040 Summary', 'Tax Return Summary']:
-            self._show_form_viewer_page()
+        # Route to specific form pages based on form name
+        routing_map = {
+            # Core tax forms
+            'income': self._show_income_page,
+            'deductions': self._show_deductions_page,
+            'credits': self._show_credits_page,
+            'payments': self._show_payments_page,
+            'foreign_income_fbar': self._show_foreign_income_page,
+            'form_viewer': self._show_form_viewer_page,
+            'tax_interview': self._start_interview,
+            'tax_forms': self._show_tax_forms_page,
+            
+            # Financial planning
+            'estate_trust': self._show_estate_trust_page,
+            'partnership_s_corp': self._show_partnership_s_corp_page,
+            'tax_planning': self._show_tax_planning_page,
+            'state_tax_calculator': self._show_state_tax_calculator_page,
+            'tax_projections': self._show_tax_projections_page,
+            
+            # Business integration
+            'quickbooks_integration': self._show_quickbooks_integration_page,
+            'receipt_scanning': self._show_receipt_scanning_page,
+            'bank_account_linking': self._show_bank_account_linking_page,
+            'state_tax': self._show_state_tax_page,
+            
+            # Advanced features
+            'ai_deduction_finder': self._show_ai_deduction_finder_page,
+            'cryptocurrency_tax': self._show_cryptocurrency_tax_page,
+            
+            # International & compliance
+            'ptin_ero_management': self._show_ptin_ero_management_page,
+            'state_tax_integration': self._show_state_tax_integration_page,
+            'translation_management': self._show_translation_management_page,
+            
+            # Analysis & reporting
+            'tax_dashboard': self._show_tax_dashboard_page,
+            'tax_analytics': self._show_tax_analytics_page,
+            'year_comparison': self._show_year_comparison_page,
+            'audit_trail': self._show_audit_trail_page,
+            
+            # Management & tools
+            'cloud_backup': self._show_cloud_backup_page,
+            'plugin_management': self._show_plugin_management_page,
+            'settings_preferences': self._show_settings_page,
+            'help_documentation': self._show_help_documentation_page,
+            
+            # Filing
+            'e_filing': self._show_e_filing_page,
+        }
+
+        # Look up the form in routing map
+        if form_name in routing_map:
+            routing_map[form_name]()
         else:
-            show_info_message("Navigation", f"Navigation to {form_name} will be implemented in the next phase.")
+            # Fallback: try partial matching for backwards compatibility
+            for key, handler in routing_map.items():
+                if key in form_name or form_name in key:
+                    handler()
+                    return
+            
+            # If no match found, show info message
+            show_info_message("Navigation", f"Page '{form_name}' is not yet implemented. Check back soon!")
 
     def _show_income_page(self):
         """Show the income page"""
@@ -892,12 +939,349 @@ class ModernMainWindow(ctk.CTk):
 
     def _handle_form_viewer_back(self):
         """Handle back navigation from form viewer"""
-        self._show_payments_page()
+        self._navigate_to_form({'form': 'payments'})
 
     def _start_form_entry(self):
         """Start the form entry process"""
         # Start with income page as it's typically the first major section
-        self._show_income_page()
+        self._navigate_to_form({'form': 'income'})
+
+    # ============================================================
+    # Financial Planning Pages
+    # ============================================================
+    
+    def _show_estate_trust_page(self):
+        """Show the estate and trust tax page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            from gui.pages.estate_trust_page import EstateTrustPage
+            estate_page = EstateTrustPage(self.content_frame, self.config)
+            estate_page.pack(fill="both", expand=True)
+            self.status_label.configure(text="Estate & Trust - Form 1041 tax return")
+            self._update_progress()
+        except ImportError:
+            self._show_page_placeholder("Estate & Trust Tax Returns", "📋", "Manage estate and trust tax returns (Form 1041)")
+
+    def _show_partnership_s_corp_page(self):
+        """Show the partnership and S-Corp tax page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            from gui.pages.partnership_s_corp_page import PartnershipSCorpPage
+            partnership_page = PartnershipSCorpPage(self.content_frame, self.config)
+            partnership_page.pack(fill="both", expand=True)
+            self.status_label.configure(text="Partnership & S-Corp - Forms 1065 and 1120-S")
+            self._update_progress()
+        except ImportError:
+            self._show_page_placeholder("Partnership & S-Corp Tax Returns", "🏢", "Manage partnership and S-Corp returns (Forms 1065 and 1120-S)")
+
+    def _show_tax_planning_page(self):
+        """Show the tax planning page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Tax Planning Tools", "📊", "Comprehensive tax planning and strategy tools to optimize your tax position")
+
+    def _show_state_tax_calculator_page(self):
+        """Show the state tax calculator page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("State Tax Calculator", "🧮", "Calculate estimated state income tax liability for current and future years")
+
+    def _show_tax_projections_page(self):
+        """Show the tax projections page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            from gui.tax_projections_window import TaxProjectionsWindow
+            if self.tax_data:
+                from services.tax_calculation_service import TaxCalculationService
+                tax_year = self.tax_data.get_current_year() if self.tax_data else 2026
+                tax_calc_service = TaxCalculationService(tax_year)
+                
+                # Create projection window in content frame instead of separate window
+                projection_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+                projection_frame.pack(fill="both", expand=True)
+                
+                self.status_label.configure(text="Tax Projections - Plan your future tax liability")
+                self._update_progress()
+            else:
+                self._show_page_placeholder("Tax Projections", "📈", "Project your future tax liability based on current income and deductions")
+        except Exception:
+            self._show_page_placeholder("Tax Projections", "📈", "Project your future tax liability based on current income and deductions")
+
+    # ============================================================
+    # Business Integration Pages
+    # ============================================================
+
+    def _show_quickbooks_integration_page(self):
+        """Show the QuickBooks integration page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("QuickBooks Integration", "💼", "Import financial data directly from QuickBooks Online and Desktop")
+
+    def _show_receipt_scanning_page(self):
+        """Show the receipt scanning page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Receipt Scanning & OCR", "📸", "Scan and automatically categorize receipts using advanced OCR technology")
+
+    def _show_bank_account_linking_page(self):
+        """Show the bank account linking page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Bank Account Linking", "🏦", "Connect your bank accounts to automatically import transactions")
+
+    def _show_state_tax_page(self):
+        """Show the state tax returns page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("State Tax Returns", "🏛️", "Prepare and file state income tax returns for multiple states")
+
+    # ============================================================
+    # Advanced Features Pages
+    # ============================================================
+
+    def _show_ai_deduction_finder_page(self):
+        """Show the AI deduction finder page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            from gui.ai_deduction_finder_window import AIDeductionFinderWindow
+            if self.tax_data:
+                # Create AI finder in content frame
+                ai_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+                ai_frame.pack(fill="both", expand=True)
+                
+                self.status_label.configure(text="AI Deduction Finder - Discover deductions you may have missed")
+                self._update_progress()
+            else:
+                self._show_page_placeholder("AI Deduction Finder", "🤖", "Use AI to discover deductions and tax credits you may have missed")
+        except Exception:
+            self._show_page_placeholder("AI Deduction Finder", "🤖", "Use AI to discover deductions and tax credits you may have missed")
+
+    def _show_cryptocurrency_tax_page(self):
+        """Show the cryptocurrency tax reporting page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Cryptocurrency Tax Reporting", "₿", "Report cryptocurrency transactions and calculate capital gains/losses")
+
+    # ============================================================
+    # International & Compliance Pages
+    # ============================================================
+
+    def _show_ptin_ero_management_page(self):
+        """Show the PTIN and ERO management page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("PTIN & ERO Management", "🔐", "Manage your Preparer Tax Identification Number and Electronic Return Originator status")
+
+    def _show_state_tax_integration_page(self):
+        """Show the state tax integration page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("State Tax Integration", "🌐", "Integrate federal and state tax data for multi-state filing")
+
+    def _show_translation_management_page(self):
+        """Show the translation management page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            # Create translation management in content frame
+            translation_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+            translation_frame.pack(fill="both", expand=True, padx=20, pady=20)
+            
+            title_label = ModernLabel(
+                translation_frame,
+                text="🌍 Translation Management",
+                font=ctk.CTkFont(size=20)
+            )
+            title_label.pack(pady=(0, 20))
+            
+            self.status_label.configure(text="Translation Management - Configure supported languages and translations")
+            self._update_progress()
+        except Exception:
+            self._show_page_placeholder("Translation Management", "🌍", "Manage application language settings and translations")
+
+    # ============================================================
+    # Analysis & Reporting Pages
+    # ============================================================
+
+    def _show_tax_dashboard_page(self):
+        """Show the tax dashboard page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Tax Dashboard", "📊", "View comprehensive overview of your tax situation and key metrics")
+
+    def _show_tax_analytics_page(self):
+        """Show the tax analytics page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        try:
+            from gui.tax_analytics_window import TaxAnalyticsWindow
+            if self.tax_data:
+                analytics_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+                analytics_frame.pack(fill="both", expand=True)
+                self.status_label.configure(text="Tax Analytics - Detailed tax analysis and insights")
+                self._update_progress()
+            else:
+                self._show_page_placeholder("Tax Analytics & Tools", "📈", "Advanced analytics and tax planning tools")
+        except Exception:
+            self._show_page_placeholder("Tax Analytics & Tools", "📈", "Advanced analytics and tax planning tools")
+
+    def _show_year_comparison_page(self):
+        """Show the year comparison page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Year Comparison", "📊", "Compare tax data across multiple years to identify trends")
+
+    def _show_audit_trail_page(self):
+        """Show the audit trail page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Audit Trail", "🔍", "Track all changes made to your tax return with complete audit history")
+
+    # ============================================================
+    # Management & Tools Pages
+    # ============================================================
+
+    def _show_cloud_backup_page(self):
+        """Show the cloud backup page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Cloud Backup", "☁️", "Securely back up your tax data to the cloud")
+
+    def _show_plugin_management_page(self):
+        """Show the plugin management page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("Plugin Management", "🧩", "Install, manage, and configure application plugins")
+
+    def _show_help_documentation_page(self):
+        """Show the help and documentation page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        help_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        help_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        title_label = ModernLabel(
+            help_frame,
+            text="📚 Help & Documentation",
+            font=ctk.CTkFont(size=20)
+        )
+        title_label.pack(pady=(0, 20))
+
+        desc_label = ModernLabel(
+            help_frame,
+            text="Access comprehensive documentation, tutorials, and support resources",
+            font=ctk.CTkFont(size=12),
+            text_color="gray60"
+        )
+        desc_label.pack(pady=(0, 30))
+
+        self.status_label.configure(text="Help & Documentation")
+        self._update_progress()
+
+    # ============================================================
+    # Filing Pages
+    # ============================================================
+
+    def _show_e_filing_page(self):
+        """Show the e-filing page"""
+        # Clear content frame
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
+        self._show_page_placeholder("E-Filing", "📮", "Electronically file your tax return with the IRS")
+
+    # ============================================================
+    # Helper Method
+    # ============================================================
+
+    def _show_page_placeholder(self, title: str, icon: str, description: str):
+        """
+        Show a placeholder page for pages not yet fully implemented.
+        
+        Args:
+            title: Page title
+            icon: Emoji icon to display
+            description: Page description
+        """
+        placeholder_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        placeholder_frame.pack(fill="both", expand=True, padx=40, pady=40)
+
+        # Title
+        title_label = ModernLabel(
+            placeholder_frame,
+            text=f"{icon} {title}",
+            font=ctk.CTkFont(size=20)
+        )
+        title_label.pack(pady=(0, 20))
+
+        # Description
+        desc_label = ModernLabel(
+            placeholder_frame,
+            text=description,
+            font=ctk.CTkFont(size=12),
+            text_color="gray60",
+            wraplength=500,
+            justify="center"
+        )
+        desc_label.pack(pady=(0, 30))
+
+        # Coming soon message
+        coming_label = ModernLabel(
+            placeholder_frame,
+            text="This feature is currently in development and will be available soon.",
+            font=ctk.CTkFont(size=11),
+            text_color="gray50"
+        )
+        coming_label.pack()
+
+        self.status_label.configure(text=f"{title} - Coming soon")
+        self._update_progress()
 
     def _save_progress(self):
         """Show save progress page"""
@@ -934,7 +1318,7 @@ class ModernMainWindow(ctk.CTk):
             return
 
         # Navigate to form viewer for summary
-        self._show_form_viewer_page()
+        self._navigate_to_form({'form': 'tax_forms'})
 
     def _show_summary_placeholder(self):
         """Show placeholder page for tax return summary when no data exists"""
@@ -1966,7 +2350,7 @@ class ModernMainWindow(ctk.CTk):
                 # Show success message and update page
                 show_info_message("Preparation Complete", "Your federal tax return has been prepared for e-filing. You can now submit it to the IRS.")
                 # Update the page to show prepared status
-                self._show_e_filing_page()
+                self._navigate_to_form({'form': 'e_filing'})
             else:
                 show_error_message("Preparation Failed", "Failed to prepare your tax return for e-filing. Please check your data and try again.")
 
@@ -1993,7 +2377,7 @@ class ModernMainWindow(ctk.CTk):
                 if result.get('success'):
                     show_info_message("Submission Successful", f"Your tax return has been submitted to the IRS.\nConfirmation: {result.get('confirmation_number', 'N/A')}")
                     # Update the page to show submitted status
-                    self._show_e_filing_page()
+                    self._navigate_to_form({'form': 'e_filing'})
                 else:
                     show_error_message("Submission Failed", f"Failed to submit your tax return: {result.get('error', 'Unknown error')}")
             else:
@@ -2227,7 +2611,7 @@ class ModernMainWindow(ctk.CTk):
             return
 
         # Show e-filing page
-        self._show_e_filing_page()
+        self._navigate_to_form({'form': 'e_filing'})
 
     def _create_amended_return(self):
         """Show amended return page"""

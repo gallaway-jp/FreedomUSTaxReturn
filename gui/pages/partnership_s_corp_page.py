@@ -19,7 +19,7 @@ from services.accessibility_service import AccessibilityService
 from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton
 
 
-class PartnershipSCorpPage(ctk.CTkScrollableFrame):
+class PartnershipSCorpPage(ModernFrame):
     """
     Partnership & S-Corp Tax Returns page - converted from popup window to integrated page.
     
@@ -141,10 +141,13 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
 
     def _create_main_content(self):
         """Create main content with tabview"""
-        main_container = ctk.CTkFrame(self, fg_color="transparent")
+        # Create scrollable frame wrapper for proper pack() compatibility
+        from gui.modern_ui_components import ModernScrollableFrame
+        scrollable_frame = ModernScrollableFrame(self, fg_color="transparent")
+        scrollable_frame.pack(fill=ctk.BOTH, expand=True)
+
+        main_container = ctk.CTkFrame(scrollable_frame, fg_color="transparent")
         main_container.pack(fill=ctk.BOTH, expand=True, padx=20, pady=10)
-        main_container.grid_rowconfigure(0, weight=1)
-        main_container.grid_columnconfigure(0, weight=1)
 
         # Create tabview
         self.tabview = ctk.CTkTabview(main_container)
@@ -166,11 +169,8 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
 
     def _setup_returns_tab(self):
         """Setup returns list tab"""
-        self.tab_returns.grid_rowconfigure(0, weight=1)
-        self.tab_returns.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_returns)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         returns_label = ModernLabel(frame, text="Existing Returns", font_size=12, font_weight="bold")
         returns_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
@@ -190,17 +190,10 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
 
     def _setup_entity_tab(self):
         """Setup entity information tab"""
-        self.tab_entity.grid_rowconfigure(0, weight=1)
-        self.tab_entity.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_entity)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         # Entity form fields
-        form_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        form_frame.pack(fill=ctk.X, padx=5, pady=10)
-        form_frame.grid_columnconfigure(1, weight=1)
-
         fields = [
             ("Tax Year", "tax_year"),
             ("Entity Type", "entity_type"),
@@ -212,65 +205,60 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
             ("Form Type", "form_type")
         ]
 
-        for row, (label, key) in enumerate(fields):
-            lbl = ctk.CTkLabel(form_frame, text=f"{label}:", text_color="gray", font=("", 11))
-            lbl.grid(row=row, column=0, sticky="w", padx=5, pady=8)
+        for label, key in fields:
+            field_row = ctk.CTkFrame(frame, fg_color="transparent")
+            field_row.pack(fill=ctk.X, padx=5, pady=5)
+            
+            lbl = ctk.CTkLabel(field_row, text=f"{label}:", text_color="gray", font=("", 11))
+            lbl.pack(side=ctk.LEFT, padx=5)
 
-            entry = ctk.CTkEntry(form_frame, placeholder_text="Enter " + label.lower(), width=200)
-            entry.grid(row=row, column=1, sticky="ew", padx=5, pady=8)
+            entry = ctk.CTkEntry(field_row, placeholder_text="Enter " + label.lower(), width=200)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
             self.return_vars[key] = entry
 
     def _setup_income_tab(self):
         """Setup business income and expenses tab"""
-        self.tab_income.grid_rowconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(1, weight=1)
-
         container = ctk.CTkFrame(self.tab_income, fg_color="transparent")
         container.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=1)
 
         # Income section
         income_label = ModernLabel(container, text="Business Income", font_size=12, font_weight="bold")
-        income_label.grid(row=0, column=0, sticky="w", padx=5, pady=(0, 10))
+        income_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
 
-        income_frame = ctk.CTkFrame(container)
-        income_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        income_frame = ctk.CTkFrame(container, fg_color="transparent")
+        income_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         income_items = ["Gross Revenue", "Cost of Goods Sold", "Gross Profit", "Other Income"]
-        for idx, item in enumerate(income_items):
-            label = ctk.CTkLabel(income_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(income_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in income_items:
+            field_row = ctk.CTkFrame(income_frame, fg_color="transparent")
+            field_row.pack(fill=ctk.X, padx=10, pady=5)
+            
+            label = ctk.CTkLabel(field_row, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            entry = ctk.CTkEntry(field_row, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
             self.income_vars[item.lower().replace(" ", "_")] = entry
-
-        income_frame.grid_columnconfigure(1, weight=1)
 
         # Deductions section
         deduction_label = ModernLabel(container, text="Business Deductions", font_size=12, font_weight="bold")
-        deduction_label.grid(row=0, column=1, sticky="w", padx=5, pady=(0, 10))
+        deduction_label.pack(anchor=ctk.W, padx=5, pady=(10, 10))
 
-        deduction_frame = ctk.CTkFrame(container)
-        deduction_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        deduction_frame = ctk.CTkFrame(container, fg_color="transparent")
+        deduction_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         deduction_items = ["Salaries & Wages", "Supplies", "Utilities", "Rent", "Depreciation", "Meals & Entertainment", "Office Expenses"]
-        for idx, item in enumerate(deduction_items):
-            label = ctk.CTkLabel(deduction_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(deduction_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in deduction_items:
+            field_row = ctk.CTkFrame(deduction_frame, fg_color="transparent")
+            field_row.pack(fill=ctk.X, padx=10, pady=5)
+            
+            label = ctk.CTkLabel(field_row, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            entry = ctk.CTkEntry(field_row, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
             self.deduction_vars[item.lower().replace(" ", "_")] = entry
-
-        deduction_frame.grid_columnconfigure(1, weight=1)
 
     def _setup_partners_tab(self):
         """Setup partners/shareholders management tab"""
-        self.tab_partners.grid_rowconfigure(1, weight=1)
-        self.tab_partners.grid_columnconfigure(0, weight=1)
-
         # Button bar
         button_frame = ctk.CTkFrame(self.tab_partners, fg_color="transparent")
         button_frame.pack(fill=ctk.X, padx=10, pady=10)
@@ -302,19 +290,14 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
         # Partners list
         list_frame = ctk.CTkFrame(self.tab_partners)
         list_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
-        list_frame.grid_rowconfigure(0, weight=1)
-        list_frame.grid_columnconfigure(0, weight=1)
 
         self.partners_text = ctk.CTkTextbox(list_frame)
-        self.partners_text.grid(row=0, column=0, sticky="nsew")
+        self.partners_text.pack(fill=ctk.BOTH, expand=True)
         self.partners_text.insert("1.0", "No partners/shareholders added yet.")
         self.partners_text.configure(state="disabled")
 
     def _setup_forms_tab(self):
         """Setup forms and reports tab"""
-        self.tab_forms.grid_rowconfigure(1, weight=1)
-        self.tab_forms.grid_columnconfigure(0, weight=1)
-
         # Button bar
         button_frame = ctk.CTkFrame(self.tab_forms, fg_color="transparent")
         button_frame.pack(fill=ctk.X, padx=10, pady=10)
@@ -346,11 +329,9 @@ class PartnershipSCorpPage(ctk.CTkScrollableFrame):
         # Forms output
         output_frame = ctk.CTkFrame(self.tab_forms)
         output_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
-        output_frame.grid_rowconfigure(0, weight=1)
-        output_frame.grid_columnconfigure(0, weight=1)
 
         self.forms_text = ctk.CTkTextbox(output_frame)
-        self.forms_text.grid(row=0, column=0, sticky="nsew")
+        self.forms_text.pack(fill=ctk.BOTH, expand=True)
         self.forms_text.insert("1.0", "No forms generated yet.")
         self.forms_text.configure(state="disabled")
 

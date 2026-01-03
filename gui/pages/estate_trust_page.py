@@ -23,10 +23,10 @@ from services.estate_trust_service import (
     IncomeDistributionType
 )
 from services.accessibility_service import AccessibilityService
-from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton, ModernScrollableFrame
 
 
-class EstateTrustPage(ctk.CTkScrollableFrame):
+class EstateTrustPage(ModernFrame):
     """
     Estate & Trust Tax Returns page - converted from popup window to integrated page.
     
@@ -148,10 +148,12 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
 
     def _create_main_content(self):
         """Create main content with tabview"""
-        main_container = ctk.CTkFrame(self, fg_color="transparent")
+        # Create scrollable container for the entire content
+        scrollable = ModernScrollableFrame(self, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True, padx=0, pady=0)
+        
+        main_container = ctk.CTkFrame(scrollable, fg_color="transparent")
         main_container.pack(fill=ctk.BOTH, expand=True, padx=20, pady=10)
-        main_container.grid_rowconfigure(0, weight=1)
-        main_container.grid_columnconfigure(0, weight=1)
 
         # Create tabview
         self.tabview = ctk.CTkTabview(main_container)
@@ -173,11 +175,8 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
 
     def _setup_returns_tab(self):
         """Setup returns list tab"""
-        self.tab_returns.grid_rowconfigure(0, weight=1)
-        self.tab_returns.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_returns)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         # Returns display
         returns_label = ModernLabel(frame, text="Existing Returns", font_size=12, font_weight="bold")
@@ -198,17 +197,12 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
 
     def _setup_entity_tab(self):
         """Setup entity information tab"""
-        self.tab_entity.grid_rowconfigure(0, weight=1)
-        self.tab_entity.grid_columnconfigure(0, weight=1)
-
         frame = ctk.CTkScrollableFrame(self.tab_entity)
-        frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
         # Entity form fields
         form_frame = ctk.CTkFrame(frame, fg_color="transparent")
         form_frame.pack(fill=ctk.X, padx=5, pady=10)
-        form_frame.grid_columnconfigure(1, weight=1)
-        form_frame.grid_columnconfigure(3, weight=1)
 
         fields = [
             ("Tax Year", "tax_year"),
@@ -223,62 +217,55 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
 
         for row, (label, key) in enumerate(fields):
             lbl = ctk.CTkLabel(form_frame, text=f"{label}:", text_color="gray", font=("", 11))
-            lbl.grid(row=row, column=0, sticky="w", padx=5, pady=8)
+            lbl.pack(anchor=ctk.W, padx=5, pady=8)
 
             entry = ctk.CTkEntry(form_frame, placeholder_text="Enter " + label.lower(), width=200)
-            entry.grid(row=row, column=1, sticky="ew", padx=5, pady=8)
+            entry.pack(fill=ctk.X, padx=5, pady=(0, 8))
             self.return_vars[key] = entry
 
     def _setup_income_deductions_tab(self):
         """Setup income and deductions tab"""
-        self.tab_income.grid_rowconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(0, weight=1)
-        self.tab_income.grid_columnconfigure(1, weight=1)
-
-        container = ctk.CTkFrame(self.tab_income, fg_color="transparent")
+        container = ctk.CTkScrollableFrame(self.tab_income, fg_color="transparent")
         container.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=1)
 
         # Income section
         income_label = ModernLabel(container, text="Income Sources", font_size=12, font_weight="bold")
-        income_label.grid(row=0, column=0, sticky="w", padx=5, pady=(0, 10))
+        income_label.pack(anchor=ctk.W, padx=5, pady=(0, 10))
 
-        income_frame = ctk.CTkFrame(container)
-        income_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        income_frame = ctk.CTkFrame(container, fg_color="transparent")
+        income_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         income_items = ["Interest", "Dividends", "Capital Gains", "Rental Income", "Other Income"]
-        for idx, item in enumerate(income_items):
-            label = ctk.CTkLabel(income_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(income_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in income_items:
+            field_row = ctk.CTkFrame(income_frame, fg_color="transparent")
+            field_row.pack(fill=ctk.X, padx=10, pady=8)
+            
+            label = ctk.CTkLabel(field_row, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            entry = ctk.CTkEntry(field_row, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
             self.income_vars[item.lower().replace(" ", "_")] = entry
-
-        income_frame.grid_columnconfigure(1, weight=1)
 
         # Deductions section
         deduction_label = ModernLabel(container, text="Deductions", font_size=12, font_weight="bold")
-        deduction_label.grid(row=0, column=1, sticky="w", padx=5, pady=(0, 10))
+        deduction_label.pack(anchor=ctk.W, padx=5, pady=(20, 10))
 
-        deduction_frame = ctk.CTkFrame(container)
-        deduction_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        deduction_frame = ctk.CTkFrame(container, fg_color="transparent")
+        deduction_frame.pack(fill=ctk.X, padx=5, pady=5)
 
         deduction_items = ["Fiduciary Fees", "Trustee Commissions", "Charitable Contributions", "Medical Expenses", "Other Deductions"]
-        for idx, item in enumerate(deduction_items):
-            label = ctk.CTkLabel(deduction_frame, text=f"{item}:", text_color="gray", font=("", 11))
-            label.grid(row=idx, column=0, sticky="w", padx=10, pady=8)
-            entry = ctk.CTkEntry(deduction_frame, placeholder_text="$0.00", width=150)
-            entry.grid(row=idx, column=1, sticky="ew", padx=10, pady=8)
+        for item in deduction_items:
+            field_row = ctk.CTkFrame(deduction_frame, fg_color="transparent")
+            field_row.pack(fill=ctk.X, padx=10, pady=8)
+            
+            label = ctk.CTkLabel(field_row, text=f"{item}:", text_color="gray", font=("", 11))
+            label.pack(side=ctk.LEFT, padx=5)
+            entry = ctk.CTkEntry(field_row, placeholder_text="$0.00", width=150)
+            entry.pack(side=ctk.LEFT, padx=5, fill=ctk.X, expand=True)
             self.deduction_vars[item.lower().replace(" ", "_")] = entry
-
-        deduction_frame.grid_columnconfigure(1, weight=1)
 
     def _setup_beneficiaries_tab(self):
         """Setup beneficiaries management tab"""
-        self.tab_beneficiaries.grid_rowconfigure(1, weight=1)
-        self.tab_beneficiaries.grid_columnconfigure(0, weight=1)
 
         # Button bar
         button_frame = ctk.CTkFrame(self.tab_beneficiaries, fg_color="transparent")
@@ -311,19 +298,14 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
         # Beneficiaries list
         list_frame = ctk.CTkFrame(self.tab_beneficiaries)
         list_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
-        list_frame.grid_rowconfigure(0, weight=1)
-        list_frame.grid_columnconfigure(0, weight=1)
 
         self.beneficiaries_text = ctk.CTkTextbox(list_frame)
-        self.beneficiaries_text.grid(row=0, column=0, sticky="nsew")
+        self.beneficiaries_text.pack(fill=ctk.BOTH, expand=True)
         self.beneficiaries_text.insert("1.0", "No beneficiaries added yet.")
         self.beneficiaries_text.configure(state="disabled")
 
     def _setup_forms_tab(self):
         """Setup forms and reports tab"""
-        self.tab_forms.grid_rowconfigure(1, weight=1)
-        self.tab_forms.grid_columnconfigure(0, weight=1)
-
         # Button bar
         button_frame = ctk.CTkFrame(self.tab_forms, fg_color="transparent")
         button_frame.pack(fill=ctk.X, padx=10, pady=10)
@@ -355,11 +337,9 @@ class EstateTrustPage(ctk.CTkScrollableFrame):
         # Forms output
         output_frame = ctk.CTkFrame(self.tab_forms)
         output_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=5)
-        output_frame.grid_rowconfigure(0, weight=1)
-        output_frame.grid_columnconfigure(0, weight=1)
 
         self.forms_text = ctk.CTkTextbox(output_frame)
-        self.forms_text.grid(row=0, column=0, sticky="nsew")
+        self.forms_text.pack(fill=ctk.BOTH, expand=True)
         self.forms_text.insert("1.0", "No forms generated yet.")
         self.forms_text.configure(state="disabled")
 

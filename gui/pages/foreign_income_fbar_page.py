@@ -17,34 +17,10 @@ import customtkinter as ctk
 from typing import Optional, Any
 from datetime import datetime
 
-
-class ModernButton(ctk.CTkButton):
-    """Custom button with type variants."""
-    
-    def __init__(self, *args, button_type: str = "primary", **kwargs):
-        colors = {
-            "primary": ("#0066CC", "#0052A3"),
-            "secondary": ("#666666", "#4D4D4D"),
-            "success": ("#28A745", "#1E8449"),
-            "danger": ("#DC3545", "#C82333"),
-        }
-        
-        fg_color, hover_color = colors.get(button_type, colors["primary"])
-        kwargs.update({"fg_color": fg_color, "hover_color": hover_color, "text_color": "white"})
-        super().__init__(*args, **kwargs)
+from gui.modern_ui_components import ModernFrame, ModernLabel, ModernButton, ModernScrollableFrame
 
 
-class ModernFrame(ctk.CTkFrame):
-    """Custom frame with consistent styling."""
-    pass
-
-
-class ModernLabel(ctk.CTkLabel):
-    """Custom label with consistent styling."""
-    pass
-
-
-class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
+class ForeignIncomeFBARPage(ModernFrame):
     """
     Foreign Income and FBAR Reporting Page
     
@@ -65,18 +41,21 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
         self.tax_data = tax_data
         self.accessibility_service = accessibility_service
         
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        # Wrap content in scrollable frame for proper pack() compatibility
+        scrollable = ModernScrollableFrame(self, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
-        self._create_header()
-        self._create_toolbar()
-        self._create_main_content()
+        # Create header
+        self._create_header(scrollable)
+        # Create toolbar
+        self._create_toolbar(scrollable)
+        # Create main content
+        self._create_main_content(scrollable)
     
-    def _create_header(self):
+    def _create_header(self, parent):
         """Create page header."""
-        header_frame = ModernFrame(self, fg_color="transparent")
-        header_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
-        header_frame.grid_columnconfigure(0, weight=1)
+        header_frame = ModernFrame(parent, fg_color="transparent")
+        header_frame.pack(fill=ctk.X, padx=20, pady=(20, 10))
         
         title_label = ModernLabel(
             header_frame,
@@ -84,7 +63,7 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             font=("Segoe UI", 24, "bold"),
             text_color="#FFFFFF"
         )
-        title_label.grid(row=0, column=0, sticky="w")
+        title_label.pack(anchor=ctk.W)
         
         subtitle_label = ModernLabel(
             header_frame,
@@ -92,16 +71,15 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             font=("Segoe UI", 12),
             text_color="#A0A0A0"
         )
-        subtitle_label.grid(row=1, column=0, sticky="w", pady=(5, 0))
+        subtitle_label.pack(anchor=ctk.W, pady=(5, 0))
     
-    def _create_toolbar(self):
+    def _create_toolbar(self, parent):
         """Create toolbar with action buttons."""
-        toolbar_frame = ModernFrame(self, fg_color="transparent")
-        toolbar_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(0, 10))
-        toolbar_frame.grid_columnconfigure(1, weight=1)
+        toolbar_frame = ModernFrame(parent, fg_color="transparent")
+        toolbar_frame.pack(fill=ctk.X, padx=20, pady=(0, 10))
         
         button_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
-        button_frame.grid(row=0, column=0, sticky="w")
+        button_frame.pack(side=ctk.LEFT, fill=ctk.X)
         
         add_income_btn = ModernButton(
             button_frame,
@@ -111,7 +89,7 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             height=36,
             command=self._action_add_foreign_income
         )
-        add_income_btn.grid(row=0, column=0, padx=(0, 10))
+        add_income_btn.pack(side=ctk.LEFT, padx=(0, 10))
         
         add_account_btn = ModernButton(
             button_frame,
@@ -121,7 +99,7 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             height=36,
             command=self._action_add_foreign_account
         )
-        add_account_btn.grid(row=0, column=1, padx=5)
+        add_account_btn.pack(side=ctk.LEFT, padx=5)
         
         check_fbar_btn = ModernButton(
             button_frame,
@@ -131,11 +109,11 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             height=36,
             command=self._action_check_fbar_status
         )
-        check_fbar_btn.grid(row=0, column=2, padx=5)
+        check_fbar_btn.pack(side=ctk.LEFT, padx=5)
         
         # Progress bar
         progress_frame = ctk.CTkFrame(toolbar_frame, fg_color="transparent")
-        progress_frame.grid(row=0, column=1, sticky="e")
+        progress_frame.pack(side=ctk.RIGHT, fill=ctk.X, expand=True, padx=20)
         
         self.progress_bar = ctk.CTkProgressBar(
             progress_frame,
@@ -143,7 +121,7 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             height=8,
             progress_color="#28A745"
         )
-        self.progress_bar.grid(row=0, column=0, sticky="e")
+        self.progress_bar.pack(side=ctk.LEFT, padx=(0, 10))
         self.progress_bar.set(0.70)
         
         self.status_label = ModernLabel(
@@ -152,14 +130,12 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             font=("Segoe UI", 10),
             text_color="#A0A0A0"
         )
-        self.status_label.grid(row=1, column=0, sticky="e", pady=(5, 0))
+        self.status_label.pack(side=ctk.RIGHT)
     
-    def _create_main_content(self):
+    def _create_main_content(self, parent):
         """Create tabbed interface."""
-        content_frame = ModernFrame(self, fg_color="#2B2B2B")
-        content_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
-        content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame = ctk.CTkFrame(parent, fg_color="#2B2B2B")
+        content_frame.pack(fill=ctk.BOTH, expand=True, padx=20, pady=10)
         
         self.tabview = ctk.CTkTabview(
             content_frame,
@@ -168,9 +144,7 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
             segmented_button_selected_color="#0066CC",
             fg_color="#2B2B2B"
         )
-        self.tabview.grid(row=0, column=0, sticky="nsew")
-        self.tabview.grid_columnconfigure(0, weight=1)
-        self.tabview.grid_rowconfigure(0, weight=1)
+        self.tabview.pack(fill=ctk.BOTH, expand=True)
         
         self.tabview.add("Foreign Income")
         self.tabview.add("Foreign Accounts")
@@ -187,27 +161,23 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
     def _setup_foreign_income_tab(self):
         """Setup Foreign Income tab."""
         tab = self.tabview.tab("Foreign Income")
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(1, weight=1)
+        
+        # Wrap tab content in scrollable frame
+        scrollable = ModernScrollableFrame(tab, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
         desc_label = ModernLabel(
-            tab,
+            scrollable,
             text="Track and report all sources of foreign income",
             font=("Segoe UI", 11),
             text_color="#A0A0A0"
         )
-        desc_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 10))
+        desc_label.pack(anchor=ctk.W, padx=15, pady=(15, 10))
         
         # Income sources frame
-        income_frame = ctk.CTkFrame(tab, fg_color="#1E1E1E")
-        income_frame.grid(row=1, column=0, sticky="nsew", padx=15, pady=10)
-        income_frame.grid_columnconfigure(0, weight=1)
-        income_frame.grid_rowconfigure(0, weight=1)
-        
-        income_scroll = ctk.CTkScrollableFrame(income_frame, fg_color="#2B2B2B")
-        income_scroll.grid(row=0, column=0, sticky="nsew")
-        income_scroll.grid_columnconfigure(0, weight=1)
-        
+        income_frame = ctk.CTkFrame(scrollable, fg_color="#1E1E1E")
+        income_frame.pack(fill=ctk.BOTH, expand=True, padx=15, pady=10)
+
         sources = [
             ("Consulting Services - Canada", "CAD 45,000", "Self-employment"),
             ("UK Investment Dividends", "GBP 8,500", "Portfolio income"),
@@ -215,143 +185,153 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
         ]
         
         for source, amount, type_ in sources:
-            source_frame = ctk.CTkFrame(income_scroll, fg_color="#1E1E1E", height=60)
-            source_frame.pack(fill="x", pady=5)
-            source_frame.grid_columnconfigure(1, weight=1)
+            source_frame = ctk.CTkFrame(income_frame, fg_color="#1E1E1E", height=60)
+            source_frame.pack(fill=ctk.X, pady=5)
             
-            source_label = ModernLabel(source_frame, text=source, font=("Segoe UI", 11, "bold"))
-            source_label.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+            left_frame = ctk.CTkFrame(source_frame, fg_color="transparent")
+            left_frame.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=10, pady=5)
             
-            type_label = ModernLabel(source_frame, text=type_, font=("Segoe UI", 9), text_color="#A0A0A0")
-            type_label.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 5))
+            source_label = ModernLabel(left_frame, text=source, font=("Segoe UI", 11, "bold"))
+            source_label.pack(anchor=ctk.W)
+            
+            type_label = ModernLabel(left_frame, text=type_, font=("Segoe UI", 9), text_color="#A0A0A0")
+            type_label.pack(anchor=ctk.W, pady=(0, 5))
             
             amount_label = ModernLabel(source_frame, text=amount, font=("Segoe UI", 12, "bold"), text_color="#2196F3")
-            amount_label.grid(row=0, column=1, sticky="e", padx=10, pady=5)
+            amount_label.pack(side=ctk.RIGHT, padx=10, pady=5)
     
     def _setup_foreign_accounts_tab(self):
         """Setup Foreign Accounts tab."""
         tab = self.tabview.tab("Foreign Accounts")
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(1, weight=1)
+        
+        # Wrap tab content in scrollable frame
+        scrollable = ModernScrollableFrame(tab, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
         desc_label = ModernLabel(
-            tab,
+            scrollable,
             text="Track foreign financial accounts for FBAR and Form 8938",
             font=("Segoe UI", 11),
             text_color="#A0A0A0"
         )
-        desc_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 10))
+        desc_label.pack(anchor=ctk.W, padx=15, pady=(15, 10))
         
         # Accounts frame
-        accounts_frame = ctk.CTkFrame(tab, fg_color="#1E1E1E")
-        accounts_frame.grid(row=1, column=0, sticky="nsew", padx=15, pady=10)
-        accounts_frame.grid_columnconfigure(0, weight=1)
-        accounts_frame.grid_rowconfigure(0, weight=1)
-        
-        accounts_scroll = ctk.CTkScrollableFrame(accounts_frame, fg_color="#2B2B2B")
-        accounts_scroll.grid(row=0, column=0, sticky="nsew")
-        accounts_scroll.grid_columnconfigure(0, weight=1)
-        
+        accounts_frame = ctk.CTkFrame(scrollable, fg_color="#1E1E1E")
+        accounts_frame.pack(fill=ctk.BOTH, expand=True, padx=15, pady=10)
+
         accounts = [
             ("Royal Bank of Canada - Savings", "Toronto, Canada", "CAD 125,000", "Yes"),
             ("Barclays Bank - Current Account", "London, UK", "GBP 45,000", "Yes"),
         ]
         
         for bank, location, balance, fbar in accounts:
-            account_frame = ctk.CTkFrame(accounts_scroll, fg_color="#1E1E1E", height=70)
-            account_frame.pack(fill="x", pady=5)
-            account_frame.grid_columnconfigure(1, weight=1)
+            account_frame = ctk.CTkFrame(accounts_frame, fg_color="#1E1E1E", height=70)
+            account_frame.pack(fill=ctk.X, pady=5)
             
-            bank_label = ModernLabel(account_frame, text=bank, font=("Segoe UI", 11, "bold"))
-            bank_label.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+            left_frame = ctk.CTkFrame(account_frame, fg_color="transparent")
+            left_frame.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=10, pady=5)
             
-            location_label = ModernLabel(account_frame, text=location, font=("Segoe UI", 9), text_color="#A0A0A0")
-            location_label.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 5))
+            bank_label = ModernLabel(left_frame, text=bank, font=("Segoe UI", 11, "bold"))
+            bank_label.pack(anchor=ctk.W)
             
-            balance_label = ModernLabel(account_frame, text=balance, font=("Segoe UI", 11, "bold"), text_color="#4CAF50")
-            balance_label.grid(row=0, column=1, sticky="e", padx=10, pady=5)
+            location_label = ModernLabel(left_frame, text=location, font=("Segoe UI", 9), text_color="#A0A0A0")
+            location_label.pack(anchor=ctk.W, pady=(0, 5))
             
-            fbar_label = ModernLabel(account_frame, text=f"FBAR Required: {fbar}", font=("Segoe UI", 9), text_color="#FF9800")
-            fbar_label.grid(row=1, column=1, sticky="e", padx=10, pady=(0, 5))
+            right_frame = ctk.CTkFrame(account_frame, fg_color="transparent")
+            right_frame.pack(side=ctk.RIGHT, fill=ctk.BOTH, padx=10, pady=5)
+            
+            balance_label = ModernLabel(right_frame, text=balance, font=("Segoe UI", 11, "bold"), text_color="#4CAF50")
+            balance_label.pack(anchor=ctk.NE)
+            
+            fbar_label = ModernLabel(right_frame, text=f"FBAR Required: {fbar}", font=("Segoe UI", 9), text_color="#FF9800")
+            fbar_label.pack(anchor=ctk.NE, pady=(0, 5))
     
     def _setup_fbar_filing_tab(self):
         """Setup FBAR Filing tab."""
         tab = self.tabview.tab("FBAR Filing")
-        tab.grid_columnconfigure(0, weight=1)
+        
+        # Wrap tab content in scrollable frame
+        scrollable = ModernScrollableFrame(tab, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
         desc_label = ModernLabel(
-            tab,
+            scrollable,
             text="Manage FBAR (Form 114) filing and compliance",
             font=("Segoe UI", 11),
             text_color="#A0A0A0"
         )
-        desc_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 10))
+        desc_label.pack(anchor=ctk.W, padx=15, pady=(15, 10))
         
         # FBAR status frame
-        fbar_frame = ctk.CTkFrame(tab, fg_color="#1E1E1E")
-        fbar_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=10)
-        fbar_frame.grid_columnconfigure(1, weight=1)
+        fbar_frame = ctk.CTkFrame(scrollable, fg_color="#1E1E1E")
+        fbar_frame.pack(fill=ctk.X, padx=15, pady=10)
         
         # Requirement check
-        require_label = ModernLabel(fbar_frame, text="FBAR Filing Required:", font=("Segoe UI", 11))
-        require_label.grid(row=0, column=0, sticky="w", padx=15, pady=10)
+        require_row = ctk.CTkFrame(fbar_frame, fg_color="transparent")
+        require_row.pack(fill=ctk.X, padx=15, pady=10)
+        
+        require_label = ModernLabel(require_row, text="FBAR Filing Required:", font=("Segoe UI", 11))
+        require_label.pack(side=ctk.LEFT)
         
         require_status = ModernLabel(
-            fbar_frame,
+            require_row,
             text="✓ YES (Aggregate balance > $10,000)",
             font=("Segoe UI", 11),
             text_color="#FF9800"
         )
-        require_status.grid(row=0, column=1, sticky="e", padx=15, pady=10)
+        require_status.pack(side=ctk.RIGHT)
         
         # Filing deadline
-        deadline_label = ModernLabel(fbar_frame, text="Filing Deadline:", font=("Segoe UI", 11))
-        deadline_label.grid(row=1, column=0, sticky="w", padx=15, pady=10)
+        deadline_row = ctk.CTkFrame(fbar_frame, fg_color="transparent")
+        deadline_row.pack(fill=ctk.X, padx=15, pady=10)
+        
+        deadline_label = ModernLabel(deadline_row, text="Filing Deadline:", font=("Segoe UI", 11))
+        deadline_label.pack(side=ctk.LEFT)
         
         deadline_status = ModernLabel(
-            fbar_frame,
+            deadline_row,
             text="April 15, 2025 (Automatic 6-month extension available)",
             font=("Segoe UI", 11),
             text_color="#FF9800"
         )
-        deadline_status.grid(row=1, column=1, sticky="e", padx=15, pady=10)
+        deadline_status.pack(side=ctk.RIGHT)
         
         # Filing status
-        filed_label = ModernLabel(fbar_frame, text="Filed Status:", font=("Segoe UI", 11))
-        filed_label.grid(row=2, column=0, sticky="w", padx=15, pady=10)
+        filed_row = ctk.CTkFrame(fbar_frame, fg_color="transparent")
+        filed_row.pack(fill=ctk.X, padx=15, pady=10)
+        
+        filed_label = ModernLabel(filed_row, text="Filed Status:", font=("Segoe UI", 11))
+        filed_label.pack(side=ctk.LEFT)
         
         filed_status = ModernLabel(
-            fbar_frame,
+            filed_row,
             text="Not Filed (Due Date: 68 days remaining)",
             font=("Segoe UI", 11),
             text_color="#F44336"
         )
-        filed_status.grid(row=2, column=1, sticky="e", padx=15, pady=10)
+        filed_status.pack(side=ctk.RIGHT)
     
     def _setup_tax_treaties_tab(self):
         """Setup Tax Treaties tab."""
         tab = self.tabview.tab("Tax Treaties")
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(1, weight=1)
+        
+        # Wrap tab content in scrollable frame
+        scrollable = ModernScrollableFrame(tab, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
         desc_label = ModernLabel(
-            tab,
+            scrollable,
             text="Apply applicable tax treaty benefits and exclusions",
             font=("Segoe UI", 11),
             text_color="#A0A0A0"
         )
-        desc_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 10))
+        desc_label.pack(anchor=ctk.W, padx=15, pady=(15, 10))
         
         # Treaties frame
-        treaties_frame = ctk.CTkFrame(tab, fg_color="#1E1E1E")
-        treaties_frame.grid(row=1, column=0, sticky="nsew", padx=15, pady=10)
-        treaties_frame.grid_columnconfigure(0, weight=1)
-        treaties_frame.grid_rowconfigure(0, weight=1)
-        
-        treaties_scroll = ctk.CTkScrollableFrame(treaties_frame, fg_color="#2B2B2B")
-        treaties_scroll.grid(row=0, column=0, sticky="nsew")
-        treaties_scroll.grid_columnconfigure(0, weight=1)
-        
+        treaties_frame = ctk.CTkFrame(scrollable, fg_color="#1E1E1E")
+        treaties_frame.pack(fill=ctk.BOTH, expand=True, padx=15, pady=10)
+
         treaties = [
             ("US-Canada Tax Treaty", "Foreign Earned Income Exclusion", "Yes"),
             ("US-UK Tax Treaty", "Investment Credit", "Yes"),
@@ -359,65 +339,75 @@ class ForeignIncomeFBARPage(ctk.CTkScrollableFrame):
         ]
         
         for treaty, benefit, status in treaties:
-            treaty_frame = ctk.CTkFrame(treaties_scroll, fg_color="#1E1E1E", height=60)
-            treaty_frame.pack(fill="x", pady=5)
-            treaty_frame.grid_columnconfigure(1, weight=1)
+            treaty_frame = ctk.CTkFrame(treaties_frame, fg_color="#1E1E1E", height=60)
+            treaty_frame.pack(fill=ctk.X, pady=5)
             
-            treaty_label = ModernLabel(treaty_frame, text=treaty, font=("Segoe UI", 11, "bold"))
-            treaty_label.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+            left_frame = ctk.CTkFrame(treaty_frame, fg_color="transparent")
+            left_frame.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True, padx=10, pady=5)
             
-            benefit_label = ModernLabel(treaty_frame, text=benefit, font=("Segoe UI", 10), text_color="#A0A0A0")
-            benefit_label.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 5))
+            treaty_label = ModernLabel(left_frame, text=treaty, font=("Segoe UI", 11, "bold"))
+            treaty_label.pack(anchor=ctk.W)
+            
+            benefit_label = ModernLabel(left_frame, text=benefit, font=("Segoe UI", 10), text_color="#A0A0A0")
+            benefit_label.pack(anchor=ctk.W, pady=(0, 5))
             
             status_label = ModernLabel(treaty_frame, text=status, font=("Segoe UI", 10, "bold"))
-            status_label.grid(row=0, column=1, sticky="e", padx=10, pady=5)
+            status_label.pack(side=ctk.RIGHT, padx=10, pady=5)
     
     def _setup_currency_reporting_tab(self):
         """Setup Currency & Reporting tab."""
         tab = self.tabview.tab("Currency & Reporting")
-        tab.grid_columnconfigure(0, weight=1)
+        
+        # Wrap tab content in scrollable frame
+        scrollable = ModernScrollableFrame(tab, fg_color="transparent")
+        scrollable.pack(fill=ctk.BOTH, expand=True)
         
         desc_label = ModernLabel(
-            tab,
+            scrollable,
             text="Configure currency conversion and reporting preferences",
             font=("Segoe UI", 11),
             text_color="#A0A0A0"
         )
-        desc_label.grid(row=0, column=0, sticky="w", padx=15, pady=(15, 10))
+        desc_label.pack(anchor=ctk.W, padx=15, pady=(15, 10))
         
         # Settings frame
-        settings_frame = ctk.CTkFrame(tab, fg_color="#1E1E1E")
-        settings_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=10)
-        settings_frame.grid_columnconfigure(1, weight=1)
+        settings_frame = ctk.CTkFrame(scrollable, fg_color="#1E1E1E")
+        settings_frame.pack(fill=ctk.X, padx=15, pady=10)
         
         # Currency conversion method
-        conv_label = ModernLabel(settings_frame, text="Conversion Method:", font=("Segoe UI", 11))
-        conv_label.grid(row=0, column=0, sticky="w", padx=15, pady=10)
+        conv_row = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        conv_row.pack(fill=ctk.X, padx=15, pady=10)
+        
+        conv_label = ModernLabel(conv_row, text="Conversion Method:", font=("Segoe UI", 11))
+        conv_label.pack(side=ctk.LEFT)
         
         conv_combo = ctk.CTkComboBox(
-            settings_frame,
+            conv_row,
             values=["Year-End Rate", "Average Rate", "Transaction Date Rate"],
             fg_color="#2B2B2B",
             button_color="#0066CC",
             text_color="#FFFFFF",
             state="readonly"
         )
-        conv_combo.grid(row=0, column=1, sticky="ew", padx=15, pady=10)
+        conv_combo.pack(side=ctk.RIGHT, fill=ctk.X, expand=True, padx=(10, 0))
         conv_combo.set("Year-End Rate")
         
         # Reporting currency
-        report_label = ModernLabel(settings_frame, text="Reporting Currency:", font=("Segoe UI", 11))
-        report_label.grid(row=1, column=0, sticky="w", padx=15, pady=10)
+        report_row = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        report_row.pack(fill=ctk.X, padx=15, pady=10)
+        
+        report_label = ModernLabel(report_row, text="Reporting Currency:", font=("Segoe UI", 11))
+        report_label.pack(side=ctk.LEFT)
         
         report_combo = ctk.CTkComboBox(
-            settings_frame,
+            report_row,
             values=["USD (US Dollar)", "EUR (Euro)", "GBP (British Pound)"],
             fg_color="#2B2B2B",
             button_color="#0066CC",
             text_color="#FFFFFF",
             state="readonly"
         )
-        report_combo.grid(row=1, column=1, sticky="ew", padx=15, pady=10)
+        report_combo.pack(side=ctk.RIGHT, fill=ctk.X, expand=True, padx=(10, 0))
         report_combo.set("USD (US Dollar)")
     
     # Action Methods
